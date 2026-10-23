@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>AR Ruler - Pengukur Benda</title>
+<title>AR Ruler Pro - Ukur dengan AI & Snap</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   html, body { width: 100%; height: 100%; overflow: hidden; background: #000; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
@@ -15,6 +15,7 @@
     align-items: center; justify-content: center; z-index: 20;
     background: radial-gradient(circle at center, #1a1a2e 0%, #000 100%);
     color: #fff; padding: 24px; text-align: center; transition: opacity 0.4s;
+    overflow-y: auto;
   }
   #overlay.hidden { opacity: 0; pointer-events: none; }
   #overlay h1 {
@@ -22,7 +23,7 @@
     background: linear-gradient(90deg, #00d4ff, #7b2ff7);
     -webkit-background-clip: text; -webkit-text-fill-color: transparent;
   }
-  #overlay p { font-size: 14px; color: #aaa; max-width: 340px; line-height: 1.6; margin-bottom: 24px; }
+  #overlay p { font-size: 14px; color: #aaa; max-width: 340px; line-height: 1.6; margin-bottom: 20px; }
   #overlay .warn { font-size: 12px; color: #ff9d00; margin-top: 16px; max-width: 340px; }
 
   #startBtn {
@@ -55,13 +56,13 @@
     position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
     background: rgba(0,0,0,0.65); backdrop-filter: blur(10px);
     color: #fff; padding: 10px 20px; border-radius: 30px;
-    font-size: 14px; z-index: 12; display: none; white-space: nowrap;
-    border: 1px solid rgba(0,212,255,0.3);
+    font-size: 13px; z-index: 12; display: none; max-width: 90vw;
+    border: 1px solid rgba(0,212,255,0.3); text-align: center; line-height: 1.5;
   }
-  #info b { color: #00d4ff; font-size: 18px; }
+  #info b { color: #00d4ff; font-size: 16px; }
 
   #liveInfo {
-    position: fixed; top: 70px; left: 50%; transform: translateX(-50%);
+    position: fixed; top: 80px; left: 50%; transform: translateX(-50%);
     background: rgba(255,212,0,0.15); backdrop-filter: blur(10px);
     color: #ffd400; padding: 8px 18px; border-radius: 30px;
     font-size: 13px; z-index: 12; display: none; white-space: nowrap;
@@ -70,23 +71,29 @@
   #liveInfo b { color: #fff; font-size: 16px; }
 
   #controls {
-    position: fixed; bottom: 24px; left: 0; right: 0;
-    display: none; justify-content: center; gap: 12px;
-    z-index: 12; pointer-events: none;
+    position: fixed; bottom: 20px; left: 0; right: 0;
+    display: none; justify-content: center; gap: 10px;
+    z-index: 12; pointer-events: none; flex-wrap: wrap; padding: 0 12px;
   }
   #controls button {
     pointer-events: auto; cursor: pointer;
-    padding: 14px 22px; font-size: 14px; font-weight: 600;
+    padding: 12px 18px; font-size: 13px; font-weight: 600;
     border: none; border-radius: 50px; color: #fff;
     background: rgba(255,255,255,0.15); backdrop-filter: blur(10px);
-    border: 1px solid rgba(255,255,255,0.25); transition: background 0.2s;
+    border: 1px solid rgba(255,255,255,0.25); transition: all 0.2s;
   }
   #controls button:active { background: rgba(255,255,255,0.3); }
+  #controls button.on {
+    background: linear-gradient(135deg, #00d4ff, #7b2ff7);
+    border-color: transparent;
+    box-shadow: 0 0 16px rgba(0,212,255,0.6);
+  }
 
   #status {
-    position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%);
-    color: rgba(255,255,255,0.7); font-size: 12px; z-index: 12;
-    display: none; text-align: center; padding: 0 20px;
+    position: fixed; bottom: 85px; left: 50%; transform: translateX(-50%);
+    color: rgba(255,255,255,0.75); font-size: 12px; z-index: 12;
+    display: none; text-align: center; padding: 0 20px; max-width: 90vw;
+    background: rgba(0,0,0,0.4); padding: 6px 14px; border-radius: 20px;
   }
 
   #toast {
@@ -96,24 +103,41 @@
     transition: all 0.3s; pointer-events: none; text-align: center; max-width: 280px;
   }
   #toast.show { opacity: 1; transform: translate(-50%,-50%) scale(1); }
+
+  /* AI Detection Overlay - canvas 2D di atas video */
+  #detCanvas {
+    position: fixed; inset: 0; width: 100%; height: 100%;
+    z-index: 9; pointer-events: none; display: none;
+  }
+
+  #aiLoading {
+    position: fixed; bottom: 140px; left: 50%; transform: translateX(-50%);
+    background: rgba(123,47,247,0.9); color: #fff; padding: 8px 18px;
+    border-radius: 30px; font-size: 12px; z-index: 12; display: none;
+    font-weight: 600;
+  }
 </style>
 </head>
 <body>
 
 <div id="overlay">
-  <h1>📏 AR Ruler</h1>
-  <p>Ukur lebar dan tinggi benda di sekitar Anda menggunakan kamera HP dan Augmented Reality.</p>
+  <h1>📏 AR Ruler Pro</h1>
+  <p>Ukur lebar & tinggi benda dengan AR. Dilengkapi <b>Snap Lurus</b> anti-goyang dan <b>AI Bounding Box</b> untuk deteksi benda otomatis.</p>
   <button id="startBtn">Mulai AR</button>
-  <div class="warn">⚠️ Hanya berfungsi di Chrome Android yang mendukung ARCore. iOS Safari belum mendukung WebXR.</div>
+  <div class="warn">⚠️ Butuh Chrome Android + ARCore. Mode AI butuh unduh model ~5MB sekali saja.</div>
 </div>
 
+<canvas id="detCanvas"></canvas>
 <div id="reticle"></div>
 <div id="info"></div>
 <div id="liveInfo"></div>
 <div id="status"></div>
+<div id="aiLoading">🧠 Memuat model AI...</div>
 
 <div id="controls">
-  <button id="undoBtn">↶ Hapus Terakhir</button>
+  <button id="snapBtn">📏 Snap Lurus</button>
+  <button id="aiBtn">🧠 AI Deteksi</button>
+  <button id="undoBtn">↶ Undo</button>
   <button id="resetBtn">🗑 Reset</button>
 </div>
 
@@ -122,7 +146,9 @@
 <script type="importmap">
 {
   "imports": {
-    "three": "https://unpkg.com/three@0.160.0/build/three.module.js"
+    "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+    "@tensorflow/tfjs": "https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.20.0/dist/tf.min.js",
+    "@tensorflow-models/coco-ssd": "https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd@2.2.3/dist/coco-ssd.min.js"
   }
 }
 </script>
@@ -130,15 +156,21 @@
 <script type="module">
 import * as THREE from 'three';
 
-// ============ DOM ============
-const overlay    = document.getElementById('overlay');
-const startBtn   = document.getElementById('startBtn');
-const reticleEl  = document.getElementById('reticle');
-const infoEl     = document.getElementById('info');
-const liveInfoEl = document.getElementById('liveInfo');
-const statusEl   = document.getElementById('status');
-const controlsEl = document.getElementById('controls');
-const toastEl    = document.getElementById('toast');
+// ============================================================
+// DOM
+// ============================================================
+const overlay     = document.getElementById('overlay');
+const startBtn    = document.getElementById('startBtn');
+const reticleEl   = document.getElementById('reticle');
+const infoEl      = document.getElementById('info');
+const liveInfoEl  = document.getElementById('liveInfo');
+const statusEl    = document.getElementById('status');
+const controlsEl  = document.getElementById('controls');
+const toastEl     = document.getElementById('toast');
+const detCanvas   = document.getElementById('detCanvas');
+const aiLoadingEl = document.getElementById('aiLoading');
+const snapBtn     = document.getElementById('snapBtn');
+const aiBtn       = document.getElementById('aiBtn');
 
 function toast(msg, ms = 2200) {
   toastEl.textContent = msg;
@@ -147,39 +179,50 @@ function toast(msg, ms = 2200) {
   toastEl._t = setTimeout(() => toastEl.classList.remove('show'), ms);
 }
 
-// ============ WebXR support check ============
+// ============================================================
+// State
+// ============================================================
+let renderer, scene, camera;
+let hitTestSource = null, hitTestSourceRequested = false;
+let referenceSpace = null, viewerSpace = null;
+let sessionRef = null;
+
+let reticle;
+let placedPoints = [], lineMeshes = [], labels = [];
+let lastHitPose = null;
+let currentHitPos = new THREE.Vector3();
+let hasCurrentHit = false;
+
+let previewLine = null, previewLabel = null;
+
+// Fitur tambahan
+let snapEnabled = false;      // Snap ke sumbu horizontal/vertikal
+let aiEnabled = false;        // Mode AI bounding box
+let cocoModel = null;
+let aiDetecting = false;
+let lastDetections = [];
+let videoEl = null;           // Video stream dari kamera (kita ambil dari getUserMedia terpisah)
+
+// Bounding box helper (garis tepi kubus 3D)
+let bboxHelpers = [];
+
+// ============================================================
+// WebXR Support & Start
+// ============================================================
 startBtn.addEventListener('click', async () => {
-  if (!navigator.xr) { toast('WebXR tidak didukung di browser ini. Gunakan Chrome Android.'); return; }
-  const supported = await navigator.xr.isSessionSupported('immersive-ar');
-  if (!supported) { toast('AR tidak didukung di perangkat ini.'); return; }
+  if (!navigator.xr) { toast('WebXR tidak didukung. Gunakan Chrome Android.'); return; }
+  const ok = await navigator.xr.isSessionSupported('immersive-ar');
+  if (!ok) { toast('AR tidak didukung di perangkat ini.'); return; }
   startBtn.disabled = true;
   startBtn.textContent = 'Memuat...';
   await initAR();
 });
 
-// ============ Scene globals ============
-let renderer, scene, camera;
-let hitTestSource = null;
-let hitTestSourceRequested = false;
-let referenceSpace = null;
-let viewerSpace = null;
-
-let reticle;
-let placedPoints = [];
-let lineMeshes = [];
-let labels = [];
-let lastHitPose = null;
-let currentHitPos = new THREE.Vector3(); // posisi reticle saat ini (world)
-let hasCurrentHit = false;
-
-// Garis preview (dashed) + label live
-let previewLine = null;   // Mesh dashed
-let previewLabel = null;  // Sprite
-let previewActive = false;
-
-// ============ Init ============
+// ============================================================
+// Init
+// ============================================================
 async function initAR() {
-  renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+  renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true });
   renderer.setPixelRatio(window.devicePixelRatio);
   renderer.setSize(window.innerWidth, window.innerHeight);
   renderer.xr.enabled = true;
@@ -187,14 +230,11 @@ async function initAR() {
 
   scene = new THREE.Scene();
   camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.01, 20);
-
-  const light = new THREE.HemisphereLight(0xffffff, 0xbbbbff, 1.5);
-  scene.add(light);
+  scene.add(new THREE.HemisphereLight(0xffffff, 0xbbbbff, 1.5));
 
   // Reticle
   const ringGeo = new THREE.RingGeometry(0.06, 0.08, 32).rotateX(-Math.PI / 2);
-  const ringMat = new THREE.MeshBasicMaterial({ color: 0x00d4ff });
-  reticle = new THREE.Mesh(ringGeo, ringMat);
+  reticle = new THREE.Mesh(ringGeo, new THREE.MeshBasicMaterial({ color: 0x00d4ff }));
   reticle.matrixAutoUpdate = false;
   reticle.visible = false;
   scene.add(reticle);
@@ -205,6 +245,7 @@ async function initAR() {
       optionalFeatures: ['dom-overlay', 'local-floor'],
       domOverlay: { root: document.getElementById('ui') || document.body }
     });
+    sessionRef = session;
 
     await renderer.xr.setSession(session);
     session.addEventListener('end', onSessionEnd);
@@ -218,9 +259,12 @@ async function initAR() {
     reticleEl.style.display = 'block';
     controlsEl.style.display = 'flex';
     statusEl.style.display = 'block';
-    statusEl.textContent = 'Arahkan crosshair ke permukaan, lalu ketuk untuk menandai titik.';
+    statusEl.textContent = 'Arahkan crosshair ke permukaan lalu ketuk.';
 
     renderer.domElement.addEventListener('pointerdown', onTap);
+
+    // Ambil video stream untuk AI (dari kamera belakang)
+    await startCameraForAI();
 
   } catch (err) {
     console.error(err);
@@ -230,16 +274,37 @@ async function initAR() {
   }
 }
 
-// ============ Render loop ============
+// ============================================================
+// Video stream untuk AI (dari kamera HP langsung)
+// ============================================================
+async function startCameraForAI() {
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: 'environment', width: { ideal: 640 }, height: { ideal: 480 } },
+      audio: false
+    });
+    videoEl = document.createElement('video');
+    videoEl.srcObject = stream;
+    videoEl.autoplay = true;
+    videoEl.muted = true;
+    videoEl.playsInline = true;
+    await videoEl.play();
+    console.log('✅ Video stream AI siap');
+  } catch (e) {
+    console.warn('Tidak bisa akses kamera terpisah untuk AI:', e);
+    videoEl = null;
+  }
+}
+
+// ============================================================
+// Render loop
+// ============================================================
 function render(timestamp, frame) {
   if (frame) {
     if (!hitTestSourceRequested) {
-      frame.session.requestHitTestSource({ space: viewerSpace }).then(source => {
-        hitTestSource = source;
-      });
+      frame.session.requestHitTestSource({ space: viewerSpace }).then(s => hitTestSource = s);
       hitTestSourceRequested = true;
     }
-
     if (hitTestSource) {
       const results = frame.getHitTestResults(hitTestSource);
       if (results.length > 0) {
@@ -248,95 +313,103 @@ function render(timestamp, frame) {
           lastHitPose = pose;
           reticle.visible = true;
           reticle.matrix.fromArray(pose.transform.matrix);
-
-          // Simpan posisi hit dalam world-space (untuk preview line)
           currentHitPos.setFromMatrixPosition(reticle.matrix);
           hasCurrentHit = true;
-
-          // Update garis preview jika sudah ada minimal 1 titik
           updatePreviewLine();
         }
       } else {
         reticle.visible = false;
         lastHitPose = null;
         hasCurrentHit = false;
-        // Jangan hapus preview line, biarkan di posisi terakhir (biar user lihat)
-        // Tapi bisa juga hide. Kita biarkan visible supaya konsisten.
       }
+    }
+
+    // Render deteksi AI ke canvas 2D overlay
+    if (aiEnabled && lastDetections.length > 0) {
+      drawDetections();
     }
   }
 
-  // Label selalu menghadap kamera
-  labels.forEach(lbl => lbl.quaternion.copy(camera.quaternion));
+  labels.forEach(l => l.quaternion.copy(camera.quaternion));
   if (previewLabel) previewLabel.quaternion.copy(camera.quaternion);
+  bboxHelpers.forEach(h => h.quaternion.copy(camera.quaternion));
 
   renderer.render(scene, camera);
 }
 
-// ============ Preview Line (dashed) dari titik terakhir ke reticle ============
-function updatePreviewLine() {
-  // Butuh minimal 1 titik terpasang + hit aktif
-  if (placedPoints.length === 0 || !hasCurrentHit) {
-    removePreview();
-    return;
+// ============================================================
+// SNAP LOGIC
+// ============================================================
+// Diberikan posisi lastPoint dan target, luruskan target agar hanya
+// berubah di sumbu dominan (X/Z untuk horizontal, Y untuk vertikal).
+function applySnap(fromPos, toPos) {
+  if (!snapEnabled) return toPos.clone();
+
+  const dx = toPos.x - fromPos.x;
+  const dy = toPos.y - fromPos.y;
+  const dz = toPos.z - fromPos.z;
+  const ax = Math.abs(dx), ay = Math.abs(dy), az = Math.abs(dz);
+  const max = Math.max(ax, ay, az);
+
+  // Kalau sumbu Y dominan → snap vertikal (X & Z = fromPos)
+  if (ay === max && ay > Math.max(ax, az) * 0.7) {
+    return new THREE.Vector3(fromPos.x, toPos.y, fromPos.z);
   }
+  // Kalau X dominan → snap horizontal pada X
+  if (ax === max && ax > Math.max(ay, az) * 0.7) {
+    return new THREE.Vector3(toPos.x, fromPos.y, fromPos.z);
+  }
+  // Kalau Z dominan → snap horizontal pada Z
+  if (az === max && az > Math.max(ax, ay) * 0.7) {
+    return new THREE.Vector3(fromPos.x, fromPos.y, toPos.z);
+  }
+  // Kalau ambigu (diagonal), biarkan
+  return toPos.clone();
+}
+
+// ============================================================
+// Preview Line
+// ============================================================
+function updatePreviewLine() {
+  if (placedPoints.length === 0 || !hasCurrentHit) { removePreview(); return; }
 
   const lastPoint = placedPoints[placedPoints.length - 1].position;
-  const dist = lastPoint.distanceTo(currentHitPos);
+  const target = applySnap(lastPoint, currentHitPos);
+  const dist = lastPoint.distanceTo(target);
+  if (dist < 0.005) { removePreview(); return; }
 
-  // Terlalu dekat, jangan tampilkan
-  if (dist < 0.005) {
-    removePreview();
-    return;
-  }
-
-  // ====== Garis dashed ======
   if (!previewLine) {
-    // Buat cylinder dashed: pakai LineDashedMaterial dengan BufferGeometry
-    const geom = new THREE.BufferGeometry().setFromPoints([lastPoint.clone(), currentHitPos.clone()]);
+    const geom = new THREE.BufferGeometry().setFromPoints([lastPoint.clone(), target.clone()]);
     const mat = new THREE.LineDashedMaterial({
-      color: 0xffd400,
-      dashSize: 0.015,
-      gapSize: 0.01,
-      linewidth: 2,
-      depthTest: false,
-      transparent: true,
-      opacity: 0.95
+      color: snapEnabled ? 0x00ff88 : 0xffd400,
+      dashSize: 0.015, gapSize: 0.01,
+      depthTest: false, transparent: true, opacity: 0.95
     });
     previewLine = new THREE.Line(geom, mat);
     previewLine.computeLineDistances();
     previewLine.renderOrder = 999;
     scene.add(previewLine);
   } else {
-    // Update posisi geometry
-    previewLine.geometry.setFromPoints([lastPoint.clone(), currentHitPos.clone()]);
+    previewLine.geometry.setFromPoints([lastPoint.clone(), target.clone()]);
     previewLine.computeLineDistances();
+    previewLine.material.color.set(snapEnabled ? 0x00ff88 : 0xffd400);
   }
 
-  // ====== Label jarak live ======
   if (!previewLabel) {
     previewLabel = makeLabelSprite('0 cm', 0.055, '#ffd400', '#ffd400');
     previewLabel.renderOrder = 1000;
     scene.add(previewLabel);
   }
-  updateLabelSprite(previewLabel, formatDistance(dist));
+  updateLabelSprite(previewLabel, formatDistance(dist), snapEnabled ? '#00ff88' : '#ffd400', snapEnabled ? '#00ff88' : '#ffd400');
 
-  // Posisi label di tengah garis, sedikit di atas
-  const mid = new THREE.Vector3().addVectors(lastPoint, currentHitPos).multiplyScalar(0.5);
+  const mid = new THREE.Vector3().addVectors(lastPoint, target).multiplyScalar(0.5);
   mid.y += 0.025;
   previewLabel.position.copy(mid);
 
-  previewActive = true;
-
-  // Update live info panel
-  const dx = Math.abs(currentHitPos.x - lastPoint.x);
-  const dy = Math.abs(currentHitPos.y - lastPoint.y);
-  const dz = Math.abs(currentHitPos.z - lastPoint.z);
-  const axisLabel = getDominantAxis(dx, dy, dz);
+  // Live info
+  const axis = getAxisLabel(lastPoint, target, snapEnabled);
   liveInfoEl.style.display = 'block';
-  liveInfoEl.innerHTML = `📐 Live: <b>${formatDistance(dist)}</b> &nbsp;(${axisLabel})`;
-
-  // Tandai reticle aktif (kuning)
+  liveInfoEl.innerHTML = `📐 Live: <b>${formatDistance(dist)}</b> &nbsp;(${axis})${snapEnabled ? ' 🔒' : ''}`;
   reticleEl.classList.add('active');
 }
 
@@ -353,137 +426,124 @@ function removePreview() {
     previewLabel.material.dispose();
     previewLabel = null;
   }
-  previewActive = false;
   liveInfoEl.style.display = 'none';
   reticleEl.classList.remove('active');
 }
 
-// Tentukan label axis dominan: "Horizontal", "Vertikal", "Diagonal"
-function getDominantAxis(dx, dy, dz) {
-  const total = dx + dy + dz;
-  if (total < 1e-6) return '—';
+function getAxisLabel(from, to, snapped) {
+  const dx = Math.abs(to.x - from.x);
+  const dy = Math.abs(to.y - from.y);
+  const dz = Math.abs(to.z - from.z);
   const max = Math.max(dx, dy, dz);
-  if (dy === max && dy > dx * 1.5) return '↕ Vertikal';
+  if (max < 1e-6) return '—';
+  if (dy === max && dy > Math.max(dx, dz) * 0.7) return '↕ Vertikal';
   if ((dx === max || dz === max) && dy < max * 0.5) return '↔ Horizontal';
   return '↗ Diagonal';
 }
 
-// ============ Tap = place point ============
-function onTap(e) {
+// ============================================================
+// Tap to place
+// ============================================================
+function onTap() {
   if (!lastHitPose) {
     toast('Belum ada permukaan terdeteksi. Arahkan kamera ke lantai/meja.');
     return;
   }
-
   const pos = new THREE.Vector3().setFromMatrixPosition(reticle.matrix);
-  addMeasurePoint(pos);
+
+  // Kalau ada titik sebelumnya DAN snap aktif → snap titik baru
+  if (placedPoints.length > 0 && snapEnabled) {
+    const last = placedPoints[placedPoints.length - 1].position;
+    const snapped = applySnap(last, pos);
+    addMeasurePoint(snapped);
+  } else {
+    addMeasurePoint(pos);
+  }
   if (navigator.vibrate) navigator.vibrate(30);
 }
 
 function addMeasurePoint(pos) {
-  // Hapus preview line dulu — akan digantikan garis final
   removePreview();
 
-  const geo = new THREE.SphereGeometry(0.015, 16, 16);
-  const mat = new THREE.MeshBasicMaterial({ color: 0xff3366 });
-  const sphere = new THREE.Mesh(geo, mat);
+  const sphere = new THREE.Mesh(
+    new THREE.SphereGeometry(0.015, 16, 16),
+    new THREE.MeshBasicMaterial({ color: 0xff3366 })
+  );
   sphere.position.copy(pos);
   scene.add(sphere);
 
-  const pointObj = { position: pos.clone(), mesh: sphere };
-  placedPoints.push(pointObj);
+  placedPoints.push({ position: pos.clone(), mesh: sphere });
 
-  // Gambar garis final solid antara titik baru dan sebelumnya
   if (placedPoints.length >= 2) {
     const prev = placedPoints[placedPoints.length - 2];
-    drawLine(prev.position, pointObj.position);
+    drawLine(prev.position, pos);
   }
-
   updateInfo();
-
-  // Setelah tap, preview line akan otomatis muncul lagi dari titik baru
-  // saat reticle bergerak (di frame berikutnya), asalkan ada hit.
 }
 
 function drawLine(p1, p2) {
   const distance = p1.distanceTo(p2);
-
-  // Garis solid biru
-  const cylGeo = new THREE.CylinderGeometry(0.004, 0.004, distance, 8);
-  const cylMat = new THREE.MeshBasicMaterial({ color: 0x00d4ff });
-  const cyl = new THREE.Mesh(cylGeo, cylMat);
-
+  const cyl = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.004, 0.004, distance, 8),
+    new THREE.MeshBasicMaterial({ color: 0x00d4ff })
+  );
   const mid = new THREE.Vector3().addVectors(p1, p2).multiplyScalar(0.5);
   cyl.position.copy(mid);
-
   const dir = new THREE.Vector3().subVectors(p2, p1).normalize();
-  const up  = new THREE.Vector3(0, 1, 0);
-  cyl.quaternion.setFromUnitVectors(up, dir);
-
+  cyl.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir);
   scene.add(cyl);
   lineMeshes.push(cyl);
 
-  // Label jarak final
-  const label = makeLabelSprite(formatDistance(distance), 0.06, '#00d4ff', '#00d4ff');
-  label.position.copy(mid).add(new THREE.Vector3(0, 0.03, 0));
-  scene.add(label);
-  labels.push(label);
+  const lbl = makeLabelSprite(formatDistance(distance), 0.06);
+  lbl.position.copy(mid).add(new THREE.Vector3(0, 0.03, 0));
+  scene.add(lbl);
+  labels.push(lbl);
 }
 
-// ============ Sprite label helpers ============
-function makeLabelSprite(text, size = 0.05, textColor = '#00d4ff', bgBorder = '#00d4ff') {
-  const sprite = new THREE.Sprite(new THREE.SpriteMaterial({
-    depthTest: false, depthWrite: false
-  }));
-  sprite.scale.set(0.001, 0.001, 1); // di-set oleh updateLabelSprite
-  sprite.userData = { size, textColor, bgBorder, text: text };
-  updateLabelSprite(sprite, text);
+// ============================================================
+// Labels (Sprite)
+// ============================================================
+function makeLabelSprite(text, size = 0.05, color = '#00d4ff', border = '#00d4ff') {
+  const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ depthTest: false, depthWrite: false }));
+  sprite.userData = { size, textColor: color, bgBorder: border, text: text };
+  updateLabelSprite(sprite, text, color, border);
   return sprite;
 }
 
-function updateLabelSprite(sprite, text) {
-  const { size, textColor, bgBorder } = sprite.userData;
-  if (sprite.userData.text === text && sprite.userData._built) {
-    return; // sudah sama, skip rebuild
-  }
-  sprite.userData.text = text;
-  sprite.userData._built = true;
+function updateLabelSprite(sprite, text, color, border) {
+  const size = sprite.userData.size;
+  if (color) sprite.userData.textColor = color;
+  if (border) sprite.userData.bgBorder = border;
 
-  // Dispose texture lama
   if (sprite.material.map) sprite.material.map.dispose();
 
   const canvas = document.createElement('canvas');
   const ctx = canvas.getContext('2d');
   const fontSize = 64;
   ctx.font = `bold ${fontSize}px sans-serif`;
-  const textWidth = ctx.measureText(text).width;
-  const padding = 24;
+  const tw = ctx.measureText(text).width;
+  const pad = 24;
+  canvas.width = Math.ceil(tw + pad * 2);
+  canvas.height = fontSize + pad * 2;
 
-  canvas.width  = Math.ceil(textWidth + padding * 2);
-  canvas.height = fontSize + padding * 2;
+  const c = canvas.getContext('2d');
+  c.fillStyle = 'rgba(0,0,0,0.85)';
+  roundRect(c, 2, 2, canvas.width - 4, canvas.height - 4, 20);
+  c.fill();
+  c.strokeStyle = sprite.userData.bgBorder;
+  c.lineWidth = 3;
+  roundRect(c, 2, 2, canvas.width - 4, canvas.height - 4, 20);
+  c.stroke();
 
-  const ctx2 = canvas.getContext('2d');
-  // Background gelap rounded
-  ctx2.fillStyle = 'rgba(0,0,0,0.8)';
-  roundRect(ctx2, 2, 2, canvas.width - 4, canvas.height - 4, 20);
-  ctx2.fill();
-  // Border tipis
-  ctx2.strokeStyle = bgBorder;
-  ctx2.lineWidth = 3;
-  roundRect(ctx2, 2, 2, canvas.width - 4, canvas.height - 4, 20);
-  ctx2.stroke();
+  c.font = `bold ${fontSize}px sans-serif`;
+  c.fillStyle = sprite.userData.textColor;
+  c.textAlign = 'center';
+  c.textBaseline = 'middle';
+  c.fillText(text, canvas.width / 2, canvas.height / 2 + 4);
 
-  // Text
-  ctx2.font = `bold ${fontSize}px sans-serif`;
-  ctx2.fillStyle = textColor;
-  ctx2.textAlign = 'center';
-  ctx2.textBaseline = 'middle';
-  ctx2.fillText(text, canvas.width / 2, canvas.height / 2 + 4);
-
-  const texture = new THREE.CanvasTexture(canvas);
-  texture.minFilter = THREE.LinearFilter;
-  texture.needsUpdate = true;
-  sprite.material.map = texture;
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.minFilter = THREE.LinearFilter;
+  sprite.material.map = tex;
   sprite.material.needsUpdate = true;
 
   const aspect = canvas.width / canvas.height;
@@ -513,7 +573,7 @@ function updateInfo() {
   if (placedPoints.length === 0) { infoEl.style.display = 'none'; return; }
   if (placedPoints.length === 1) {
     infoEl.style.display = 'block';
-    infoEl.innerHTML = 'Titik ke-1 tertandai. Gerakkan kamera & ketuk titik ke-2.';
+    infoEl.innerHTML = 'Titik ke-1 tertandai. Ketuk titik ke-2.' + (snapEnabled ? ' <b>🔒 Snap aktif</b>' : '');
     return;
   }
   const parts = [];
@@ -522,52 +582,164 @@ function updateInfo() {
     parts.push(formatDistance(d));
   }
   infoEl.style.display = 'block';
-  infoEl.innerHTML = parts.map((p, i) => `#${i + 1}: <b>${p}</b>`).join(' &nbsp;|&nbsp; ');
+  infoEl.innerHTML = parts.map((p, i) => `#${i + 1}: <b>${p}</b>`).join(' | ');
 }
 
-// ============ Undo & Reset ============
+// ============================================================
+// Tombol Snap
+// ============================================================
+snapBtn.addEventListener('click', () => {
+  snapEnabled = !snapEnabled;
+  snapBtn.classList.toggle('on', snapEnabled);
+  toast(snapEnabled ? '📏 Snap Lurus: ON — garis akan otomatis lurus vertikal/horizontal' : 'Snap Lurus: OFF');
+});
+
+// ============================================================
+// Tombol AI Bounding Box
+// ============================================================
+aiBtn.addEventListener('click', async () => {
+  if (!videoEl) { toast('Kamera AI tidak tersedia.'); return; }
+  aiEnabled = !aiEnabled;
+  aiBtn.classList.toggle('on', aiEnabled);
+
+  if (aiEnabled) {
+    detCanvas.style.display = 'block';
+    if (!cocoModel) {
+      aiLoadingEl.style.display = 'block';
+      aiLoadingEl.textContent = '🧠 Memuat model AI...';
+      try {
+        const tf = await import('@tensorflow/tfjs');
+        await tf.ready();
+        const cocoSsd = await import('@tensorflow-models/coco-ssd');
+        cocoModel = await cocoSsd.load({ base: 'lite_mobilenet_v2' });
+        aiLoadingEl.style.display = 'none';
+        toast('✅ Model AI siap');
+      } catch (e) {
+        console.error(e);
+        aiLoadingEl.style.display = 'none';
+        aiEnabled = false;
+        aiBtn.classList.remove('on');
+        detCanvas.style.display = 'none';
+        toast('Gagal memuat AI: ' + e.message);
+        return;
+      }
+    }
+    startAILoop();
+    toast('🧠 AI Deteksi ON — arahkan ke benda (botol, kursi, meja, dll) lalu ketuk');
+  } else {
+    detCanvas.style.display = 'none';
+    lastDetections = [];
+    clearDetCanvas();
+  }
+});
+
+async function startAILoop() {
+  if (aiDetecting) return;
+  aiDetecting = true;
+  const loop = async () => {
+    if (!aiEnabled || !cocoModel || !videoEl || videoEl.readyState < 2) {
+      aiDetecting = false;
+      return;
+    }
+    try {
+      lastDetections = await cocoModel.detect(videoEl, 5, 0.45);
+    } catch (e) {
+      console.warn('AI detect error', e);
+    }
+    requestAnimationFrame(loop);
+  };
+  loop();
+}
+
+function drawDetections() {
+  const rect = detCanvas.getBoundingClientRect();
+  detCanvas.width = rect.width;
+  detCanvas.height = rect.height;
+  const ctx = detCanvas.getContext('2d');
+  ctx.clearRect(0, 0, detCanvas.width, detCanvas.height);
+
+  if (!videoEl) return;
+  // Skalakan box dari resolusi video ke ukuran layar (cover-fit kasar)
+  const sx = detCanvas.width / videoEl.videoWidth;
+  const sy = detCanvas.height / videoEl.videoHeight;
+
+  lastDetections.forEach(det => {
+    const [x, y, w, h] = det.bbox;
+    const label = `${det.class} ${(det.score * 100).toFixed(0)}%`;
+    ctx.strokeStyle = '#00ff88';
+    ctx.lineWidth = 3;
+    ctx.strokeRect(x * sx, y * sy, w * sx, h * sy);
+
+    ctx.fillStyle = 'rgba(0,255,136,0.85)';
+    const textW = ctx.measureText(label).width;
+    ctx.fillRect(x * sx, y * sy - 24, textW + 12, 22);
+    ctx.fillStyle = '#000';
+    ctx.font = 'bold 14px sans-serif';
+    ctx.fillText(label, x * sx + 6, y * sy - 7);
+  });
+}
+
+function clearDetCanvas() {
+  const ctx = detCanvas.getContext('2d');
+  ctx.clearRect(0, 0, detCanvas.width, detCanvas.height);
+}
+
+// ============================================================
+// Undo & Reset
+// ============================================================
 document.getElementById('undoBtn').addEventListener('click', () => {
   if (placedPoints.length === 0) return;
   removePreview();
   const last = placedPoints.pop();
   scene.remove(last.mesh);
+  last.mesh.geometry.dispose();
+  last.mesh.material.dispose();
+
   if (lineMeshes.length > 0 && placedPoints.length >= 1) {
-    scene.remove(lineMeshes.pop());
+    const l = lineMeshes.pop();
+    scene.remove(l);
+    l.geometry.dispose(); l.material.dispose();
     const lbl = labels.pop();
-    if (lbl) { scene.remove(lbl); if (lbl.material.map) lbl.material.map.dispose(); lbl.material.dispose(); }
+    if (lbl) {
+      scene.remove(lbl);
+      if (lbl.material.map) lbl.material.map.dispose();
+      lbl.material.dispose();
+    }
   }
   updateInfo();
 });
 
 document.getElementById('resetBtn').addEventListener('click', () => {
   removePreview();
-  placedPoints.forEach(p => scene.remove(p.mesh));
-  lineMeshes.forEach(l => scene.remove(l));
-  labels.forEach(l => {
-    scene.remove(l);
-    if (l.material.map) l.material.map.dispose();
-    l.material.dispose();
-  });
+  placedPoints.forEach(p => { scene.remove(p.mesh); p.mesh.geometry.dispose(); p.mesh.material.dispose(); });
+  lineMeshes.forEach(l => { scene.remove(l); l.geometry.dispose(); l.material.dispose(); });
+  labels.forEach(l => { scene.remove(l); if (l.material.map) l.material.map.dispose(); l.material.dispose(); });
   placedPoints = []; lineMeshes = []; labels = [];
   updateInfo();
 });
 
-// ============ Session end ============
+// ============================================================
+// Session end
+// ============================================================
 function onSessionEnd() {
   renderer.setAnimationLoop(null);
   renderer.domElement.removeEventListener('pointerdown', onTap);
-  hitTestSource = null;
-  hitTestSourceRequested = false;
+  hitTestSource = null; hitTestSourceRequested = false;
 
   removePreview();
   placedPoints.forEach(p => scene.remove(p.mesh));
   lineMeshes.forEach(l => scene.remove(l));
-  labels.forEach(l => {
-    scene.remove(l);
-    if (l.material.map) l.material.map.dispose();
-    l.material.dispose();
-  });
+  labels.forEach(l => scene.remove(l));
   placedPoints = []; lineMeshes = []; labels = [];
+
+  aiEnabled = false; aiBtn.classList.remove('on');
+  detCanvas.style.display = 'none';
+  clearDetCanvas();
+
+  if (videoEl && videoEl.srcObject) {
+    videoEl.srcObject.getTracks().forEach(t => t.stop());
+    videoEl = null;
+  }
 
   overlay.classList.remove('hidden');
   startBtn.disabled = false;
@@ -577,10 +749,13 @@ function onSessionEnd() {
   liveInfoEl.style.display = 'none';
   controlsEl.style.display = 'none';
   statusEl.style.display = 'none';
+  aiLoadingEl.style.display = 'none';
   reticleEl.classList.remove('active');
 }
 
-// ============ Resize ============
+// ============================================================
+// Resize
+// ============================================================
 window.addEventListener('resize', () => {
   if (camera && renderer) {
     camera.aspect = window.innerWidth / window.innerHeight;
