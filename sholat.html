@@ -1,0 +1,1999 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FazzQuranic - SholatEdu</title>
+    <link rel="shortcut icon" type="image/png" href="img/iconfazz.png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Amiri:wght@400;700&display=swap" rel="stylesheet">
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            position: relative;
+            overflow-x: hidden;
+            background: #020617;
+            color: #f8fafc;
+            transition: background-color 0.5s ease, color 0.5s ease;
+        }
+        main { padding-bottom: 12rem !important; }
+        .font-arabic { font-family: 'Amiri', serif; line-height: 2.3 !important; }
+
+        /* === BACKGROUND LANGIT === */
+        .sky-bg {
+            position: fixed; inset: 0; z-index: -1; overflow: hidden; pointer-events: none;
+            transition: background 0.8s ease;
+            background:
+                radial-gradient(ellipse at 20% 10%, rgba(16,185,129,0.10) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 80%, rgba(20,184,166,0.08) 0%, transparent 50%),
+                linear-gradient(180deg, #020617 0%, #0a0f1e 50%, #020617 100%);
+        }
+        .moon {
+            position: absolute; top: 8%; right: 10%;
+            width: 120px; height: 120px; border-radius: 50%;
+            background: radial-gradient(circle at 35% 35%, #fefce8 0%, #fde68a 40%, #fbbf24 70%, #d97706 100%);
+            box-shadow: 0 0 40px 10px rgba(253, 224, 71, 0.5), 0 0 80px 30px rgba(251, 191, 36, 0.3), 0 0 140px 60px rgba(251, 191, 36, 0.15), inset -10px -10px 30px rgba(180, 83, 9, 0.4);
+            animation: moonGlow 4s ease-in-out infinite alternate, moonFloat 12s ease-in-out infinite;
+            transition: background 0.8s ease, box-shadow 0.8s ease;
+        }
+        .moon::before, .moon::after { content: ''; position: absolute; border-radius: 50%; background: rgba(180, 83, 9, 0.25); transition: opacity 0.6s ease; }
+        .moon::before { width: 22px; height: 22px; top: 30%; left: 25%; box-shadow: 40px 30px 0 -4px rgba(180,83,9,0.2), 15px 55px 0 -6px rgba(180,83,9,0.25), 60px 60px 0 -8px rgba(180,83,9,0.15); }
+        .moon::after { width: 14px; height: 14px; top: 60%; left: 55%; }
+        @keyframes moonGlow {
+            0%   { box-shadow: 0 0 40px 10px rgba(253,224,71,0.4), 0 0 80px 30px rgba(251,191,36,0.25), 0 0 140px 60px rgba(251,191,36,0.12), inset -10px -10px 30px rgba(180,83,9,0.4); }
+            100% { box-shadow: 0 0 60px 18px rgba(253,224,71,0.6), 0 0 120px 45px rgba(251,191,36,0.4), 0 0 200px 90px rgba(251,191,36,0.2), inset -10px -10px 30px rgba(180,83,9,0.4); }
+        }
+        @keyframes moonFloat { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-15px); } }
+
+        .stars-layer { position: absolute; inset: 0; transition: opacity 0.8s ease; }
+        .star { position: absolute; background: #fff; border-radius: 50%; animation: twinkle 3s infinite ease-in-out; }
+        .star::after { content: ''; position: absolute; inset: -3px; border-radius: 50%; background: radial-gradient(circle, rgba(255,255,255,0.8) 0%, transparent 70%); opacity: 0.6; }
+        @keyframes twinkle { 0%, 100% { opacity: 0.2; transform: scale(0.8); } 50% { opacity: 1; transform: scale(1.2); } }
+
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 9999px; }
+        ::-webkit-scrollbar-thumb:hover { background: #10b981; }
+
+        .glow-arabic { text-shadow: 0 0 10px rgba(16,185,129,0.4), 0 0 25px rgba(16,185,129,0.2); }
+        .glow-arabic-teal { text-shadow: 0 0 10px rgba(20,184,166,0.4), 0 0 25px rgba(20,184,166,0.2); }
+        .glow-arabic-amber { text-shadow: 0 0 10px rgba(245,158,11,0.4), 0 0 25px rgba(245,158,11,0.2); }
+
+        .swal2-popup { font-family: 'Poppins', sans-serif !important; }
+
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+        .fade-in-up { animation: fadeInUp 0.5s ease-out both; }
+
+        .scrollbar-thin::-webkit-scrollbar { height: 4px; }
+        .scrollbar-thin::-webkit-scrollbar-thumb { background: #475569; border-radius: 9999px; }
+        .scrollbar-thin::-webkit-scrollbar-thumb:hover { background: #f59e0b; }
+
+        [x-cloak] { display: none !important; }
+
+        /* === THEME TOGGLE === */
+        .theme-toggle {
+            position: relative; width: 46px; height: 26px;
+            background: linear-gradient(135deg, #1e293b, #334155);
+            border-radius: 9999px; cursor: pointer;
+            transition: background 0.4s ease, box-shadow 0.4s ease;
+            border: 1px solid rgba(148, 163, 184, 0.3);
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.3); flex-shrink: 0;
+        }
+        .theme-toggle::after {
+            content: '🌙'; position: absolute; top: 1px; left: 1px;
+            width: 22px; height: 22px;
+            background: linear-gradient(135deg, #fbbf24, #f59e0b);
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            font-size: 12px;
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), background 0.4s ease;
+            box-shadow: 0 2px 6px rgba(251, 191, 36, 0.5);
+        }
+
+        /* ============================================================
+           ANIMASI GERAKAN SHOLAT - MULTI POSE SVG (Crossfade)
+           ============================================================ */
+        .gerakan-animation-container {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.08), rgba(20, 184, 166, 0.05));
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            border-radius: 1.5rem;
+            padding: 1.5rem;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+            min-height: 500px;
+            justify-content: center;
+        }
+        .gerakan-animation-container::before {
+            content: ''; position: absolute; inset: 0;
+            background-image:
+                linear-gradient(rgba(16, 185, 129, 0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(16, 185, 129, 0.05) 1px, transparent 1px);
+            background-size: 30px 30px;
+            pointer-events: none;
+        }
+
+        /* Stage - container utama animasi */
+        .sholat-stage {
+            width: 260px;
+            height: 340px;
+            position: relative;
+            z-index: 1;
+            border-radius: 1rem;
+            background: linear-gradient(180deg, rgba(15, 23, 42, 0.4) 0%, rgba(15, 23, 42, 0.6) 100%);
+            border: 1px solid rgba(16, 185, 129, 0.15);
+            overflow: hidden;
+        }
+
+        /* Setiap pose SVG - absolute overlap */
+        .sholat-stage .pose-svg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            transition: opacity 0.6s ease-in-out;
+            pointer-events: none;
+        }
+        .sholat-stage .pose-svg.pose-active {
+            opacity: 1;
+            z-index: 2;
+        }
+        .sholat-stage .pose-svg.pose-inactive {
+            opacity: 0;
+            z-index: 1;
+        }
+
+        /* Highlight ring untuk bagian tubuh tertentu */
+        .body-highlight {
+            position: absolute;
+            border-radius: 50%;
+            border: 3px solid #fbbf24;
+            box-shadow: 0 0 20px rgba(251, 191, 36, 0.8), inset 0 0 15px rgba(251, 191, 36, 0.4);
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.5s ease, transform 0.5s ease;
+            z-index: 5;
+        }
+        .body-highlight.active {
+            opacity: 1;
+            animation: highlightPulse 1.5s ease-in-out infinite;
+        }
+        @keyframes highlightPulse {
+            0%, 100% { transform: scale(1); opacity: 0.8; }
+            50% { transform: scale(1.15); opacity: 1; }
+        }
+
+        /* Tooltip body part */
+        .body-label {
+            position: absolute;
+            background: linear-gradient(135deg, #fbbf24, #f59e0b);
+            color: #0f172a;
+            font-size: 10px;
+            font-weight: 800;
+            padding: 4px 10px;
+            border-radius: 9999px;
+            box-shadow: 0 4px 12px rgba(251, 191, 36, 0.6);
+            white-space: nowrap;
+            pointer-events: none;
+            opacity: 0;
+            transform: translateY(6px);
+            transition: opacity 0.4s ease, transform 0.4s ease;
+            z-index: 10;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        .body-label.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .body-label::after {
+            content: '';
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            border: 5px solid transparent;
+            border-top-color: #fbbf24;
+        }
+
+        /* Panduan arah gerakan (arrow) */
+        .motion-arrow {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+            z-index: 8;
+        }
+        .motion-arrow.active {
+            opacity: 1;
+            animation: arrowFloat 1.8s ease-in-out infinite;
+        }
+        .motion-arrow svg {
+            width: 100%;
+            height: 100%;
+            filter: drop-shadow(0 0 8px rgba(251, 191, 36, 0.9));
+        }
+        @keyframes arrowFloat {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
+        }
+
+        /* Info panel atas */
+        .stage-info {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            right: 10px;
+            display: flex;
+            justify-content: space-between;
+            z-index: 12;
+            pointer-events: none;
+        }
+        .stage-badge {
+            background: rgba(15, 23, 42, 0.9);
+            border: 1px solid rgba(16, 185, 129, 0.4);
+            color: #34d399;
+            font-size: 10px;
+            font-weight: 700;
+            padding: 4px 10px;
+            border-radius: 9999px;
+            backdrop-filter: blur(8px);
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .stage-badge.amber {
+            border-color: rgba(251, 191, 36, 0.5);
+            color: #fbbf24;
+        }
+
+        /* Toggle mode */
+        .mode-toggle-group {
+            display: flex;
+            gap: 4px;
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            padding: 4px;
+            border-radius: 12px;
+            z-index: 12;
+        }
+        .mode-toggle-btn {
+            padding: 4px 10px;
+            font-size: 10px;
+            font-weight: 700;
+            border-radius: 8px;
+            color: #94a3b8;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        .mode-toggle-btn:hover { color: #cbd5e1; }
+        .mode-toggle-btn.active {
+            color: #34d399;
+            background: rgba(16, 185, 129, 0.2);
+            box-shadow: 0 0 12px rgba(16, 185, 129, 0.3);
+        }
+
+        .gerakan-label {
+            font-size: 0.75rem; font-weight: 700;
+            color: #34d399;
+            background: rgba(16, 185, 129, 0.15);
+            padding: 0.4rem 1rem;
+            border-radius: 9999px;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            z-index: 1;
+            text-align: center;
+            max-width: 90%;
+            line-height: 1.3;
+        }
+
+        .gerakan-progress-dots {
+            display: flex; gap: 4px; z-index: 1;
+            flex-wrap: wrap; justify-content: center;
+            max-width: 220px;
+        }
+        .gerakan-dot {
+            width: 6px; height: 6px; border-radius: 50%;
+            background: rgba(148, 163, 184, 0.3);
+            transition: all 0.4s ease;
+        }
+        .gerakan-dot.active {
+            background: #34d399;
+            box-shadow: 0 0 8px rgba(52, 211, 153, 0.8);
+            transform: scale(1.3);
+            width: 18px; border-radius: 3px;
+        }
+
+        .btn-play-animation {
+            display: inline-flex; align-items: center; gap: 0.5rem;
+            padding: 0.6rem 1.2rem;
+            background: linear-gradient(135deg, #10b981, #14b8a6);
+            color: white; border-radius: 0.75rem;
+            font-size: 0.75rem; font-weight: 600;
+            box-shadow: 0 0 15px rgba(16, 185, 129, 0.5);
+            transition: all 0.3s ease;
+            border: none; cursor: pointer; z-index: 1;
+        }
+        .btn-play-animation:hover { transform: translateY(-2px); box-shadow: 0 0 25px rgba(16, 185, 129, 0.7); }
+        .btn-play-animation:active { transform: scale(0.95); }
+        .btn-play-animation.playing {
+            background: linear-gradient(135deg, #ef4444, #f59e0b);
+            box-shadow: 0 0 15px rgba(239, 68, 68, 0.5);
+        }
+
+        /* ============================================================
+           LIGHT MODE
+           ============================================================ */
+        html.light-mode body { background: #f0f4f8; color: #0a0f1e; }
+        html.light-mode .sky-bg {
+            background:
+                radial-gradient(ellipse at 20% 10%, rgba(16, 185, 129, 0.18) 0%, transparent 55%),
+                radial-gradient(ellipse at 80% 80%, rgba(20, 184, 166, 0.14) 0%, transparent 55%),
+                linear-gradient(180deg, #dbeafe 0%, #e0f2fe 40%, #f0fdf4 100%);
+        }
+        html.light-mode .moon {
+            background: radial-gradient(circle at 35% 35%, #fffbeb 0%, #fef08a 30%, #fbbf24 65%, #f97316 100%);
+            box-shadow: 0 0 50px 18px rgba(253, 224, 71, 0.85), 0 0 100px 45px rgba(251, 191, 36, 0.55), 0 0 180px 80px rgba(251, 191, 36, 0.3), inset -10px -10px 30px rgba(180, 83, 9, 0.25);
+        }
+        html.light-mode .moon::before, html.light-mode .moon::after { opacity: 0.15; }
+        html.light-mode .stars-layer { opacity: 0; pointer-events: none; }
+        html.light-mode header {
+            background-color: rgba(255, 255, 255, 0.96) !important;
+            border-bottom-color: rgba(16, 185, 129, 0.5) !important;
+            box-shadow: 0 4px 24px rgba(15, 23, 42, 0.08);
+        }
+        html.light-mode .bg-slate-900\/90, html.light-mode .bg-slate-900\/70,
+        html.light-mode .bg-slate-900\/60, html.light-mode .bg-slate-900\/40,
+        html.light-mode .bg-slate-900 { background-color: rgba(255, 255, 255, 0.92) !important; }
+        html.light-mode .bg-slate-950\/80, html.light-mode .bg-slate-950\/60,
+        html.light-mode .bg-slate-950\/40, html.light-mode .bg-slate-950 { background-color: rgba(248, 250, 252, 0.9) !important; }
+        html.light-mode .bg-slate-800\/80, html.light-mode .bg-slate-800\/50,
+        html.light-mode .bg-slate-800 { background-color: rgba(226, 232, 240, 0.95) !important; }
+        html.light-mode .bg-emerald-950\/50, html.light-mode .bg-emerald-950\/40 { background-color: rgba(209, 250, 229, 0.85) !important; }
+        html.light-mode .bg-emerald-900\/40, html.light-mode .bg-teal-950\/40 { background-color: rgba(204, 251, 241, 0.6) !important; }
+        html.light-mode .text-slate-100 { color: #020617 !important; }
+        html.light-mode .text-slate-200 { color: #0f172a !important; }
+        html.light-mode .text-slate-300 { color: #1e293b !important; }
+        html.light-mode .text-slate-400 { color: #334155 !important; }
+        html.light-mode .text-slate-500 { color: #475569 !important; }
+        html.light-mode .text-emerald-200 { color: #064e3b !important; }
+        html.light-mode .text-emerald-300 { color: #047857 !important; }
+        html.light-mode .text-emerald-400 { color: #059669 !important; }
+        html.light-mode .text-teal-200 { color: #134e4a !important; }
+        html.light-mode .text-teal-300 { color: #0f766e !important; }
+        html.light-mode .text-teal-400 { color: #0d9488 !important; }
+        html.light-mode .text-amber-100 { color: #78350f !important; }
+        html.light-mode .text-amber-200 { color: #92400e !important; }
+        html.light-mode .text-amber-300 { color: #b45309 !important; }
+        html.light-mode .text-amber-400 { color: #d97706 !important; }
+        html.light-mode .border-slate-800, html.light-mode .border-slate-700 { border-color: rgba(100, 116, 139, 0.35) !important; }
+        html.light-mode .border-emerald-500\/40, html.light-mode .border-emerald-500\/30,
+        html.light-mode .border-emerald-800\/40 { border-color: rgba(5, 150, 105, 0.45) !important; }
+        html.light-mode .border-amber-500\/40, html.light-mode .border-amber-500\/30 { border-color: rgba(217, 119, 6, 0.5) !important; }
+        html.light-mode .glow-arabic, html.light-mode .glow-arabic-teal,
+        html.light-mode .glow-arabic-amber { text-shadow: none !important; }
+        html.light-mode .nav-bar {
+            background-color: rgba(255, 255, 255, 0.98) !important;
+            border-color: rgba(16, 185, 129, 0.5) !important;
+            box-shadow: 0 8px 32px rgba(15, 23, 42, 0.15);
+        }
+        html.light-mode .nav-btn { color: #475569; }
+        html.light-mode .nav-btn:hover { color: #059669; }
+        html.light-mode .nav-btn.active { color: #047857; }
+        html.light-mode button.bg-emerald-600, html.light-mode .bg-emerald-600 { background-color: #059669 !important; color: white !important; }
+        html.light-mode button.bg-emerald-600:hover, html.light-mode .bg-emerald-600:hover { background-color: #047857 !important; }
+        html.light-mode button.bg-teal-600, html.light-mode .bg-teal-600 { background-color: #0d9488 !important; color: white !important; }
+        html.light-mode button.bg-amber-600, html.light-mode .bg-amber-600 { background-color: #d97706 !important; color: white !important; }
+        html.light-mode button.bg-slate-800, html.light-mode .bg-slate-800 { background-color: #e2e8f0 !important; }
+        html.light-mode button.bg-slate-800:hover { background-color: #cbd5e1 !important; }
+        html.light-mode button.bg-slate-800.text-emerald-300 {
+            color: #047857 !important;
+            background-color: #d1fae5 !important;
+            border-color: rgba(5, 150, 105, 0.4) !important;
+        }
+        html.light-mode .font-arabic { color: #064e3b; font-weight: 700; }
+        html.light-mode .text-emerald-200.font-arabic { color: #065f46 !important; }
+        html.light-mode .text-teal-200.font-arabic { color: #134e4a !important; }
+        html.light-mode .text-amber-100.font-arabic { color: #78350f !important; }
+        html.light-mode .gerakan-animation-container {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(20, 184, 166, 0.1));
+            border-color: rgba(5, 150, 105, 0.45);
+        }
+        html.light-mode .sholat-stage {
+            background: linear-gradient(180deg, rgba(224, 242, 254, 0.6) 0%, rgba(240, 253, 244, 0.8) 100%);
+            border-color: rgba(5, 150, 105, 0.3);
+        }
+        html.light-mode .gerakan-label {
+            color: #065f46;
+            background: rgba(16, 185, 129, 0.25);
+            border-color: rgba(5, 150, 105, 0.5);
+        }
+        html.light-mode .gerakan-dot { background: rgba(100, 116, 139, 0.35); }
+        html.light-mode .gerakan-dot.active { background: #059669; box-shadow: 0 0 10px rgba(5, 150, 105, 0.9); }
+        html.light-mode .italic { color: #1e293b !important; }
+        html.light-mode .bg-emerald-500\/20 { background-color: rgba(5, 150, 105, 0.18) !important; }
+        html.light-mode .bg-teal-500\/20 { background-color: rgba(13, 148, 136, 0.18) !important; }
+        html.light-mode .bg-amber-500\/20 { background-color: rgba(217, 119, 6, 0.18) !important; }
+        html.light-mode .bg-sky-600\/20 { background-color: rgba(2, 132, 199, 0.18) !important; }
+        html.light-mode .theme-toggle {
+            background: linear-gradient(135deg, #fef3c7, #fde68a);
+            border-color: rgba(217, 119, 6, 0.5);
+            box-shadow: inset 0 2px 4px rgba(146, 64, 14, 0.15);
+        }
+        html.light-mode .theme-toggle::after {
+            content: '☀️';
+            transform: translateX(20px);
+            background: linear-gradient(135deg, #fff, #fef9c3);
+            box-shadow: 0 2px 8px rgba(217, 119, 6, 0.5);
+        }
+        html.light-mode .nav-btn .tooltip { background: rgba(15, 23, 42, 0.95); color: #a7f3d0; border-color: rgba(16, 185, 129, 0.5); }
+        html.light-mode .nav-btn .tooltip::after { border-top-color: rgba(15, 23, 42, 0.95); }
+
+        /* Figure stroke color di light mode */
+        html.light-mode .pose-svg path[stroke],
+        html.light-mode .pose-svg rect[stroke],
+        html.light-mode .pose-svg circle[stroke],
+        html.light-mode .pose-svg line[stroke] {
+            stroke-opacity: 0.9;
+        }
+    </style>
+</head>
+<body class="text-slate-100 min-h-screen flex flex-col selection:bg-emerald-500 selection:text-white"
+      x-data="sholatApp()" 
+      @click.once="unlockAudio()"
+      @touchstart.once="unlockAudio()"
+      x-cloak>
+
+    <div class="sky-bg">
+        <div class="moon"></div>
+        <div class="stars-layer" id="starsLayer"></div>
+    </div>
+
+    <header class="sticky top-0 z-50 bg-slate-950/80 backdrop-blur-xl border-b border-emerald-800/40 px-4 lg:px-12 py-3.5 flex justify-between items-center shadow-lg shadow-emerald-950/40">
+        <div class="flex items-center gap-3">
+            <div class="p-3 bg-emerald-500/15 text-emerald-300 rounded-2xl border border-emerald-400/60 shadow-[0_0_25px_rgba(16,185,129,0.7),inset_0_0_15px_rgba(16,185,129,0.4)] backdrop-blur-md relative overflow-hidden animate-[pulse_3s_cubic-bezier(0.4,0,0.6,1)_infinite]">
+                <i class="fa-solid fa-mosque text-lg drop-shadow-[0_0_10px_rgba(16,185,129,0.9)]"></i>
+            </div>
+            <div>
+                <button onclick="fazzPage()" class="inline-flex items-center gap-2 px-4 py-1.5 rounded-lg bg-red-800/20 border border-red-800/30 text-green-300 text-sm font-medium mb-1 transition-all duration-300 hover:bg-red-800 hover:border-red-600 hover:text-white" title="Back to FazzQuranic Page">
+                    <span class="font-bold text-base bg-gradient-to-r from-emerald-400 to-teal-300 bg-clip-text text-transparent">FazzQuranic - Sholat<span class="text-white">Edu</span></span>
+                </button>
+                <p class="text-[10px] text-slate-400">Panduan Tata Cara Sholat & Doa</p>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-2 sm:gap-3">
+            <!--<div @click="toggleTheme()" class="theme-toggle" :title="isDarkMode ? 'Ubah ke Mode Terang' : 'Ubah ke Mode Gelap'"></div>-->
+            <div class="hidden sm:flex items-center gap-2 bg-slate-900/90 border border-amber-500/40 px-3.5 py-1.5 rounded-xl shadow-[0_0_20px_rgba(251,191,36,0.35)]">
+                <i class="fa-solid fa-star text-amber-400"></i>
+                <span class="text-xs font-semibold text-amber-200" x-text="stars + ' Bintang'"></span>
+            </div>
+            <div class="flex items-center gap-2 bg-emerald-950/50 border border-emerald-500/40 px-3 py-1.5 rounded-xl">
+                <i class="fa-solid fa-award text-emerald-400"></i>
+                <span class="text-xs font-semibold text-emerald-300" x-text="'XP: ' + userXP"></span>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-1 max-w-5xl w-full mx-auto p-4 lg:p-6 pb-72 space-y-6">
+
+        <!-- TAB 1: HOME -->
+        <div x-show="activeTab === 'home'" x-transition.opacity.duration.300 class="space-y-6">
+            <div class="relative overflow-hidden bg-gradient-to-r from-emerald-900/40 via-teal-950/40 to-slate-900 border border-emerald-500/30 rounded-3xl p-6 lg:p-8">
+                <div class="relative z-10 space-y-3">
+                    <span class="px-3 py-1 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-full text-[10px] font-bold tracking-wider uppercase">Belajar Fardhu & Dzikir</span>
+                    <h2 class="text-2xl lg:text-3xl font-bold tracking-tight">Sahabat Fazz, Ayo Kita Belajar Sholat & Berdoa! 🕌</h2>
+                    <p class="text-xs lg:text-sm text-slate-300 max-w-xl">Pahami setiap gerakan sholat lengkap dengan bacaan tahiyyat awal, akhir, hingga dzikir dan doa setelah sholat.</p>
+                    <div class="pt-2 flex flex-wrap gap-3">
+                        <button @click="activeTab = 'gerakan'" class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold rounded-xl shadow-[0_0_15px_rgba(16,185,129,0.5)] transition transform active:scale-95 flex items-center gap-2">
+                            <span>Mulai Belajar Gerakan</span>
+                            <i class="fa-solid fa-arrow-right text-[10px]"></i>
+                        </button>
+                        <button @click="activeTab = 'doa'" class="px-5 py-2.5 bg-slate-800 hover:bg-slate-700 text-emerald-300 border border-emerald-500/30 text-xs font-semibold rounded-xl transition flex items-center gap-2">
+                            <span>Doa & Dzikir Harian</span>
+                            <i class="fa-solid fa-hands-praying text-[10px]"></i>
+                        </button>
+                        <button @click="activeTab = 'jenazah'" class="px-5 py-2.5 bg-slate-800 hover:bg-slate-700 text-emerald-300 border border-emerald-500/30 text-xs font-semibold rounded-xl transition flex items-center gap-2">
+                            <i class="fa-solid fa-book-quran text-[10px]"></i>
+                            <span>Sholat Jenazah</span>
+                        </button>
+                        <button @click="activeTab = 'haji'" class="px-5 py-2.5 bg-amber-600 hover:bg-amber-500 text-white border border-amber-400/40 text-xs font-semibold rounded-xl transition flex items-center gap-2">
+                            <i class="fa-solid fa-kaaba text-[10px]"></i>
+                            <span>Panduan Manasik Haji</span>
+                        </button>
+                    </div>
+                </div>
+                <div class="absolute -right-6 -bottom-10 text-emerald-500/10 font-arabic text-9xl select-none pointer-events-none">ص</div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div @click="activeTab = 'gerakan'" class="border border-slate-800 bg-slate-900/70 p-5 rounded-2xl cursor-pointer hover:border-emerald-500/50 hover:shadow-[0_0_25px_rgba(16,185,129,0.2)] transition-all">
+                    <div class="w-10 h-10 bg-emerald-500/20 text-emerald-400 rounded-xl flex items-center justify-center font-bold mb-3">
+                        <i class="fa-solid fa-person-praying"></i>
+                    </div>
+                    <h4 class="font-semibold text-sm mb-1">Panduan Gerakan Sholat</h4>
+                    <p class="text-xs text-slate-400">Dari Niat, Iftitah, Tahiyyat Awal & Akhir lengkap dengan animasi visual.</p>
+                </div>
+                <div @click="activeTab = 'doa'" class="border border-slate-800 bg-slate-900/70 p-5 rounded-2xl cursor-pointer hover:border-teal-500/50 hover:shadow-[0_0_25px_rgba(20,184,166,0.2)] transition-all">
+                    <div class="w-10 h-10 bg-teal-500/20 text-teal-400 rounded-xl flex items-center justify-center font-bold mb-3">
+                        <i class="fa-solid fa-hands-praying"></i>
+                    </div>
+                    <h4 class="font-semibold text-sm mb-1">Doa & Dzikir Setelah Sholat</h4>
+                    <p class="text-xs text-slate-400">Wirid pendek, istighfar, ayat kursi, dan doa keselamatan dunia akhirat.</p>
+                </div>
+                <div @click="activeTab = 'jenazah'" class="border border-slate-800 bg-slate-900/70 p-5 rounded-2xl cursor-pointer hover:border-emerald-500/50 hover:shadow-[0_0_25px_rgba(16,185,129,0.2)] transition-all">
+                    <div class="w-10 h-10 bg-emerald-500/20 text-emerald-400 rounded-xl flex items-center justify-center font-bold mb-3">
+                        <i class="fa-solid fa-book-quran"></i>
+                    </div>
+                    <h4 class="font-semibold text-sm mb-1">Sholat Jenazah</h4>
+                    <p class="text-xs text-slate-400">Empat takbir lengkap dengan bacaan niat & doa untuk laki-laki maupun perempuan.</p>
+                </div>
+                <div @click="activeTab = 'haji'" class="border border-slate-800 bg-slate-900/70 p-5 rounded-2xl cursor-pointer hover:border-amber-500/50 hover:shadow-[0_0_25px_rgba(245,158,11,0.2)] transition-all">
+                    <div class="w-10 h-10 bg-amber-500/20 text-amber-400 rounded-xl flex items-center justify-center font-bold mb-3">
+                        <i class="fa-solid fa-kaaba"></i>
+                    </div>
+                    <h4 class="font-semibold text-sm mb-1">Manasik Haji</h4>
+                    <p class="text-xs text-slate-400">Syarat, rukun, wajib haji, serta urutan manasik lengkap dengan doa 7 putaran thawaf.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================
+             TAB 2: GERAKAN SHOLAT - MULTI POSE SVG
+             ============================================================ -->
+        <div x-show="activeTab === 'gerakan'" x-transition.opacity.duration.300 class="space-y-6">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h2 class="text-xl font-bold">Modul Gerakan & Bacaan Sholat</h2>
+                    <p class="text-xs text-slate-400">Visual dengan panduan arah gerakan & highlight bagian tubuh.</p>
+                </div>
+                <button @click="activeTab = 'home'" class="text-xs text-slate-400 hover:text-white bg-slate-900 px-3 py-1.5 rounded-xl border border-slate-800 transition"><i class="fa-solid fa-arrow-left mr-1"></i> Kembali</button>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                
+                <!-- KIRI: Animasi dengan Panduan -->
+                <div class="gerakan-animation-container">
+                    
+                    <!-- Info Badge atas -->
+                    <div class="stage-info">
+                        <div class="stage-badge">
+                            <i class="fa-solid fa-person-praying"></i>
+                            <span x-text="selectedGerakan.name.split('. ')[1] || selectedGerakan.name"></span>
+                        </div>
+                        <div class="stage-badge amber">
+                            <i class="fa-solid fa-eye"></i>
+                            <span x-text="currentHighlightLabel || 'Normal'"></span>
+                        </div>
+                    </div>
+
+                    <!-- MODE TOGGLE -->
+                    <div class="mode-toggle-group mt-8">
+                        <button @click="viewMode = 'clean'"
+                                :class="viewMode === 'clean' ? 'active' : ''"
+                                class="mode-toggle-btn">
+                            <i class="fa-solid fa-circle"></i> Bersih
+                        </button>
+                        <button @click="viewMode = 'guide'"
+                                :class="viewMode === 'guide' ? 'active' : ''"
+                                class="mode-toggle-btn">
+                            <i class="fa-solid fa-compass"></i> Panduan
+                        </button>
+                        <button @click="viewMode = 'focus'"
+                                :class="viewMode === 'focus' ? 'active' : ''"
+                                class="mode-toggle-btn">
+                            <i class="fa-solid fa-magnifying-glass-plus"></i> Fokus
+                        </button>
+                    </div>
+
+                    <!-- STAGE: Multi Pose SVG -->
+                    <div class="sholat-stage">
+                        <!-- Shared SVG gradients (di luar setiap pose) -->
+                        <svg width="0" height="0" style="position:absolute;">
+                            <defs>
+                                <radialGradient id="headGrad" cx="35%" cy="35%">
+                                    <stop offset="0%" stop-color="#a7f3d0"/>
+                                    <stop offset="100%" stop-color="#10b981"/>
+                                </radialGradient>
+                                <linearGradient id="bodyGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                                    <stop offset="0%" stop-color="#34d399"/>
+                                    <stop offset="100%" stop-color="#059669"/>
+                                </linearGradient>
+                                <linearGradient id="limbGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                                    <stop offset="0%" stop-color="#10b981"/>
+                                    <stop offset="100%" stop-color="#047857"/>
+                                </linearGradient>
+                                <radialGradient id="glowGrad">
+                                    <stop offset="0%" stop-color="rgba(16, 185, 129, 0.5)"/>
+                                    <stop offset="100%" stop-color="transparent"/>
+                                </radialGradient>
+                            </defs>
+                        </svg>
+
+                        <!-- 13 Pose SVG (hanya yang aktif visible) -->
+                        <template x-for="(pose, idx) in poseList" :key="idx">
+                            <svg class="pose-svg"
+                                 :class="selectedIndex === idx ? 'pose-active' : 'pose-inactive'"
+                                 viewBox="0 0 240 320"
+                                 xmlns="http://www.w3.org/2000/svg"
+                                 x-html="pose"></svg>
+                        </template>
+
+                        <!-- Highlight & panduan (di atas semua pose) -->
+                        <div class="body-highlight" 
+                             :class="currentHighlight.active && viewMode !== 'clean' ? 'active' : ''"
+                             :style="`left: ${currentHighlight.x}px; top: ${currentHighlight.y}px; width: ${currentHighlight.w}px; height: ${currentHighlight.h}px;`"></div>
+
+                        <div class="body-label"
+                             :class="currentHighlight.active && viewMode !== 'clean' ? 'active' : ''"
+                             :style="`left: ${currentHighlight.labelX}px; top: ${currentHighlight.labelY}px; transform: translateX(-50%);`"
+                             x-text="currentHighlight.label"></div>
+
+                        <div class="motion-arrow"
+                             :class="currentHighlight.arrowActive && viewMode !== 'clean' ? 'active' : ''"
+                             :style="`left: ${currentHighlight.arrowX}px; top: ${currentHighlight.arrowY}px; transform: rotate(${currentHighlight.arrowRotate}deg);`">
+                            <svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M 8 20 L 28 20 M 22 14 L 28 20 L 22 26" stroke="#fbbf24" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </div>
+                    </div>
+
+                    <!-- Progress Dots -->
+                    <div class="gerakan-progress-dots">
+                        <template x-for="(_, i) in listGerakan" :key="i">
+                            <div class="gerakan-dot" :class="selectedIndex === i ? 'active' : ''"></div>
+                        </template>
+                    </div>
+
+                    <button @click="playAnimation()" class="btn-play-animation" :class="isPlayingAnimation ? 'playing' : ''">
+                        <i :class="isPlayingAnimation ? 'fa-solid fa-pause' : 'fa-solid fa-play'"></i>
+                        <span x-text="isPlayingAnimation ? 'Stop Animasi' : 'Putar Animasi Otomatis'"></span>
+                    </button>
+                </div>
+
+                <!-- KANAN: Bacaan -->
+                <div class="bg-slate-900/90 border border-emerald-500/40 p-6 rounded-3xl space-y-4 backdrop-blur-md fade-in-up">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-slate-800 pb-4">
+                        <div>
+                            <span class="text-[10px] bg-emerald-500/20 text-emerald-300 px-3 py-1 rounded-full font-bold uppercase" x-text="'Gerakan ke-' + (selectedIndex + 1)"></span>
+							<div class="flex items-center gap-2">
+								<!-- Tombol Prev -->
+								<button 
+									@click="selectedIndex > 0 ? selectedIndex-- : selectedIndex = listGerakan.length - 1" 
+									title="Gerakan Sebelumnya"
+									class="p-2 text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded-xl transition-colors border border-slate-700 flex items-center justify-center">
+									<i class="fa-solid fa-chevron-left text-xs"></i>
+								</button>
+								<!-- Tombol Next -->
+								<button 
+									@click="selectedIndex < listGerakan.length - 1 ? selectedIndex++ : selectedIndex = 0" 
+									title="Gerakan Selanjutnya"
+									class="p-2 text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded-xl transition-colors border border-slate-700 flex items-center justify-center">
+									<i class="fa-solid fa-chevron-right text-xs"></i>
+								</button>
+							</div>
+                            <h3 class="text-xl font-bold text-emerald-400 mt-2" x-text="selectedGerakan.name"></h3>
+                        </div>
+                        <button @click="playAudio(selectedGerakan.arabic)" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-semibold flex items-center gap-2">
+                            <i class="fa-solid fa-volume-high"></i> Dengar
+                        </button>
+                    </div>
+
+                    <div class="text-center py-4 bg-slate-950/60 border border-slate-800/80 rounded-2xl p-4 space-y-3">
+                        <span class="text-xs text-emerald-400/80 uppercase tracking-widest font-semibold">Bacaan</span>
+                        <p class="font-arabic text-2xl text-emerald-200 glow-arabic py-3" x-text="selectedGerakan.arabic"></p>
+                        <p class="text-xs italic text-slate-300" x-text="selectedGerakan.latin"></p>
+                    </div>
+
+                    <div class="bg-slate-950/40 p-4 rounded-xl border border-slate-800">
+                        <span class="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">Artinya:</span>
+                        <p class="text-xs sm:text-sm text-slate-200 mt-1" x-text="selectedGerakan.translation"></p>
+                    </div>
+
+                    <!-- TIPS bagian penting -->
+                    <div class="bg-amber-500/10 border border-amber-500/30 p-3 rounded-xl">
+                        <span class="text-[10px] text-amber-400 font-bold uppercase tracking-wider flex items-center gap-1 mb-1">
+                            <i class="fa-solid fa-lightbulb"></i> Tips
+                        </span>
+                        <p class="text-[11px] text-amber-100/90" x-text="selectedGerakan.tips || 'Perhatikan gerakan dengan saksama.'"></p>
+                    </div>
+					<div x-show="isMobileDevice()" class="bg-amber-500/10 border border-slate-500/30 p-3 rounded-xl flex items-center justify-center">
+                         <img :src="selectedGerakan.image || 'https://lh3.googleusercontent.com/d/1ajqhqxjEc4NM9rR0HORpJzVbvw3_of2v'" 
+							 alt="Gambar Gerakan Shalat"
+							 class="h-14 w-auto object-contain drop-shadow-2xl relative z-10"
+							 style="height:300px;width:auto;">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Grid Pilihan Gerakan -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-slate-900/40 p-4 rounded-3xl border border-emerald-500/30 backdrop-blur-md max-h-[40vh] overflow-y-auto pr-1">
+                <template x-for="(item, index) in listGerakan" :key="index">
+                    <div @click="goToStep(index)"
+                         :class="selectedIndex === index ? 'border-emerald-500 bg-emerald-500/20 shadow-[0_0_20px_rgba(16,185,129,0.4)] scale-105' : 'border-slate-800 bg-slate-900/80 hover:border-emerald-500/50'"
+                         class="border rounded-2xl p-3 text-center cursor-pointer transition-all duration-300 flex flex-col items-center justify-center gap-1">
+                        <span class="w-7 h-7 rounded-full bg-emerald-500/20 text-emerald-400 font-bold text-xs flex items-center justify-center" x-text="index + 1"></span>
+                        <span class="text-[11px] font-semibold text-slate-200 truncate w-full" x-text="item.name.split('. ')[1]"></span>
+                    </div>
+                </template>
+            </div>
+			<div class="grid grid-cols-1 lg:grid-cols-1 gap-6">
+			
+			<img src="pdf/shalat.png" 
+                 alt="shalat" 
+                 class="h-14 w-auto object-contain drop-shadow-2xl relative z-10"
+                 style="width:100%;height:auto;">
+			</div>
+        </div>
+
+        <!-- TAB 3-5 (Doa, Jenazah, Haji) - tetap sama seperti sebelumnya -->
+
+        <!-- TAB 3: DOA & DZIKIR -->
+        <div x-show="activeTab === 'doa'" x-transition.opacity.duration.300 class="space-y-6">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h2 class="text-xl font-bold">Doa & Dzikir Setelah Sholat</h2>
+                    <p class="text-xs text-slate-400">Kumpulan wirid, istighfar, dan doa ringkas setelah salam.</p>
+                </div>
+                <button @click="activeTab = 'home'" class="text-xs text-slate-400 hover:text-white bg-slate-900 px-3 py-1.5 rounded-xl border border-slate-800 transition"><i class="fa-solid fa-arrow-left mr-1"></i> Kembali</button>
+            </div>
+
+            <div class="bg-slate-900/90 border border-teal-500/40 p-6 rounded-3xl space-y-4 backdrop-blur-md fade-in-up">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-slate-800 pb-4">
+                    <div>
+                        <span class="text-[10px] bg-teal-500/20 text-teal-300 px-3 py-1 rounded-full font-bold uppercase" x-text="'Dzikir & Doa #' + (selectedDoaIndex + 1)"></span>
+                        <h3 class="text-xl font-bold text-teal-400 mt-2" x-text="selectedDoa.name"></h3>
+                    </div>
+                    <button @click="playAudio(selectedDoa.arabic)" class="px-4 py-2 bg-teal-600 hover:bg-teal-500 text-white rounded-xl text-xs font-semibold flex items-center gap-2">
+                        <i class="fa-solid fa-volume-high"></i> Dengar Audio
+                    </button>
+                </div>
+
+                <div class="text-center py-4 bg-slate-950/60 border border-slate-800/80 rounded-2xl p-4 space-y-3">
+                    <span class="text-xs text-teal-400/80 uppercase tracking-widest font-semibold">Bacaan</span>
+                    <p class="font-arabic text-2xl text-teal-200 glow-arabic-teal" x-text="selectedDoa.arabic"></p>
+                    <p class="text-xs italic text-slate-300" x-text="selectedDoa.latin"></p>
+                </div>
+
+                <div class="bg-slate-950/40 p-4 rounded-xl border border-slate-800">
+                    <span class="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">Artinya:</span>
+                    <p class="text-xs sm:text-sm text-slate-200 mt-1" x-text="selectedDoa.translation"></p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-slate-900/40 p-4 rounded-3xl border border-teal-500/30 backdrop-blur-md max-h-[40vh] overflow-y-auto pr-1">
+                <template x-for="(doa, index) in listDoa" :key="index">
+                    <div @click="selectedDoaIndex = index"
+                         :class="selectedDoaIndex === index ? 'border-teal-500 bg-teal-500/20 shadow-[0_0_20px_rgba(20,184,166,0.4)] scale-[1.02]' : 'border-slate-800 bg-slate-900/80 hover:border-teal-500/50'"
+                         class="border rounded-2xl p-4 text-left cursor-pointer transition-all duration-300 flex items-center gap-3">
+                        <span class="w-8 h-8 rounded-full bg-teal-500/20 text-teal-400 font-bold text-xs flex items-center justify-center shrink-0" x-text="index + 1"></span>
+                        <div>
+                            <span class="text-xs font-semibold text-slate-200 block" x-text="doa.name"></span>
+                            <span class="text-[10px] text-slate-400 truncate block max-w-[200px]" x-text="doa.latin"></span>
+                        </div>
+                    </div>
+                </template>
+            </div>
+        </div>
+
+		<!-- TAB 4: SHOLAT JENAZAH -->
+        <div x-show="activeTab === 'jenazah'" x-transition.opacity.duration.300 class="space-y-6">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h2 class="text-xl font-bold">Panduan Sholat Jenazah</h2>
+                    <p class="text-xs text-slate-400">Empat takbir lengkap dengan bacaan & doa.</p>
+                </div>
+                <button @click="activeTab = 'home'" class="text-xs text-slate-400 hover:text-white bg-slate-900 px-3 py-1.5 rounded-xl border border-slate-800 transition"><i class="fa-solid fa-arrow-left mr-1"></i> Kembali</button>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3 bg-slate-900/40 p-4 rounded-3xl border border-emerald-500/30 shadow-[0_0_25px_rgba(16,185,129,0.15),inset_0_0_15px_rgba(16,185,129,0.1)] backdrop-blur-md">
+                <template x-for="(item, index) in listJenazah" :key="index">
+                    <button @click="selectedJenazahIndex = index; subTabJenazah = 'dasar'"
+                        :class="selectedJenazahIndex === index ? 'bg-emerald-600 text-white shadow-[0_0_20px_rgba(16,185,129,0.5)] scale-[1.02]' : 'bg-slate-800/80 text-slate-300 hover:bg-slate-700 border border-slate-700'"
+                        class="p-4 rounded-2xl text-xs font-medium text-left transition-all duration-300">
+                        <span class="block font-bold text-sm" x-text="item.step"></span>
+                        <span class="text-[10px] opacity-80" x-text="item.title"></span>
+                    </button>
+                </template>
+            </div>
+            <template x-if="selectedJenazahIndex === 0">
+                <div class="space-y-4">
+                    <div class="grid grid-cols-2 gap-2 bg-slate-900/60 p-1.5 rounded-2xl border border-emerald-500/30 backdrop-blur-md">
+                        <button @click="subTabJenazah = 'dasar'"
+                            :class="subTabJenazah === 'dasar' ? 'bg-emerald-600 text-white shadow-[0_0_15px_rgba(16,185,129,0.5)]' : 'text-slate-400 hover:text-white hover:bg-slate-800'"
+                            class="py-2.5 rounded-xl text-xs font-semibold transition-all duration-300 flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-book"></i> Ketentuan Dasar
+                        </button>
+                        <button @click="subTabJenazah = 'rukun'"
+                            :class="subTabJenazah === 'rukun' ? 'bg-emerald-600 text-white shadow-[0_0_15px_rgba(16,185,129,0.5)]' : 'text-slate-400 hover:text-white hover:bg-slate-800'"
+                            class="py-2.5 rounded-xl text-xs font-semibold transition-all duration-300 flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-star"></i> Rukun Sholat Jenazah
+                        </button>
+                    </div>
+
+                    <div x-show="subTabJenazah === 'dasar'" x-transition.opacity.duration.300
+                         class="bg-slate-900/90 p-5 rounded-2xl border border-amber-500/30 space-y-3 shadow-[0_0_20px_rgba(245,158,11,0.1)]">
+                        <h3 class="text-xs font-bold text-amber-400 uppercase tracking-wider flex items-center gap-2">
+                            <i class="fa-solid fa-book"></i> Tentang Sholat Jenazah
+                        </h3>
+                        <div class="space-y-2">
+                            <template x-for="(item, idx) in sholatJenazahOverview.ketentuanDasar" :key="idx">
+                                <div class="bg-slate-800/50 p-3 rounded-xl border border-slate-700/50">
+                                    <h4 class="text-xs font-bold text-white" x-text="item.title"></h4>
+                                    <p class="text-[11px] text-slate-400 mt-0.5" x-text="item.desc"></p>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+
+                    <div x-show="subTabJenazah === 'rukun'" x-transition.opacity.duration.300
+                         class="bg-slate-900/90 p-5 rounded-2xl border border-amber-500/30 space-y-3 shadow-[0_0_20px_rgba(245,158,11,0.1)]">
+                        <h3 class="text-xs font-bold text-amber-400 uppercase tracking-wider flex items-center gap-2">
+                            <i class="fa-solid fa-star"></i> Rukun Sholat Jenazah
+                        </h3>
+                        <div class="space-y-2">
+                            <template x-for="(item, idx) in sholatJenazahOverview.ketentuanRukun" :key="idx">
+                                <div class="bg-slate-800/50 p-3 rounded-xl border border-slate-700/50">
+                                    <h4 class="text-xs font-bold text-white" x-text="item.title"></h4>
+                                    <p class="text-[11px] text-slate-400 mt-0.5" x-text="item.desc"></p>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+                </div>
+            </template>
+            <template x-if="selectedJenazahIndex > 0">
+                <div class="bg-slate-900/90 border border-emerald-500/40 p-6 rounded-3xl space-y-4 shadow-[0_0_30px_rgba(16,185,129,0.15)] backdrop-blur-md fade-in-up">
+                    <div class="border-b border-slate-800 pb-4">
+                        <span class="text-[10px] bg-emerald-500/20 text-emerald-300 px-3 py-1 rounded-full font-bold uppercase" x-text="selectedJenazah.step"></span>
+                        <h3 class="text-xl font-bold text-emerald-400 mt-2" x-text="selectedJenazah.title"></h3>
+                    </div>
+
+                    <div class="text-center py-4 bg-slate-950/60 border border-slate-800/80 rounded-2xl p-4 space-y-3">
+                        <span class="text-xs text-emerald-400/80 uppercase tracking-widest font-semibold">Bacaan</span>
+                        <p class="font-arabic text-2xl sm:text-2xl text-emerald-200 glow-arabic" x-text="selectedJenazah.arabic"></p>
+                        <p class="text-xs italic text-slate-300" x-text="selectedJenazah.latin"></p>
+                    </div>
+
+                    <div class="bg-slate-950/40 p-4 rounded-xl border border-slate-800">
+                        <span class="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">Artinya:</span>
+                        <p class="text-xs sm:text-sm text-slate-200 mt-1" x-text="selectedJenazah.translation"></p>
+                    </div>
+
+                    <button @click="playAudio(selectedJenazah.arabic)" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-semibold shadow-[0_0_15px_rgba(16,185,129,0.5)] transition flex items-center gap-2">
+                        <i class="fa-solid fa-volume-high"></i> Putar Audio Bacaan
+                    </button>
+                </div>
+            </template>
+        </div>
+
+        <!-- TAB 5: MANASIK HAJI -->
+        <div x-show="activeTab === 'haji'" x-transition.opacity.duration.300 class="space-y-6" style="display: none;">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h2 class="text-xl font-bold">Panduan Manasik Haji</h2>
+                    <p class="text-xs text-slate-400">Syarat, rukun, wajib haji, dan urutan manasik lengkap.</p>
+                </div>
+                <button @click="activeTab = 'home'" class="text-xs text-slate-400 hover:text-white bg-slate-900 px-3 py-1.5 rounded-xl border border-slate-800 transition"><i class="fa-solid fa-arrow-left mr-1"></i> Kembali</button>
+            </div>
+
+            <!-- Sub-Menu: Teori vs Praktek -->
+            <div class="grid grid-cols-2 gap-2 bg-slate-900/60 p-1.5 rounded-2xl border border-amber-500/30 backdrop-blur-md">
+                <button @click="subTabHaji = 'teori'"
+                    :class="subTabHaji === 'teori' ? 'bg-amber-600 text-white shadow-[0_0_15px_rgba(245,158,11,0.5)]' : 'text-slate-400 hover:text-white hover:bg-slate-800'"
+                    class="py-2.5 rounded-xl text-xs font-semibold transition-all duration-300 flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-book"></i> Syarat & Rukun Haji
+                </button>
+                <button @click="subTabHaji = 'praktek'"
+                    :class="subTabHaji === 'praktek' ? 'bg-amber-600 text-white shadow-[0_0_15px_rgba(245,158,11,0.5)]' : 'text-slate-400 hover:text-white hover:bg-slate-800'"
+                    class="py-2.5 rounded-xl text-xs font-semibold transition-all duration-300 flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-kaaba"></i> Urutan & Doa Manasik
+                </button>
+            </div>
+
+            <!-- SUB-MENU 1: TEORI -->
+            <div x-show="subTabHaji === 'teori'" class="space-y-4">
+                <!-- Syarat Wajib Haji -->
+                <div class="bg-slate-900/90 p-5 rounded-2xl border border-amber-500/30 space-y-3 shadow-[0_0_20px_rgba(245,158,11,0.1)]">
+                    <h3 class="text-xs font-bold text-amber-400 uppercase tracking-wider flex items-center gap-2">
+                        <i class="fa-solid fa-list-check"></i> Syarat Wajib Haji
+                    </h3>
+                    <div class="grid grid-cols-1 gap-2">
+                        <template x-for="item in hajiOverview.syarat">
+                            <div class="bg-slate-800/50 p-3 rounded-xl border border-slate-700/50 flex justify-between items-center">
+                                <span class="text-xs font-semibold text-white" x-text="item.title"></span>
+                                <span class="text-[11px] text-slate-400 text-right" x-text="item.desc"></span>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+
+                <!-- Rukun Haji -->
+                <div class="bg-slate-900/90 p-5 rounded-2xl border border-amber-500/30 space-y-3 shadow-[0_0_20px_rgba(245,158,11,0.1)]">
+                    <h3 class="text-xs font-bold text-amber-400 uppercase tracking-wider flex items-center gap-2">
+                        <i class="fa-solid fa-star"></i> Rukun Haji
+                    </h3>
+                    <p class="text-[10px] text-slate-500 italic">Tidak boleh ditinggalkan & tidak bisa diganti dengan dam/denda</p>
+                    <div class="space-y-2">
+                        <template x-for="item in hajiOverview.rukun">
+                            <div class="bg-slate-800/50 p-3 rounded-xl border border-slate-700/50">
+                                <h4 class="text-xs font-bold text-white" x-text="item.title"></h4>
+                                <p class="text-[11px] text-slate-400 mt-0.5" x-text="item.desc"></p>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+
+                <!-- Wajib Haji -->
+                <div class="bg-slate-900/90 p-5 rounded-2xl border border-amber-500/30 space-y-3 shadow-[0_0_20px_rgba(245,158,11,0.1)]">
+                    <h3 class="text-xs font-bold text-amber-400 uppercase tracking-wider flex items-center gap-2">
+                        <i class="fa-solid fa-circle-exclamation"></i> Wajib Haji
+                    </h3>
+                    <p class="text-[10px] text-slate-500 italic">Boleh ditinggalkan tetapi harus membayar dam/denda</p>
+                    <div class="space-y-2">
+                        <template x-for="item in hajiOverview.wajib">
+                            <div class="bg-slate-800/50 p-3 rounded-xl border border-slate-700/50">
+                                <h4 class="text-xs font-bold text-white" x-text="item.title"></h4>
+                                <p class="text-[11px] text-slate-400 mt-0.5" x-text="item.desc"></p>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SUB-MENU 2: PRAKTEK & DOA MANASIK -->
+            <div x-show="subTabHaji === 'praktek'" class="space-y-4">
+                <!-- Pilihan Urutan Manasik Haji -->
+                <div class="grid grid-cols-2 gap-3 bg-slate-900/40 p-4 rounded-3xl border border-amber-500/30 shadow-[0_0_25px_rgba(245,158,11,0.15),inset_0_0_15px_rgba(245,158,11,0.1)] backdrop-blur-md">
+                    <template x-for="(item, index) in listHaji" :key="index">
+                        <button @click="selectHajiStep(index)"
+                            :class="selectedHajiIndex === index ? 'bg-amber-600 text-white shadow-[0_0_20px_rgba(245,158,11,0.5)] scale-[1.02]' : 'bg-slate-800/80 text-slate-300 hover:bg-slate-700 border border-slate-700'"
+                            class="p-4 rounded-2xl text-xs font-medium text-left transition-all duration-300">
+                            <span class="block font-bold text-sm" x-text="item.step"></span>
+                            <span class="text-[10px] opacity-80" x-text="item.title"></span>
+                        </button>
+                    </template>
+                </div>
+
+                <!-- Detail Bacaan -->
+                <div class="bg-slate-900/90 border border-amber-500/40 p-6 rounded-3xl space-y-4 shadow-[0_0_30px_rgba(245,158,11,0.15)] backdrop-blur-md fade-in-up">
+                    <div class="border-b border-slate-800 pb-4">
+                        <span class="text-[10px] bg-amber-500/20 text-amber-300 px-3 py-1 rounded-full font-bold uppercase" x-text="selectedHaji.step"></span>
+                        <h3 class="text-xl font-bold text-amber-400 mt-2" x-text="selectedHaji.title"></h3>
+                    </div>
+
+                    <!-- KONDISI KHUSUS: Thawaf dengan 7 Putaran -->
+                    <template x-if="selectedHaji.isThawafList">
+                        <div class="space-y-4">
+                            <!-- Pilihan Putaran 1 - 7 -->
+                            <div class="flex gap-2 overflow-x-auto pb-2 scrollbar-thin">
+                                <template x-for="(putaranItem, pIndex) in selectedHaji.putaran" :key="pIndex">
+                                    <button @click="selectPutaran(pIndex)"
+                                        :class="activePutaranIndex === pIndex ? 'bg-amber-600 text-white shadow-[0_0_15px_rgba(245,158,11,0.6)] scale-105' : 'bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700 border border-slate-700'"
+                                        class="px-4 py-2 rounded-xl text-[11px] font-semibold whitespace-nowrap transition-all duration-300"
+                                        x-text="putaranItem.no">
+                                    </button>
+                                </template>
+                            </div>
+
+                            <!-- Indikator Putaran Aktif -->
+                            <div class="flex items-center justify-between text-[10px] text-slate-500 px-1">
+                                <span>Putaran <span class="text-amber-400 font-bold" x-text="activePutaranIndex + 1"></span> dari <span x-text="selectedHaji.putaran.length"></span></span>
+                                <span class="text-amber-400/70 italic">Geser untuk melihat putaran lain →</span>
+                            </div>
+
+                            <!-- Tampilan Bacaan Putaran yang Dipilih -->
+                            <div class="bg-slate-950/60 p-4 rounded-2xl border border-amber-500/20 space-y-3">
+                                <h4 class="text-xs font-bold text-amber-300" x-text="selectedHaji.putaran[activePutaranIndex].title"></h4>
+
+                                <div class="text-center py-3 space-y-3">
+                                    <span class="text-[10px] text-amber-400/70 uppercase tracking-widest font-semibold">Bacaan</span>
+                                    <p class="font-arabic text-2xl text-amber-100 glow-arabic-amber" x-text="selectedHaji.putaran[activePutaranIndex].arabic"></p>
+                                    <p class="text-xs italic text-slate-300" x-text="selectedHaji.putaran[activePutaranIndex].latin"></p>
+                                </div>
+
+                                <div class="bg-slate-950/40 p-3 rounded-xl border border-slate-800">
+                                    <span class="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">Artinya:</span>
+                                    <p class="text-xs text-slate-200 mt-1" x-text="selectedHaji.putaran[activePutaranIndex].translation"></p>
+                                </div>
+
+                                <button @click="playAudio(selectedHaji.putaran[activePutaranIndex].arabic)" class="px-4 py-2 bg-amber-600 hover:bg-amber-500 text-white rounded-xl text-xs font-semibold shadow-[0_0_15px_rgba(245,158,11,0.5)] transition flex items-center gap-2">
+                                    <i class="fa-solid fa-volume-high"></i> Putar Audio <span x-text="selectedHaji.putaran[activePutaranIndex].no"></span>
+                                </button>
+                            </div>
+                        </div>
+                    </template>
+
+                    <!-- KONDISI NORMAL: Untuk Langkah Lain (Ihram, Wukuf, dll) -->
+                    <template x-if="!selectedHaji.isThawafList">
+                        <div class="space-y-4">
+                            <div class="text-center py-4 bg-slate-950/60 border border-slate-800/80 rounded-2xl p-4 space-y-3">
+                                <span class="text-[10px] text-amber-400/70 uppercase tracking-widest font-semibold">Bacaan / Doa</span>
+                                <p class="font-arabic text-2xl text-amber-100 glow-arabic-amber" x-text="selectedHaji.arabic"></p>
+                                <p class="text-xs italic text-slate-300" x-text="selectedHaji.latin"></p>
+                            </div>
+
+                            <div class="bg-slate-950/40 p-4 rounded-xl border border-slate-800">
+                                <span class="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">Artinya:</span>
+                                <p class="text-xs sm:text-sm text-slate-200 mt-1" x-text="selectedHaji.translation"></p>
+                            </div>
+
+                            <button @click="playAudio(selectedHaji.arabic)" class="px-4 py-2 bg-amber-600 hover:bg-amber-500 text-white rounded-xl text-xs font-semibold shadow-[0_0_15px_rgba(245,158,11,0.5)] transition flex items-center gap-2">
+                                <i class="fa-solid fa-volume-high"></i> Putar Audio Doa/Niat
+                            </button>
+                        </div>
+                    </template>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- NAVBAR -->
+    <style>
+      @keyframes nav-slide-up { from { transform: translateY(120%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+      @keyframes nav-pop { 0% { transform: scale(1) rotate(0); } 35% { transform: scale(0.8) rotate(-12deg); } 70% { transform: scale(1.18) rotate(8deg); } 100% { transform: scale(1) rotate(0); } }
+      @keyframes nav-dot-pulse { 0%,100% { transform: translateX(-50%) scale(1); opacity: 1; } 50% { transform: translateX(-50%) scale(1.7); opacity: .35; } }
+      @keyframes nav-glow { 0%,100% { box-shadow: 0 0 0 0 var(--glow-a), 0 0 12px var(--glow-b); } 50% { box-shadow: 0 0 0 6px var(--glow-a), 0 0 18px var(--glow-c); } }
+      @keyframes popup-item-in { from { opacity: 0; transform: translateX(12px); } to { opacity: 1; transform: translateX(0); } }
+
+      .nav-bar { animation: nav-slide-up .6s cubic-bezier(.2,.9,.3,1.2) both; }
+      .nav-btn { position: relative; transition: all .3s cubic-bezier(.2,.9,.3,1.2); }
+      .nav-btn i { transition: transform .35s cubic-bezier(.2,.9,.3,1.4), color .3s; }
+      .nav-btn:hover { transform: translateY(-2px); }
+      .nav-btn:hover i { transform: translateY(-3px) scale(1.15); }
+      .nav-btn:active i { animation: nav-pop .45s ease; }
+      .nav-btn.active { animation: nav-glow 2.4s ease-in-out infinite; background: linear-gradient(180deg, var(--active-bg-1), var(--active-bg-2)); }
+      .nav-btn.active i { filter: drop-shadow(0 0 6px var(--glow-c)); }
+      .nav-btn.active::after {
+        content:''; position:absolute; bottom:-4px; left:50%;
+        width:6px; height:6px; border-radius:9999px;
+        background: var(--dot-color);
+        transform: translateX(-50%);
+        animation: nav-dot-pulse 1.6s ease-in-out infinite;
+        box-shadow: 0 0 8px var(--glow-c);
+      }
+      .nav-btn[data-color="emerald"] { --active-bg-1: rgba(16,185,129,.22); --active-bg-2: rgba(16,185,129,.06); --glow-a: rgba(16,185,129,.35); --glow-b: rgba(16,185,129,.25); --glow-c: rgba(52,211,153,.85); --dot-color: #34d399; }
+      .nav-btn[data-color="teal"] { --active-bg-1: rgba(20,184,166,.22); --active-bg-2: rgba(20,184,166,.06); --glow-a: rgba(20,184,166,.35); --glow-b: rgba(20,184,166,.25); --glow-c: rgba(45,212,191,.85); --dot-color: #2dd4bf; }
+      .nav-btn[data-color="amber"] { --active-bg-1: rgba(245,158,11,.22); --active-bg-2: rgba(245,158,11,.06); --glow-a: rgba(245,158,11,.35); --glow-b: rgba(245,158,11,.25); --glow-c: rgba(251,191,36,.85); --dot-color: #fbbf24; }
+
+      .nav-btn .tooltip {
+        position: absolute; bottom: calc(100% + 10px); left: 50%;
+        transform: translateX(-50%) translateY(6px);
+        background: rgba(15,23,42,.96); color:#a7f3d0;
+        font-size: 10px; font-weight: 600; white-space: nowrap;
+        padding: 4px 8px; border-radius: 8px;
+        border: 1px solid rgba(16,185,129,.35);
+        opacity: 0; pointer-events: none;
+        transition: all .25s ease;
+        backdrop-filter: blur(8px);
+      }
+      .nav-btn .tooltip::after {
+        content:''; position:absolute; top:100%; left:50%;
+        transform: translateX(-50%);
+        border:4px solid transparent; border-top-color: rgba(15,23,42,.96);
+      }
+      .nav-btn:hover .tooltip { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+      .shuffle-icon { transition: transform .45s cubic-bezier(.2,.9,.3,1.4); }
+      .shuffle-icon.spin { transform: rotate(180deg); color:#34d399; }
+
+      .popup-item { opacity: 0; animation: popup-item-in .35s ease forwards; }
+      .popup-item:nth-child(1) { animation-delay: .04s; }
+      .popup-item:nth-child(2) { animation-delay: .08s; }
+      .popup-item:nth-child(3) { animation-delay: .12s; }
+      .popup-item:nth-child(4) { animation-delay: .16s; }
+      .popup-item:nth-child(5) { animation-delay: .20s; }
+      .popup-item:nth-child(6) { animation-delay: .24s; }
+    </style>
+
+    <nav x-data="{showSwitchPopup: false }"
+         class="nav-bar fixed bottom-6 left-4 right-4 max-w-md mx-auto z-50
+                bg-slate-900/95 backdrop-blur-xl border border-emerald-800/50
+                rounded-3xl px-3 py-3 flex justify-around items-center
+                shadow-2xl shadow-emerald-950/80">
+
+      <button @click="activeTab='home'; navigator.vibrate?.(10)" data-color="emerald" :class="activeTab==='home' && 'active'" class="nav-btn flex items-center justify-center w-11 h-11 rounded-2xl text-slate-400 hover:text-slate-200">
+        <i class="fa-solid fa-house text-base"></i><span class="tooltip">Beranda</span>
+      </button>
+      <button @click="activeTab='gerakan'; navigator.vibrate?.(10)" data-color="emerald" :class="activeTab==='gerakan' && 'active'" class="nav-btn flex items-center justify-center w-11 h-11 rounded-2xl text-slate-400 hover:text-slate-200">
+        <i class="fa-solid fa-person-praying text-base"></i><span class="tooltip">Gerakan Sholat</span>
+      </button>
+      <button @click="activeTab='doa'; navigator.vibrate?.(10)" data-color="teal" :class="activeTab==='doa' && 'active'" class="nav-btn flex items-center justify-center w-11 h-11 rounded-2xl text-slate-400 hover:text-slate-200">
+        <i class="fa-solid fa-hands-praying text-base"></i><span class="tooltip">Kumpulan Doa</span>
+      </button>
+      <button @click="activeTab='jenazah'; navigator.vibrate?.(10)" data-color="emerald" :class="activeTab==='jenazah' && 'active'" class="nav-btn flex items-center justify-center w-11 h-11 rounded-2xl text-slate-400 hover:text-slate-200">
+        <i class="fa-solid fa-book-quran text-base"></i><span class="tooltip">Sholat Jenazah</span>
+      </button>
+      <button @click="activeTab='haji'; navigator.vibrate?.(10)" data-color="amber" :class="activeTab==='haji' && 'active'" class="nav-btn flex items-center justify-center w-11 h-11 rounded-2xl text-slate-400 hover:text-slate-200">
+        <i class="fa-solid fa-kaaba text-base"></i><span class="tooltip">Manasik Haji</span>
+      </button>
+
+      <div class="relative shrink-0 z-20" @click.outside="showSwitchPopup = false">
+        <button @click.stop="showSwitchPopup = !showSwitchPopup; navigator.vibrate?.(10)"
+                class="nav-btn flex items-center justify-center w-10 h-10 shrink-0 rounded-2xl
+                       bg-slate-800/80 border border-slate-700/50 shadow-inner
+                       text-slate-400 hover:text-emerald-300 transition-all duration-300">
+          <i class="fa-solid fa-shuffle text-sm shuffle-icon" :class="showSwitchPopup ? 'spin' : ''"></i>
+          <span class="tooltip">Pindah Halaman</span>
+        </button>
+
+        <div x-show="showSwitchPopup"
+             x-transition:enter="transition ease-out duration-200"
+             x-transition:enter-start="opacity-0"
+             x-transition:enter-end="opacity-100"
+             x-transition:leave="transition ease-in duration-150"
+             x-transition:leave-start="opacity-100"
+             x-transition:leave-end="opacity-0"
+             @click="showSwitchPopup=false"
+             class="fixed inset-0 bg-black/50 backdrop-blur-sm z-40"
+             x-cloak></div>
+
+        <div x-show="showSwitchPopup"
+             x-transition:enter="transition ease-out duration-250"
+             x-transition:enter-start="opacity-0 translate-y-3 scale-95"
+             x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+             x-transition:leave="transition ease-in duration-150"
+             x-transition:leave-start="opacity-100 translate-y-0 scale-100"
+             x-transition:leave-end="opacity-0 translate-y-3 scale-95"
+             class="fixed right-4 bottom-20 w-60 bg-slate-900/95 backdrop-blur-2xl
+                    border border-slate-700/80 rounded-2xl shadow-2xl py-2 z-50"
+             x-cloak>
+          <div class="px-4 py-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-800 mb-1 flex items-center gap-2">
+            <i class="fa-solid fa-arrow-right-arrow-left text-emerald-400"></i> Pindah Halaman
+          </div>
+          <div class="max-h-72 overflow-y-auto overscroll-contain">
+            <!--<button @click="toggleTheme(); showSwitchPopup = false"
+                    class="popup-item w-full text-left px-4 py-2.5 text-xs text-slate-300 hover:bg-emerald-600 hover:text-white hover:pl-5 transition-all duration-200 flex items-center gap-2 group">
+              <i class="fa-solid fa-circle-half-stroke text-emerald-400 w-4 group-hover:scale-125 transition-transform"></i>
+              <span x-text="isDarkMode ? 'Ubah ke Mode Terang ☀️' : 'Ubah ke Mode Gelap 🌙'"></span>
+            </button>-->
+            <button @click="window.location.href='index.html'"
+                    class="popup-item w-full text-left px-4 py-2.5 text-xs text-slate-300 hover:bg-emerald-600 hover:text-white hover:pl-5 transition-all duration-200 flex items-center gap-2 group">
+              <i class="fa-solid fa-person-praying text-emerald-400 w-4 group-hover:scale-125 transition-transform"></i> Fazz Smart Quranic
+            </button>
+            <button @click="window.location.href='iklim.html'"
+                    class="popup-item w-full text-left px-4 py-2.5 text-xs text-slate-300 hover:bg-emerald-600 hover:text-white hover:pl-5 transition-all duration-200 flex items-center gap-2 group">
+              <i class="fa-solid fa-cloud-sun text-emerald-400 w-4 group-hover:scale-125 transition-transform"></i> Fazz AgroClimate AI
+            </button>
+            <button @click="switchPage('altimeter.html', 'Fazz GeoAltimeter')"
+                    class="popup-item w-full text-left px-4 py-2.5 text-xs text-slate-300 hover:bg-emerald-600 hover:text-white hover:pl-5 transition-all duration-200 flex items-center gap-2 group">
+              <i class="fa-solid fa-mountain text-emerald-400 w-4 group-hover:scale-125 transition-transform"></i> Fazz GeoAltimeter
+            </button>
+            <button @click="window.location.href='kifayah.html'"
+                    class="popup-item w-full text-left px-4 py-2.5 text-xs text-slate-300 hover:bg-emerald-600 hover:text-white hover:pl-5 transition-all duration-200 flex items-center gap-2 group">
+              <i class="fa-solid fa-calculator text-emerald-400 w-4 group-hover:scale-125 transition-transform"></i> Kalkulator Waris
+            </button>
+            <button @click="window.location.href='read.html'"
+                    class="popup-item w-full text-left px-4 py-2.5 text-xs text-slate-300 hover:bg-emerald-600 hover:text-white hover:pl-5 transition-all duration-200 flex items-center gap-2 group">
+              <i class="fa-solid fa-book-open text-emerald-400 w-4 group-hover:scale-125 transition-transform"></i> Belajar Huruf Hijaiyah
+            </button>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Skrip -->
+    <script>
+        function getSwalDark() {
+            const isLight = document.documentElement.classList.contains('light-mode');
+            return Swal.mixin({
+                background: isLight ? '#ffffff' : '#0f172a',
+                color: isLight ? '#0f172a' : '#e2e8f0',
+                confirmButtonColor: '#10b981',
+                cancelButtonColor: '#334155',
+                customClass: {
+                    popup: 'rounded-3xl border border-emerald-500/30',
+                    title: 'text-emerald-500',
+                    confirmButton: 'rounded-xl font-semibold px-6 py-2.5',
+                    cancelButton: 'rounded-xl font-semibold px-6 py-2.5'
+                }
+            });
+        }
+
+        function fazzPage() {
+            Swal.fire({
+                title: 'Memuat Halaman',
+                html: `Kembali ke halaman <b>FazzQuranic</b>...`,
+                timer: 1200, timerProgressBar: true, showConfirmButton: false,
+                background: '#0f172a', color: '#fff',
+                didOpen: () => { Swal.showLoading(); }
+            }).then(() => { window.location.href = `index.html`; });
+        }
+
+        function switchPage(pageKey, halaman) {
+            Swal.fire({
+                title: 'Memuat Halaman',
+                html: `Menuju halaman <b>` + halaman + `</b>...`,
+                timer: 1200, timerProgressBar: true, showConfirmButton: false,
+                background: '#0f172a', color: '#fff',
+                didOpen: () => { Swal.showLoading(); }
+            }).then(() => { window.location.href = pageKey; });
+        }
+
+        // ============================================================
+        // SVGPose - Gambar figure per pose
+        // Menggunakan helper head() + ground() + coordinate manual
+        // ============================================================
+        const SVGPose = {
+            head(cx, cy, rotation = 0) {
+                return `
+                    <g transform="rotate(${rotation} ${cx} ${cy})">
+                        <rect x="${cx - 6}" y="${cy + 22}" width="12" height="15" rx="4" fill="url(#limbGrad)" stroke="#047857" stroke-width="1"/>
+                        <circle cx="${cx}" cy="${cy}" r="22" fill="url(#headGrad)" stroke="#047857" stroke-width="2"/>
+                        <path d="M ${cx - 20} ${cy - 10} Q ${cx} ${cy - 26} ${cx + 20} ${cy - 10} L ${cx + 18} ${cy - 16} Q ${cx} ${cy - 30} ${cx - 18} ${cy - 16} Z" fill="#047857"/>
+                        <circle cx="${cx - 8}" cy="${cy - 2}" r="2" fill="#064e3b"/>
+                        <circle cx="${cx + 8}" cy="${cy - 2}" r="2" fill="#064e3b"/>
+                        <path d="M ${cx - 12} ${cy - 7} Q ${cx - 8} ${cy - 9} ${cx - 4} ${cy - 7}" stroke="#064e3b" stroke-width="1" fill="none" stroke-linecap="round"/>
+                        <path d="M ${cx + 4} ${cy - 7} Q ${cx + 8} ${cy - 9} ${cx + 12} ${cy - 7}" stroke="#064e3b" stroke-width="1" fill="none" stroke-linecap="round"/>
+                        <path d="M ${cx - 4} ${cy + 8} Q ${cx} ${cy + 10} ${cx + 4} ${cy + 8}" stroke="#064e3b" stroke-width="1" fill="none" stroke-linecap="round"/>
+                    </g>
+                `;
+            },
+            ground() {
+                return `<ellipse cx="120" cy="300" rx="80" ry="12" fill="url(#glowGrad)" opacity="0.6"/>`;
+            },
+            berdiri() {
+                return `
+                    ${this.ground()}
+                    <rect x="106" y="190" width="14" height="55" rx="7" fill="url(#limbGrad)" stroke="#047857" stroke-width="1.2"/>
+                    <rect x="106" y="245" width="14" height="50" rx="7" fill="url(#limbGrad)" stroke="#047857" stroke-width="1.2"/>
+                    <path d="M 106 288 Q 113 298 122 294 L 122 288 Z" fill="#047857"/>
+                    <rect x="120" y="190" width="14" height="55" rx="7" fill="url(#limbGrad)" stroke="#047857" stroke-width="1.2"/>
+                    <rect x="120" y="245" width="14" height="50" rx="7" fill="url(#limbGrad)" stroke="#047857" stroke-width="1.2"/>
+                    <path d="M 120 288 Q 127 298 136 294 L 136 288 Z" fill="#047857"/>
+                    <rect x="106" y="85" width="28" height="105" rx="8" fill="url(#bodyGrad)" stroke="#047857" stroke-width="1.5"/>
+                    <line x1="120" y1="90" x2="120" y2="185" stroke="#047857" stroke-width="0.5" opacity="0.5"/>
+                    <rect x="96" y="95" width="13" height="48" rx="6.5" fill="url(#limbGrad)" stroke="#047857" stroke-width="1.2"/>
+                    <rect x="96" y="143" width="13" height="45" rx="6.5" fill="url(#limbGrad)" stroke="#047857" stroke-width="1.2"/>
+                    <circle cx="102" cy="190" r="7" fill="#a7f3d0" stroke="#047857" stroke-width="1.5"/>
+                    <rect x="131" y="95" width="13" height="48" rx="6.5" fill="url(#limbGrad)" stroke="#047857" stroke-width="1.2"/>
+                    <rect x="131" y="143" width="13" height="45" rx="6.5" fill="url(#limbGrad)" stroke="#047857" stroke-width="1.2"/>
+                    <circle cx="138" cy="190" r="7" fill="#a7f3d0" stroke="#047857" stroke-width="1.5"/>
+                    ${this.head(120, 58)}
+                `;
+            },
+            takbir() {
+                return `
+                    ${this.ground()}
+                    <rect x="106" y="190" width="14" height="55" rx="7" fill="url(#limbGrad)" stroke="#047857" stroke-width="1.2"/>
+                    <rect x="106" y="245" width="14" height="50" rx="7" fill="url(#limbGrad)" stroke="#047857" stroke-width="1.2"/>
+                    <path d="M 106 288 Q 113 298 122 294 L 122 288 Z" fill="#047857"/>
+                    <rect x="120" y="190" width="14" height="55" rx="7" fill="url(#limbGrad)" stroke="#047857" stroke-width="1.2"/>
+                    <rect x="120" y="245" width="14" height="50" rx="7" fill="url(#limbGrad)" stroke="#047857" stroke-width="1.2"/>
+                    <path d="M 120 288 Q 127 298 136 294 L 136 288 Z" fill="#047857"/>
+                    <rect x="106" y="85" width="28" height="105" rx="8" fill="url(#bodyGrad)" stroke="#047857" stroke-width="1.5"/>
+                    <line x1="120" y1="90" x2="120" y2="185" stroke="#047857" stroke-width="0.5" opacity="0.5"/>
+                    <g>
+                        <line x1="108" y1="92" x2="78" y2="85" stroke="url(#limbGrad)" stroke-width="13" stroke-linecap="round"/>
+                        <line x1="78" y1="85" x2="72" y2="48" stroke="url(#limbGrad)" stroke-width="13" stroke-linecap="round"/>
+                        <circle cx="72" cy="42" r="7" fill="#a7f3d0" stroke="#047857" stroke-width="1.5"/>
+                    </g>
+                    <g>
+                        <line x1="132" y1="92" x2="162" y2="85" stroke="url(#limbGrad)" stroke-width="13" stroke-linecap="round"/>
+                        <line x1="162" y1="85" x2="168" y2="48" stroke="url(#limbGrad)" stroke-width="13" stroke-linecap="round"/>
+                        <circle cx="168" cy="42" r="7" fill="#a7f3d0" stroke="#047857" stroke-width="1.5"/>
+                    </g>
+                    ${this.head(120, 58)}
+                `;
+            },
+            sedekap() {
+                return `
+                    ${this.ground()}
+                    <rect x="106" y="190" width="14" height="55" rx="7" fill="url(#limbGrad)" stroke="#047857" stroke-width="1.2"/>
+                    <rect x="106" y="245" width="14" height="50" rx="7" fill="url(#limbGrad)" stroke="#047857" stroke-width="1.2"/>
+                    <path d="M 106 288 Q 113 298 122 294 L 122 288 Z" fill="#047857"/>
+                    <rect x="120" y="190" width="14" height="55" rx="7" fill="url(#limbGrad)" stroke="#047857" stroke-width="1.2"/>
+                    <rect x="120" y="245" width="14" height="50" rx="7" fill="url(#limbGrad)" stroke="#047857" stroke-width="1.2"/>
+                    <path d="M 120 288 Q 127 298 136 294 L 136 288 Z" fill="#047857"/>
+                    <rect x="106" y="85" width="28" height="105" rx="8" fill="url(#bodyGrad)" stroke="#047857" stroke-width="1.5"/>
+                    <line x1="120" y1="90" x2="120" y2="185" stroke="#047857" stroke-width="0.5" opacity="0.5"/>
+                    <g>
+                        <line x1="108" y1="95" x2="115" y2="135" stroke="url(#limbGrad)" stroke-width="13" stroke-linecap="round"/>
+                        <line x1="115" y1="135" x2="100" y2="140" stroke="url(#limbGrad)" stroke-width="13" stroke-linecap="round"/>
+                        <circle cx="95" cy="142" r="7" fill="#a7f3d0" stroke="#047857" stroke-width="1.5"/>
+                    </g>
+                    <g>
+                        <line x1="132" y1="95" x2="125" y2="130" stroke="url(#limbGrad)" stroke-width="13" stroke-linecap="round"/>
+                        <line x1="125" y1="130" x2="140" y2="138" stroke="url(#limbGrad)" stroke-width="13" stroke-linecap="round"/>
+                        <circle cx="145" cy="140" r="7" fill="#a7f3d0" stroke="#047857" stroke-width="1.5"/>
+                        <line x1="112" y1="132" x2="135" y2="135" stroke="#047857" stroke-width="1" stroke-linecap="round"/>
+                    </g>
+                    ${this.head(120, 58)}
+                `;
+            },
+            ruku() {
+                return `
+                    ${this.ground()}
+                    <rect x="106" y="190" width="14" height="55" rx="7" fill="url(#limbGrad)" stroke="#047857" stroke-width="1.2"/>
+                    <rect x="106" y="245" width="14" height="50" rx="7" fill="url(#limbGrad)" stroke="#047857" stroke-width="1.2"/>
+                    <path d="M 106 288 Q 113 298 122 294 L 122 288 Z" fill="#047857"/>
+                    <rect x="120" y="190" width="14" height="55" rx="7" fill="url(#limbGrad)" stroke="#047857" stroke-width="1.2"/>
+                    <rect x="120" y="245" width="14" height="50" rx="7" fill="url(#limbGrad)" stroke="#047857" stroke-width="1.2"/>
+                    <path d="M 120 288 Q 127 298 136 294 L 136 288 Z" fill="#047857"/>
+                    <g transform="translate(120, 190) rotate(-85) translate(-120, -190)">
+                        <rect x="106" y="85" width="28" height="105" rx="8" fill="url(#bodyGrad)" stroke="#047857" stroke-width="1.5"/>
+                        ${this.head(120, 72, 92)}
+                    </g>
+                    <g>
+                        <line x1="120" y1="190" x2="115" y2="245" stroke="url(#limbGrad)" stroke-width="13" stroke-linecap="round"/>
+                        <circle cx="115" cy="250" r="7" fill="#a7f3d0" stroke="#047857" stroke-width="1.5"/>
+                    </g>
+                `;
+            },
+            itidal() { return this.berdiri(); },
+            sujud() {
+                return `
+                    ${this.ground()}
+                    <path d="M 100 250 Q 100 285 120 290 L 155 290 Q 170 290 170 270 L 170 250 Z" fill="url(#limbGrad)" stroke="#047857" stroke-width="1.5"/>
+                    <g transform="translate(120, 260) rotate(90) translate(-120, -260)">
+                        <rect x="106" y="155" width="28" height="95" rx="8" fill="url(#bodyGrad)" stroke="#047857" stroke-width="1.5"/>
+                        ${this.head(120, 142, -95)}
+                    </g>
+                    <g>
+                        <line x1="125" y1="240" x2="90" y2="280" stroke="url(#limbGrad)" stroke-width="13" stroke-linecap="round"/>
+                        <circle cx="85" cy="285" r="7" fill="#a7f3d0" stroke="#047857" stroke-width="1.5"/>
+                    </g>
+                `;
+            },
+            dudukAntara() {
+                return `
+                    ${this.ground()}
+                    <path d="M 90 230 Q 90 270 110 280 L 150 280 Q 170 280 170 260 L 170 230 Z" fill="url(#limbGrad)" stroke="#047857" stroke-width="1.5"/>
+                    <rect x="98" y="140" width="44" height="90" rx="8" fill="url(#bodyGrad)" stroke="#047857" stroke-width="1.5"/>
+                    <line x1="120" y1="145" x2="120" y2="225" stroke="#047857" stroke-width="0.5" opacity="0.5"/>
+                    <g>
+                        <line x1="100" y1="155" x2="105" y2="200" stroke="url(#limbGrad)" stroke-width="13" stroke-linecap="round"/>
+                        <line x1="105" y1="200" x2="110" y2="225" stroke="url(#limbGrad)" stroke-width="13" stroke-linecap="round"/>
+                        <circle cx="112" cy="228" r="7" fill="#a7f3d0" stroke="#047857" stroke-width="1.5"/>
+                    </g>
+                    <g>
+                        <line x1="140" y1="155" x2="135" y2="200" stroke="url(#limbGrad)" stroke-width="13" stroke-linecap="round"/>
+                        <line x1="135" y1="200" x2="130" y2="225" stroke="url(#limbGrad)" stroke-width="13" stroke-linecap="round"/>
+                        <circle cx="128" cy="228" r="7" fill="#a7f3d0" stroke="#047857" stroke-width="1.5"/>
+                    </g>
+                    ${this.head(120, 115)}
+                `;
+            },
+            tahiyatAwal() {
+                return `
+                    ${this.ground()}
+                    <path d="M 90 230 Q 90 270 110 280 L 150 280 Q 170 280 170 260 L 170 230 Z" fill="url(#limbGrad)" stroke="#047857" stroke-width="1.5"/>
+                    <rect x="98" y="140" width="44" height="90" rx="8" fill="url(#bodyGrad)" stroke="#047857" stroke-width="1.5"/>
+                    <g>
+                        <line x1="140" y1="155" x2="140" y2="205" stroke="url(#limbGrad)" stroke-width="13" stroke-linecap="round"/>
+                        <line x1="140" y1="205" x2="135" y2="230" stroke="url(#limbGrad)" stroke-width="13" stroke-linecap="round"/>
+                        <circle cx="132" cy="233" r="7" fill="#a7f3d0" stroke="#047857" stroke-width="1.5"/>
+                        <line x1="132" y1="233" x2="132" y2="215" stroke="#047857" stroke-width="2.5" stroke-linecap="round"/>
+                    </g>
+                    <g>
+                        <line x1="100" y1="155" x2="105" y2="205" stroke="url(#limbGrad)" stroke-width="13" stroke-linecap="round"/>
+                        <line x1="105" y1="205" x2="112" y2="228" stroke="url(#limbGrad)" stroke-width="13" stroke-linecap="round"/>
+                        <circle cx="115" cy="231" r="7" fill="#a7f3d0" stroke="#047857" stroke-width="1.5"/>
+                    </g>
+                    ${this.head(120, 115)}
+                `;
+            },
+            tahiyatAkhir() { return this.tahiyatAwal(); },
+            salam() {
+                return `
+                    ${this.ground()}
+                    <path d="M 90 230 Q 90 270 110 280 L 150 280 Q 170 280 170 260 L 170 230 Z" fill="url(#limbGrad)" stroke="#047857" stroke-width="1.5"/>
+                    <rect x="98" y="140" width="44" height="90" rx="8" fill="url(#bodyGrad)" stroke="#047857" stroke-width="1.5"/>
+                    <g>
+                        <line x1="140" y1="155" x2="140" y2="205" stroke="url(#limbGrad)" stroke-width="13" stroke-linecap="round"/>
+                        <line x1="140" y1="205" x2="135" y2="230" stroke="url(#limbGrad)" stroke-width="13" stroke-linecap="round"/>
+                        <circle cx="132" cy="233" r="7" fill="#a7f3d0" stroke="#047857" stroke-width="1.5"/>
+                    </g>
+                    <g>
+                        <line x1="100" y1="155" x2="105" y2="205" stroke="url(#limbGrad)" stroke-width="13" stroke-linecap="round"/>
+                        <line x1="105" y1="205" x2="112" y2="228" stroke="url(#limbGrad)" stroke-width="13" stroke-linecap="round"/>
+                        <circle cx="115" cy="231" r="7" fill="#a7f3d0" stroke="#047857" stroke-width="1.5"/>
+                    </g>
+                    ${this.head(120, 115, 35)}
+                `;
+            },
+            dudukDoa() {
+                return `
+                    ${this.ground()}
+                    <path d="M 90 230 Q 90 270 110 280 L 150 280 Q 170 280 170 260 L 170 230 Z" fill="url(#limbGrad)" stroke="#047857" stroke-width="1.5"/>
+                    <rect x="98" y="140" width="44" height="90" rx="8" fill="url(#bodyGrad)" stroke="#047857" stroke-width="1.5"/>
+                    <g>
+                        <line x1="100" y1="155" x2="80" y2="180" stroke="url(#limbGrad)" stroke-width="13" stroke-linecap="round"/>
+                        <line x1="80" y1="180" x2="75" y2="150" stroke="url(#limbGrad)" stroke-width="13" stroke-linecap="round"/>
+                        <circle cx="73" cy="145" r="7" fill="#a7f3d0" stroke="#047857" stroke-width="1.5"/>
+                    </g>
+                    <g>
+                        <line x1="140" y1="155" x2="160" y2="180" stroke="url(#limbGrad)" stroke-width="13" stroke-linecap="round"/>
+                        <line x1="160" y1="180" x2="165" y2="150" stroke="url(#limbGrad)" stroke-width="13" stroke-linecap="round"/>
+                        <circle cx="167" cy="145" r="7" fill="#a7f3d0" stroke="#047857" stroke-width="1.5"/>
+                    </g>
+                    ${this.head(120, 115)}
+                `;
+            }
+        };
+
+        // ============================================================
+        // HIGHLIGHT INFO (per index pose)
+        // ============================================================
+        const HIGHLIGHTS = {
+            0: { active: false },
+            1: { active: true, x: 50, y: 30, w: 140, h: 80, labelX: 120, labelY: 20, label: 'Tangan sejajar telinga', arrowActive: false, arrowX: 0, arrowY: 0, arrowRotate: 0 },
+            2: { active: true, x: 80, y: 120, w: 80, h: 50, labelX: 120, labelY: 115, label: 'Sedekap di dada', arrowActive: false, arrowX: 0, arrowY: 0, arrowRotate: 0 },
+            3: { active: true, x: 80, y: 120, w: 80, h: 50, labelX: 120, labelY: 115, label: 'Sedekap di dada', arrowActive: false, arrowX: 0, arrowY: 0, arrowRotate: 0 },
+            4: { active: true, x: 80, y: 120, w: 80, h: 50, labelX: 120, labelY: 115, label: 'Sedekap di dada', arrowActive: false, arrowX: 0, arrowY: 0, arrowRotate: 0 },
+            5: { active: true, x: 40, y: 90, w: 160, h: 40, labelX: 120, labelY: 80, label: 'Punggung rata', arrowActive: true, arrowX: 200, arrowY: 130, arrowRotate: 0 },
+            6: { active: false },
+            7: { active: true, x: 20, y: 250, w: 180, h: 50, labelX: 120, labelY: 240, label: '7 anggota sujud', arrowActive: true, arrowX: 200, arrowY: 260, arrowRotate: 180 },
+            8: { active: true, x: 80, y: 230, w: 80, h: 50, labelX: 120, labelY: 220, label: 'Duduk iftirasy', arrowActive: false, arrowX: 0, arrowY: 0, arrowRotate: 0 },
+            9: { active: true, x: 115, y: 200, w: 50, h: 50, labelX: 170, labelY: 195, label: 'Jari telunjuk', arrowActive: false, arrowX: 0, arrowY: 0, arrowRotate: 0 },
+            10: { active: true, x: 115, y: 200, w: 50, h: 50, labelX: 170, labelY: 195, label: 'Jari telunjuk', arrowActive: false, arrowX: 0, arrowY: 0, arrowRotate: 0 },
+            11: { active: true, x: 90, y: 90, w: 60, h: 60, labelX: 180, labelY: 85, label: 'Menoleh kanan', arrowActive: true, arrowX: 195, arrowY: 110, arrowRotate: 0 },
+            12: { active: true, x: 60, y: 130, w: 120, h: 60, labelX: 120, labelY: 120, label: 'Menengadah', arrowActive: true, arrowX: 40, arrowY: 100, arrowRotate: -30 }
+        };
+
+        window.sholatApp = function() {
+            return {
+                activeTab: 'home',
+                stars: 15,
+                userXP: 50,
+                selectedIndex: 0,
+                selectedDoaIndex: 0,
+                selectedJenazahIndex: 0,
+                selectedHajiIndex: 0,
+                activePutaranIndex: 0,
+                subTabHaji: 'teori',
+                subTabTeoriHaji: 'syarat',
+                subTabJenazah: 'dasar',
+                viewMode: 'guide',
+
+				isMobileDevice() {
+					return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+				},
+
+                _audioUnlocked: false,
+                _silentAudioCtx: null,
+                isDarkMode: true,
+                isPlayingAnimation: false,
+                animationTimer: null,
+
+                get selectedJenazah() { return this.listJenazah[this.selectedJenazahIndex]; },
+                get selectedGerakan() { return this.listGerakan[this.selectedIndex]; },
+                get selectedDoa() { return this.listDoa[this.selectedDoaIndex]; },
+                get selectedHaji() { return this.listHaji[this.selectedHajiIndex]; },
+
+                // Array 13 pose SVG
+                get poseList() {
+                    return [
+                        SVGPose.berdiri(),       // 0
+                        SVGPose.takbir(),        // 1
+                        SVGPose.sedekap(),       // 2
+                        SVGPose.sedekap(),       // 3
+                        SVGPose.sedekap(),       // 4
+                        SVGPose.ruku(),          // 5
+                        SVGPose.itidal(),        // 6
+                        SVGPose.sujud(),         // 7
+                        SVGPose.dudukAntara(),   // 8
+                        SVGPose.tahiyatAwal(),   // 9
+                        SVGPose.tahiyatAkhir(),  // 10
+                        SVGPose.salam(),         // 11
+                        SVGPose.dudukDoa()       // 12
+                    ];
+                },
+
+                get currentHighlight() {
+                    const h = HIGHLIGHTS[this.selectedIndex] || { active: false };
+                    if (this.viewMode === 'clean') {
+                        return { active: false, x: 0, y: 0, w: 0, h: 0, labelX: 0, labelY: 0, label: '', arrowActive: false, arrowX: 0, arrowY: 0, arrowRotate: 0 };
+                    }
+                    return h;
+                },
+
+                get currentHighlightLabel() {
+                    if (this.viewMode === 'clean') return 'Normal';
+                    const h = HIGHLIGHTS[this.selectedIndex];
+                    if (!h || !h.active) return 'Normal';
+                    return h.label;
+                },
+
+                toggleTheme() {
+                    this.isDarkMode = !this.isDarkMode;
+                    if (this.isDarkMode) {
+                        document.documentElement.classList.remove('light-mode');
+                        localStorage.setItem('fazz_theme', 'dark');
+                    } else {
+                        document.documentElement.classList.add('light-mode');
+                        localStorage.setItem('fazz_theme', 'light');
+                    }
+                },
+                initTheme() {
+                    const saved = localStorage.getItem('fazz_theme');
+                    if (saved === 'light') {
+                        this.isDarkMode = false;
+                        document.documentElement.classList.add('light-mode');
+                    }
+                },
+
+                playAnimation() {
+                    if (this.isPlayingAnimation) { this.stopAnimation(); return; }
+                    this.isPlayingAnimation = true;
+                    this.animationTimer = setInterval(() => {
+                        let next = this.selectedIndex + 1;
+                        if (next >= this.listGerakan.length) { this.stopAnimation(); return; }
+                        this.selectedIndex = next;
+                    }, 3500);
+                },
+                stopAnimation() {
+                    this.isPlayingAnimation = false;
+                    if (this.animationTimer) { clearInterval(this.animationTimer); this.animationTimer = null; }
+                },
+                goToStep(index) {
+                    this.selectedIndex = index;
+                    if (this.isPlayingAnimation) this.stopAnimation();
+                },
+
+                selectHajiStep(index) { this.selectedHajiIndex = index; this.activePutaranIndex = 0; },
+                selectPutaran(index) { this.activePutaranIndex = index; },
+                addXP(amount) {
+                    this.userXP += amount;
+                    if (this.userXP % 30 === 0) {
+                        this.stars += 1;
+                        getSwalDark().fire({ icon: 'success', title: 'Naik Level! 🌟', html: `Selamat!`, confirmButtonText: 'Lanjut' });
+                    }
+                },
+
+                unlockAudio() {
+                    if (this._audioUnlocked) return;
+                    try {
+                        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                        if (AudioCtx) {
+                            this._silentAudioCtx = new AudioCtx();
+                            if (this._silentAudioCtx.state === 'suspended') this._silentAudioCtx.resume();
+                            const buffer = this._silentAudioCtx.createBuffer(1, 1, 22050);
+                            const source = this._silentAudioCtx.createBufferSource();
+                            source.buffer = buffer;
+                            source.connect(this._silentAudioCtx.destination);
+                            source.start(0);
+                        }
+                        if ('speechSynthesis' in window) {
+                            const silentUtter = new SpeechSynthesisUtterance('');
+                            silentUtter.volume = 0;
+                            window.speechSynthesis.speak(silentUtter);
+                        }
+                        this._audioUnlocked = true;
+                    } catch (e) { console.warn('Audio unlock failed:', e); }
+                },
+                playAudio(text) {
+                    if (!text || !('speechSynthesis' in window)) return;
+                    this.unlockAudio();
+                    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+                    const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+                    try {
+                        window.speechSynthesis.cancel();
+                        const startSpeak = () => {
+                            const utterance = new SpeechSynthesisUtterance(text);
+                            utterance.lang = 'ar-SA';
+                            utterance.rate = 0.85;
+                            const voices = window.speechSynthesis.getVoices();
+                            const arabicVoice = voices.find(v => v.lang && v.lang.toLowerCase().startsWith('ar'));
+                            if (arabicVoice) utterance.voice = arabicVoice;
+                            utterance.onend = () => this.addXP(5);
+                            window.speechSynthesis.speak(utterance);
+                            if (isIOS) setTimeout(() => { if (window.speechSynthesis.paused) window.speechSynthesis.resume(); }, 250);
+                        };
+                        if (isIOS || isSafari) setTimeout(startSpeak, 60);
+                        else startSpeak();
+                    } catch (err) { console.error('Play error:', err); }
+                },
+
+                init() {
+                    this.initTheme();
+                },
+				
+				listGerakan: [
+                    {
+                        name: '1. Berdiri Tegak & Niat',
+                        arabic: 'أُصَلِّي فَرْضَ الصُّبْحِ رَكْعَتَيْنِ مُسْتَقْبِلَ الْقِبْلَةِ أَدَاءً لِلَّهِ تَعَالَى',
+                        latin: 'Usholli fardhas shubhi rak\'ataini mustaqbilal qiblati adaalan lillaahi ta\'aalaa.',
+                        translation: 'Aku berniat sholat fardhu subuh dua rakaat menghadap kiblat karena Allah Ta\'ala.',
+						tips: 'Berdiri tegak, pandangan ke tempat sujud, niat ikhlas karena Allah.',
+						image: 'https://lh3.googleusercontent.com/d/1ajqhqxjEc4NM9rR0HORpJzVbvw3_of2v'
+                    },
+                    {
+                        name: '2. Takbiratul Ihram',
+                        arabic: 'اللَّهُ أَكْبَرُ',
+                        latin: 'Allahu Akbar',
+                        translation: 'Allah Maha Besar.',
+						tips: 'Angkat tangan sejajar telinga atau bahu, telapak menghadap kiblat.',
+						image: 'https://lh3.googleusercontent.com/d/1Q_Gm4ko11mIOehBioApH-poNSkInJfd8'
+                    },
+                    {
+                        name: '3. Doa Iftitah',
+                        arabic: 'اللَّهُ أَكْبَرُ كَبِيرًا وَالْحَمْدُ لِلَّهِ كَثِيرًا وَسُبْحَانَ اللَّهِ بُكْرَةً وَأَصِيلًا. إِنِّي وَجَّهْتُ وَجْهِيَ لِلَّذِي فَطَرَ السَّمَاوَاتِ وَالْأَرْضَ حَنِيفًا مُسْلِمًا وَمَا أَنَا مِنَ الْمُشْرِكِينَ. إِنَّ صَلَاتِي وَنُسُكِي وَمَحْيَايَ وَمَمَاتِي لِلَّهِ رَبِّ الْعَالَمِينَ. لَا شَرِيكَ لَهُ وَبِذَلِكَ أُمِرْتُ وَأَنَا مِنَ الْمُسْلِمِينَ',
+                        latin: 'Allahu akbaru kabiiraa, walhamdulillaahi katsiiraa, wa subhaanallaahi bukrataw wa ashiilaa. Innii wajjahtu wajhiya lilladzii fatharas samaawaati wal ardha haniifam muslimaw wamaa ana minal musyrikiin. Inna shalaatii wa nusukii wa mahyaaya wa mamatii lillaahi rabbil \'alamiin. Laa syariika laahu wa bidzaalika umirtu wa ana minal muslimiin.',
+                        translation: 'Allah Maha Besar lagi sempurna kebesaran-Nya. Segala puji bagi Allah dengan pujian yang banyak. Maha Suci Allah pada waktu pagi dan petang. Sesungguhnya aku menghadapkan wajahku kepada Zat yang menciptakan langit dan bumi dengan keadaan lurus dan berserah diri, dan aku bukanlah dari golongan orang-orang musyrik. Sesungguhnya salatku, ibadahku, hidupku, dan matiku hanyalah untuk Allah, Tuhan semesta alam. Tiada sekutu bagi-Nya dan karena itulah aku diperintahkan untuk tidak menyekutukan-Nya dan aku adalah orang yang pertama-tama menyerahkan diri.',
+						tips: 'Letakkan tangan sedekap di dada, mata melihat tempat sujud.',
+						image: 'https://lh3.googleusercontent.com/d/1MdHv7uNWrioFE9jLVF9E93DzidMIR09r'
+                    },
+                    {
+                        name: '4. Membaca Al-Fatihah',
+                        arabic: 'بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ ۝ الْحَمْدُ لِلَّهِ رَبِّ الْعَالَمِينَ ۝ الرَّحْمَٰنِ الرَّحِيمِ ۝ مَالِكِ يَوْمِ الدِّينِ ۝ إِيَّاكَ نَعْبُدُ وَإِيَّاكَ نَسْتَعِينُ ۝ اهْدِنَا الصِّرَاطَ الْمُسْتَقِيمَ ۝ صِرَاطَ الَّذِينَ أَنْعَمْتَ عَلَيْهِمْ غَيْرِ الْمَغْضُوبِ عَلَيْهِمْ وَلَا الضَّالِّينَ',
+                        latin: "Bismillahir rahmanir rahim. Alhamdulillahi rabbil 'alamin. Ar-rahmanir rahim. Maliki yaumiddin. Iyyaka na'budu wa iyyaka nasta'in. Ihdinas shiratal mustaqim. Siratal ladzina an'amta 'alaihim ghairil maghdubi 'alaihim waladh-dhollin.",
+                        translation: 'Dengan menyebut nama Allah Yang Maha Pemurah lagi Maha Penyayang. Segala puji bagi Allah, Tuhan semesta alam. Maha Pemurah lagi Maha Penyayang.Yang menguasai di Hari Pembalasan.Hanya Engkaulah yang kami sembah, dan hanya kepada Engkaulah kami meminta pertolongan. Tunjukilah kami jalan yang lurus,(yaitu) Jalan orang-orang yang telah Engkau beri nikmat kepada mereka; bukan (jalan) mereka yang dimurkai dan bukan (pula jalan) mereka yang sesat.',
+						tips: 'Baca dengan tartil, tidak terlalu cepat, resapi maknanya.',
+						image: 'https://lh3.googleusercontent.com/d/1MdHv7uNWrioFE9jLVF9E93DzidMIR09r'	
+                    },
+                    {
+                        name: '5. Membaca Surah Pendek',
+                        arabic: 'قُلْ هُوَ اللَّهُ أَحَدٌ ۝ اللَّهُ الصَّمَدُ ۝ لَمْ يَلِدْ وَلَمْ يُولَدْ ۝ وَلَمْ يَكُن لَّهُ كُفُوًا أَحَدٌ',
+                        latin: 'Qul huwallahu ahad. Allahus-shamad. Lam yalid walam yuulad. Walam yakun lahu kufuwan ahad.',
+                        translation: 'Katakanlah (Muhammad), "Allah itu Yang Maha Esa. Allah adalah Tuhan yang bergantung kepada-Nya segala sesuatu. Dia tiada beranak dan tidak pula diperanakkan. dan tidak ada seorangpun yang setara dengan Dia."',
+						tips: 'Baca surah pendek setelah Al-Fatihah di 2 rakaat pertama.',
+						image: 'https://lh3.googleusercontent.com/d/1MdHv7uNWrioFE9jLVF9E93DzidMIR09r'	
+                    },
+                    {
+                        name: '6. Ruku\'',
+                        arabic: 'سُبْحَانَ رَبِّيَ الْعَظِيمِ وَبِحَمْدِهِ',
+                        latin: 'Subhaana rabbiyal \'azhiimi wa bihamdih (3x)',
+                        translation: 'Maha Suci Tuhanku Yang Maha Agung dengan segala puji-Nya.',
+						tips: 'Punggung & kepala RATA seperti papan. Baca 3x.',
+						image: 'https://lh3.googleusercontent.com/d/1bkk7Hfjj_W356-B0TtvoavZTgXnSPuyQ'
+                    },
+                    {
+                        name: '7. I\'tidal',
+                        arabic: 'سَمِعَ اللَّهُ لِمَنْ حَمِدَهُ، رَبَّنَا وَلَكَ الْحَمْدُ، مِلْءَ السَّمَاوَاتِ وَمِلْءَ الْأَرْضِ وَمِلْءَ مَا شِئْتَ مِنْ شَيْءٍ بَعْدُ',
+                        latin: 'Sami\'allahu liman hamidah, rabbanaa wa lakal hamdu, mil\'as-samaawati wal ardhi...',
+                        translation: 'Wahai Tuhan kami, bagi-Mu segala puji, sepenuh langit, sepenuh bumi, dan sepenuh apa yang Engkau kehendaki setelah itu.',
+						tips: 'Berdiri tegak, tidak terlalu cepat. Baca doa i\'tidal.',
+						image: 'https://lh3.googleusercontent.com/d/1X5xaUWc3URG7NyVzugJ-tf0W2TAQi9sj'
+                    },
+                    {
+                        name: '8. Sujud',
+                        arabic: 'سُبْحَانَ رَبِّيَ الأَعْلَى وَبِحَمْدِهِ',
+                        latin: 'Subhaana rabbiyal a\'laa wa bihamdih (3x)',
+                        translation: 'Maha Suci Tuhanku Yang Maha Tinggi dengan segala puji-Nya.',
+						tips: 'Sujud pada 7 anggota (2 telapak tangan, 1 Dahi & hidung, 2 Lutut, 2 Ibu Jari Kaki. Punggung rata, lengan jangan menempel.',
+						image: 'https://lh3.googleusercontent.com/d/1hWdTm5pbWjnjiAYdTAxWSbyA5tYZN9uI'
+                    },
+                    {
+                        name: '9. Duduk di Antara Dua Sujud',
+                        arabic: 'رَبِّ اغْفِرْ لِي وَارْحَمْنِي وَاجْبُرْنِي وَارْفَعْنِي وَارْزُقْنِي وَهْدِنِي وَعَافِنِي وَاعْفُ عَنِّي',
+                        latin: 'Rabbighfir lii warhamnii wajburnii warfa\'nii warzuqnii wahdinii wa \'aafinii wa\'fu \'annii.',
+                        translation: 'Ya Tuhanku, ampunilah aku, sayangilah aku, tutuplah kekuranganku, tinggikanlah derajatku, berilah aku rezeki, berilah aku petunjuk, sehatkanlah aku, dan maafkanlah aku.',
+						tips: 'Duduk iftirasy: duduk di atas kaki kiri, kaki kanan tegak, ibu jari menumpu.',
+						image: 'https://lh3.googleusercontent.com/d/19bK0L1QOQyYS36VPsvIg9gUd2Z3z225G'
+                    },
+                    {
+                        name: '10. Tasyahud / Tahiyyat Awal',
+                        arabic: 'التَّحِيَّاتُ الْمُبَارَكَاتُ الصَّلَوَاتُ الطَّيِّبَاتُ لِلَّهِ. السَّلَامُ عَلَيْكَ أَيُّهَا النَّبِيُّ وَرَحْمَةُ اللَّهِ وَبَرَكَاتُهُ. السَّلَامُ عَلَيْنَا وَعَلَى عِبَادِ اللَّهِ الصَّالِحِينَ. أَشْهدُ أَنْ لَا إِلَهَ إِلَّا اللَّهُ وَأَشْهدُ أَنَّ مُحَمَّدًا رَسُولُ اللَّهِ. اللَّهُمَّ صَلِّ عَلَى سَيِّدِنَا مُحَمَّدٍ...',
+                        latin: 'At-tahiyyaatul mubaraakaatush shalawatuth thoyyibaatu lillaah. Assalaamu \'alaika ayyuhan nabiyyu warahmatullaahi wabarakaatuh. Assalaamu \'alainaa wa \'alaa \'ibaadillahish-shaalihiin. Asyhadu an laa ilaaha illallaah, wa asyhadu anna muhammadan rasuulullaah...',
+                        translation: 'Segala penghormatan yang penuh berkah, keutamaan dan kebaikan adalah milik Allah. Semoga keselamatan, rahmat Allah, dan berkah-Nya tercurah kepadamu, wahai Nabi. Semoga keselamatan tercurah kepada kami dan kepada hamba-hamba Allah yang saleh. Aku bersaksi bahwa tidak ada tuhan selain Allah, dan aku bersaksi bahwa Muhammad adalah utusan Allah. Ya Allah, limpahkanlah rahmat kepada junjungan kami Nabi Muhammad.',
+						tips: 'Angkat jari telunjuk kanan saat baca syahadat.',
+						image: 'https://lh3.googleusercontent.com/d/1uL7uyhYL8ymuRaH637A-SMAXCb2n7EiK'
+                    },
+                    {
+                        name: '11. Tasyahud / Tahiyyat Akhir (Lengkap)',
+                        arabic: 'التَّحِيَّاتُ الْمُبَارَكَاتُ الصَّلَوَاتُ الطَّيِّبَاتُ لِلَّهِ. السَّلَامُ عَلَيْكَ أَيُّهَا النَّبِيُّ وَرَحْمَةُ اللَّهِ وَبَرَكَاتُهُ. السَّلَامُ عَلَيْنَا وَعَلَى عِبَادِ اللَّهِ الصَّالِحِينَ. أَشْهَدُ أَنْ لَا إِلَهَ إِلَّا اللَّهُ وَأَشْهَدُ أَنَّ مُحَمَّدًا رَسُولُ اللَّهِ. اللَّهُمَّ صَلِّ عَلَى سَيِّدِنَا مُحَمَّدٍ وَعَلَى آلِ سَيِّدِنَا مُحَمَّدٍ، كَمَا صَلَّيْتَ عَلَى سَيِّدِنَا إِبْرَاهِيمَ وَعَلَى آلِ سَيِّدِنَا إِبْرَاهِيمَ، وَبَارِكْ عَلَى سَيِّدِنَا مُحَمَّدٍ وَعَلَى آلِ سَيِّدِنَا مُحَمَّدٍ، كَمَا بَارَكْتَ عَلَى سَيِّدِنَا إِبْرَاهِيمَ وَعَلَى آلِ سَيِّدِنَا إِبْرَاهِيمَ فِي الْعَالَمِينَ إِنَّكَ حَمِيدٌ مَجِيدٌ',
+                        latin: 'At-tahiyyaatul mubaraakaatush shalawatuth thoyyibaatu lillaah... Allahumma sholli \'alaa sayyidinaa muhammad wa \'alaa aali sayyidinaa muhammad...',
+                        translation: 'Segala penghormatan yang penuh berkah, keutamaan dan kebaikan adalah milik Allah. Semoga keselamatan, rahmat Allah, dan berkah-Nya tercurah kepadamu, wahai Nabi. Semoga keselamatan tercurah kepada kami dan kepada hamba-hamba Allah yang saleh. Aku bersaksi bahwa tidak ada tuhan selain Allah, dan aku bersaksi bahwa Muhammad adalah utusan Allah. Ya Allah, limpahkanlah rahmat kepada junjungan kami Nabi Muhammad dan kepada keluarga Nabi Muhammad, sebagaimana Engkau telah melimpahkan rahmat kepada junjungan kami Nabi Ibrahim dan kepada keluarga Nabi Ibrahim. Dan berkahilah junjungan kami Nabi Muhammad dan keluarga Nabi Muhammad, sebagaimana Engkau telah memberkahi junjungan kami Nabi Ibrahim dan keluarga Nabi Ibrahim. Di seluruh alam semesta, sesungguhnya Engkau Maha Terpuji lagi Maha Agung.',
+						tips: 'Lanjutkan dengan shalawat Nabi & doa sebelum salam.',
+						image: 'https://lh3.googleusercontent.com/d/1Ky-wwhxUOLBcWkqIxXIGyOnC3180Hp8Z'
+                    },
+                    {
+                        name: '12. Salam',
+                        arabic: 'السَّلَامُ عَلَيْكُمْ وَرَحْمَةُ اللَّهِ',
+                        latin: 'Assalaamu\'alaikum warahmatullah.',
+                        translation: 'Semoga keselamatan dan rahmat Allah limpahkan kepada kalian.',
+						tips: 'Menoleh ke kanan lalu ke kiri, sampai terlihat pipi.',
+						image: 'https://lh3.googleusercontent.com/d/19bK0L1QOQyYS36VPsvIg9gUd2Z3z225G'
+                    },
+                    {
+                        name: '13. Doa Tambahan Sebelum Salam (Sangat dianjurkan)',
+                        arabic: 'اللَّهُمَّ إِنِّي أَعُوذُ بِكَ مِنْ عَذَابِ جَهَنَّمَ، وَمِنْ عَذَابِ الْقَبْرِ، وَمِنْ فِتْنَةِ الْمَحْيَا وَالْمَمَاتِ، وَمِنْ شَرِّ فِتْنَةِ الْمَسِيحِ الدَّجَّالِ',
+                        latin: 'Allahumma inni a\'udzu bika min \'adzabi jahannam, wa min \'adzabil qabri, wa min fitnatil mahyaa wal mamaati, wa min syarri fitnatil masiihid dajjaal.',
+                        translation: 'Ya Allah, sesungguhnya aku berlindung kepada-Mu dari azab neraka Jahanam, dari azab kubur, dari fitnah kehidupan dan kematian, serta dari keburukan fitnah Al-Masih Ad-Dajjal.',
+						tips: 'Sangat dianjurkan dibaca sebelum membaca Salam, posisi masih duduk takhiyat akhir.',
+						image: 'https://lh3.googleusercontent.com/d/19bK0L1QOQyYS36VPsvIg9gUd2Z3z225G'
+                    }
+                ],
+
+                listDoa: [
+                    {
+                        name: '1. Sayyidul Istighfar (Istighfar Paling Utama)',
+                        arabic: 'اللَّهُمَّ أَنْتَ رَبِّي لَا إِلَهَ إِلَّا أَنْتَ، خَلَقْتَنِي وَأَنَا عَبْدُكَ، وَأَنَا عَلَى عَهْدِكَ وَوَعْدِكَ مَا اسْتَطَعْتُ، أَعُوذُ بِكَ مِنْ شَرِّ مَا صَنَعْتُ، أَبُوءُ لَكَ بِنِعْمَتِكَ عَلَيَّ، وَأَبُوءُ بِذَنْبِي فَاغْفِرْ لِي، فَإِنَّهُ لَا يَغْفِرُ الذُّنُوبَ إِلَّا أَنْتَ',
+                        latin: 'Allahumma anta rabbii laa ilaaha illaa anta, khalaqtanii wa ana \'abduka, wa ana \'alaa \'ahdika wa wa\'dika mastatha\'tu, a\'uudzu bika min syarri maa shana\'tu, abuu-u laka bini\'matika \'alayya, wa abuu-u bidzanbii faghfir lii, fa innahu laa yaghfirudz-dzunuuba illaa anta.',
+                        translation: 'Ya Allah, Engkau adalah Tuhanku, tidak ada tuhan selain Engkau. Engkau menciptakanku dan aku adalah hamba-Mu. Aku berusaha menepati perjanjian dan janjiku kepada-Mu sesuai kemampuanku. Aku berlindung kepada-Mu dari keburukan yang telah aku perbuat. Aku mengakui segala nikmat-Mu atasku, dan aku mengakui dosaku, maka ampunilah aku. Sesungguhnya tidak ada yang dapat mengampuni dosa-dosa kecuali Engkau.'
+                    },
+                    {
+                        name: '2. Istighfar Pendek',
+                        arabic: 'أَسْتَغْفِرُ اللَّهَ الْعَظِيمَ',
+                        latin: 'Astaghfirullahal \'azhiim (3x)',
+                        translation: 'Aku memohon ampun kepada Allah Yang Maha Agung.'
+                    },
+                    {
+                        name: '3. Doa Keselamatan & Kesejahteraan',
+                        arabic: 'اللَّهُمَّ أَنْتَ السَّلَامُ، وَمِنْكَ السَّلَامُ، تَبَارَكْتَ يَا ذَا الْجَلَالِ وَالإِكْرَامِ',
+                        latin: 'Allaahumma antas salaam, wa minkas salaam, tabaarakta yaa dzal jalaali wal ikraam.',
+                        translation: 'Ya Allah, Engkau adalah Zat yang selamat dan dari-Mu lah keselamatan, Maha Suci Engkau, wahai Zat yang memiliki keagungan dan kemuliaan.'
+                    },
+                    {
+                        name: '4. Membaca Ayat Kursi',
+                        arabic: 'اللَّهُ لَا إِلَهَ إِلَّا هُوَ الْحَيُّ الْقَيُّومُ ۚ لَا تَأْخُذُهُ سِنَةٌ وَلَا نَوْمٌ ۚ لَهُ مَا فِي السَّمَاوَاتِ وَمَا فِي الْأَرْضِ ۚ مَنْ ذَا الَّذِي يَشْفَعُ عِنْدَهُ إِلَّا بِإِذْنِهِ ۚ يَعْلَمُ مَا بَيْنَ أَيْدِيهِمْ وَمَا خَلْفَهُمْ ۖ وَلَا يُحِيطُونَ بِشَيْءٍ مِنْ عِلْمِهِ إِلَّا بِمَا شَاءَ ۚ وَسِعَ كُرْسِيُّهُ السَّمَاوَاتِ وَلْأَرْضَ ۖ وَلَا يَؤُودُهُ حِفْظُهُمَا ۚ وَهُوَ الْعَلِيُّ الْعَظِيمُ',
+                        latin: 'Allahu laa ilaaha illa huwal hayyul qayyum. Laa ta\'khudzuhuu sinatun wa laa naum...',
+                        translation: 'Allah, tidak ada tuhan selain Dia. Yang Maha Hidup, yang terus-menerus mengurus (makhluk-Nya)...'
+                    },
+                    {
+                        name: '5. Doa Selamat Dunia Akhirat',
+                        arabic: 'رَبَّنَا آتِنَا فِي الدُّنْيَا حَسَنَةً وَفِي الْآخِرَةِ حَسَنَةً وَقِنَا عَذَابَ النَّارِ',
+                        latin: 'Rabbanaa aatinaa fid-dunyaa hasanah, wa fil-aakhirati hasanah, wa qinaa \'adzaban-naar.',
+                        translation: 'Ya Tuhan kami, berilah kami kebaikan di dunia dan kebaikan di akhirat, serta lindungilah kami dari azab neraka.'
+                    },
+                    {
+                        name: '6. Doa untuk Kedua Orang Tua',
+                        arabic: 'رَبِّ اغْفِرْ لِي وَلِوَالِدَيَّ وَارْحَمْهُمَا كَمَا رَبَّيَانِي صَغِيرًا',
+                        latin: 'Rabbighfir lii wa liwaalidayya warhamhumaa kamaa rabbayaanii shaghiiraa.',
+                        translation: 'Ya Tuhanku, ampunilah dosaku dan dosa kedua orang tuaku, dan sayangilah keduanya sebagaimana mereka berdua mendidik aku pada waktu kecil.'
+                    },
+                    {
+                        name: '7. Doa Perlindungan',
+                        arabic: 'بِسْمِ اللَّهِ الَّذِى لاَ يَضُرُّ مَعَ اسْمِهِ شَىْءٌ فِى الأَرْضِ وَلاَ فِى السَّمَاءِ وَهُوَ السَّمِيعُ الْعَلِيمُ',
+                        latin: 'Bismillahilladzi laa yadhurru ma\'asmihi syai-un fil ardhi wa laa fis samaa\' wa huwas samii\'ul \'aliim.',
+                        translation: 'Dengan nama Allah yang bila disebut, segala sesuatu di bumi dan langit tidak akan berbahaya, Dia-lah Yang Maha Mendengar lagi Maha Mengetahui. (dibaca 3x tiap pagi dan petang)'
+                    },
+                    {
+                        name: '8. Doa Pagi dan Petang',
+                        arabic: 'رَضِيْتُ بِاللهِ رَبًّا، وَبِاْلإِسْلاَمِ دِيْنًا، وَبِمُحَمَّدٍ صَلَّى اللهُ عَلَيْهِ وَسَلَّمَ نَبِيًّا',
+                        latin: 'Rodhiitu billaahi robbaa wa bil-islaami diinaa, wa bi-muhammadin shallallaahu \'alaihi wa sallama nabiyya.',
+                        translation: 'Aku ridha Allah sebagai Rabb, Islam sebagai agama dan Muhammad shallallahu \'alaihi wa sallam sebagai nabi.'
+                    },
+                    {
+                        name: '9. Dzikir Pagi dan Petang',
+                        arabic: 'لاَ إِلَـهَ إِلاَّ اللهُ وَحْدَهُ لاَ شَرِيْكَ لَهُ، لَهُ الْمُلْكُ وَلَهُ الْحَمْدُ وَهُوَ عَلَى كُلِّ شَيْءٍ قَدِيْرُ',
+                        latin: 'Laa ilaha illallah wahdahu laa syarika lah, lahul mulku walahul hamdu wa huwa \'ala kulli syai-in qodiir.',
+                        translation: 'Tidak ada ilah yang berhak disembah selain Allah semata, tidak ada sekutu bagiNya. Bagi-Nya kerajaan dan segala pujian. Dia-lah yang berkuasa atas segala sesuatu. (dibaca 10x tiap pagi dan petang)'
+                    },
+                    {
+                        name: '10. Doa Dibebaskan dari Api Neraka',
+                        arabic: 'اَللَّهُمَّ إِنِّيْ أَصْبَحْتُ أُشْهِدُكَ وَأُشْهِدُ حَمَلَةَ عَرْشِكَ، وَمَلاَئِكَتَكَ وَجَمِيْعَ خَلْقِكَ، أَنَّكَ أَنْتَ اللهُ لاَ إِلَـهَ إِلاَّ أَنْتَ وَأَنَّ مُحَمَّدًا عَبْدُكَ وَرَسُوْلُكَ',
+                        latin: 'Allahumma inni ash-bahtu usy-hiduka wa usy-hidu hamalata \'arsyika wa malaa-ikatak wa jami\'a kholqik, annaka antallahu laa ilaha illa anta, wa anna Muhammadan \'abduka wa rosuuluka.',
+                        translation: 'Ya Allah, sesungguhnya aku di waktu pagi ini mempersaksikan Engkau, malaikat yang memikul \'Arys-Mu, malaikat-malaikat dan seluruh makhluk-Mu, bahwa sesungguhnya Engkau adalah Allah, tiada ilah yang berhak disembah kecuali Engkau semata, dan sesungguhnya Muhammad adalah hamba dan utusan-Mu. (dibaca 4x tiap pagi dan petang). Jika petang Kata ashbahtu diganti dengan amsaitu  Allahumma inni amsaitu...'
+                    }
+                ],
+
+                listJenazah: [
+                    {
+                        step: 'Tentang Sholat Jenazah',
+                        title: 'Tentang Sholat Jenazah',
+                        arabic: 'Tentang Sholat Jenazah',
+                        latin: "Tentang Sholat Jenazah",
+                        translation: 'Tentang Sholat Jenazah'
+                    },
+                    {
+                        step: 'Niat Sholat Jenazah',
+                        title: 'Niat Sholat Jenazah (Mayit Laki-laki / Perempuan)',
+                        arabic: 'أُصَلِّي عَلَى هَذَا الْمَيِّتِ / الْمَيِّتَةِ أَرْبَعَ تَكْبِيرَاتٍ فَرْضَ الْكِفَايَةِ مَأْمُومًا لِلَّهِ تَعَالَى',
+                        latin: "Usholli 'ala hadzal mayyiti / mayyitati arba'a takbiiratin fardhal kifayati ma'muman lillahi ta'ala.",
+                        translation: 'Niat Jenazah Laki-laki: "Usholli \'ala hadzal mayyiti..." | Niat Jenazah Perempuan: "Usholli \'ala hadzal mayyitati..." (Artinya: Aku berniat sholat atas jenazah ini empat takbir fardhu kifayah sebagai makmum karena Allah Ta\'ala).'
+                    },
+                    {
+                        step: 'Takbir Pertama (1)',
+                        title: 'Takbiratul Ihram & Membaca Surat Al-Fatihah',
+                        arabic: 'بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ ۝ الْحَمْدُ لِلَّهِ رَبِّ الْعَالَمِينَ ۝ الرَّحْمَٰنِ الرَّحِيمِ ۝ مَالِكِ يَوْمِ الدِّينِ ۝ إِيَّاكَ نَعْبُدُ وَإِيَّاكَ نَسْتَعِينُ ۝ اهْدِنَا الصِّرَاطَ الْمُسْتَقِيمَ ۝ صِرَاطَ الَّذِينَ أَنْعَمْتَ عَلَيْهِمْ غَيْرِ الْمَغْضُوبِ عَلَيْهِمْ وَلَا الضَّالِّينَ',
+                        latin: "Bismillahir rahmanir rahim. Alhamdulillahi rabbil 'alamin. Ar-rahmanir rahim. Maliki yaumiddin. Iyyaka na'budu wa iyyaka nasta'in. Ihdinas shiratal mustaqim. Siratal ladzina an'amta 'alaihim ghairil maghdubi 'alaihim waladh-dhollin.",
+                        translation: 'Membaca ta\'awudz lalu dilanjutkan membaca Surat Al-Fatihah secara lengkap setelah Takbir pertama. Dengan menyebut nama Allah Yang Maha Pemurah lagi Maha Penyayang. Segala puji bagi Allah, Tuhan semesta alam. Maha Pemurah lagi Maha Penyayang.Yang menguasai di Hari Pembalasan.Hanya Engkaulah yang kami sembah, dan hanya kepada Engkaulah kami meminta pertolongan. Tunjukilah kami jalan yang lurus,(yaitu) Jalan orang-orang yang telah Engkau beri nikmat kepada mereka; bukan (jalan) mereka yang dimurkai dan bukan (pula jalan) mereka yang sesat.'
+                    },
+                    {
+                        step: 'Takbir Kedua (2)',
+                        title: 'Membaca Sholawat Nabi SAW',
+                        arabic: 'اللَّهُمَّ صَلِّ عَلَى مُحَمَّدٍ وَعَلَى آلِ مُحَمَّدٍ كَمَا صَلَّيْتَ عَلَى إِبْرَاهِيمَ وَعَلَى آلِ إِبْرَاهِيمَ، إِنَّكَ حَمِيدٌ مَجِيدٌ. وَبَارِكْ عَلَى مُحَمَّدٍ وَعَلَى آلِ مُحَمَّدٍ كَمَا بَارَكْتَ عَلَى إِبْرَاهِيمَ وَعَلَى آلِ إِبْرَاهِيمَ، إِنَّكَ حَمِيدٌ مَجِيدٌ',
+                        latin: "Allahumma salli 'ala Muhammad wa 'ala ali Muhammad, kama sallaita 'ala Ibrahima wa 'ala ali Ibrahim, innaka hamidun majid. Wa barik 'ala Muhammad wa 'ala ali Muhammad, kama barakta 'ala Ibrahima wa 'ala ali Ibrahim, innaka hamidun majid.",
+                        translation: 'Ya Allah, berilah shalawat kepada Muhammad dan keluarga Muhammad, sebagaimana Engkau telah memberi shalawat kepada Ibrahim dan keluarga Ibrahim. Sesungguhnya Engkau Maha Terpuji lagi Maha Mulia...'
+                    },
+                    {
+                        step: 'Takbir Ketiga (Laki-laki)',
+                        title: 'Doa Khusus untuk Jenazah (Laki-laki)',
+                        arabic: 'اللَّهُمَّ اغْفِرْ لَهُ وَرْحَمْهُ وَعَافِهِ وَاعْفُ عَنْهُ، وَأَكْرِمْ نُزُلَهُ، وَوَسِّعْ مُدْخَلَهُ، وَاغْسِلْهُ بِالْمَاءِ وَالثَّلْجِ وَالْبَرَدِ، وَنَقِّهِ مِنَ الْخَطَايَا كَمَا نَقَّيْتَ الثَّوْبَ الْأَبْيَضَ مِنَ الدَّنَسِ',
+                        latin: "Allahummaghfir lahu warhamhu wa 'afihi wa'fu 'anhu, wa akrim nuzulaahu, wa wassi' mudkhalahu, waghsilhu bilmai wats-thalji wal baradi, wa naqqihi minal khathaaya kama naqqaitats-tsaul abhyadha minad danas.",
+                        translation: 'Ya Allah, ampunilah dia, rahmatilah dia, bebaskanlah dia, maafkanlah dia, muliakanlah tempat tinggalnya, luaskanlah jalan masuknya, basuhlah dia dengan air, es, dan embun. Bersihkanlah dia dari kesalahan sebagaimana Engkau membersihkan baju putih dari kotoran.'
+                    },
+                    {
+                        step: 'Takbir Ketiga (Perempuan)',
+                        title: 'Doa Khusus untuk Jenazah (Perempuan)',
+                        arabic: 'اللَّهُمَّ اغْفِرْ لَهَا وَرْحَمْهَا وَعَافِهَا وَاعْفُ عَنْهَا، وَأَكْرِمْ نُزُلَهَا، وَوَسِّعْ مُدْخَلَهَا، وَاغْسِلْهَا بِالْمَاءِ وَالثَّلْجِ وَالْبَرَدِ، وَنَقِّهَا مِنَ الْخَطَايَا كَمَا نَقَّيْتَ الثَّوْبَ الْأَبْيَضَ مِنَ الدَّنَسِ',
+                        latin: "Allahummaghfir laha warhamha wa 'afiha wa'fu 'anha, wa akrim nuzulaha, wa wassi' mudkhalaha, waghsilha bilmai wats-thalji wal baradi, wa naqqiha minal khathaaya kama naqqaitats-tsaul abhyadha minad danas.",
+                        translation: 'Ya Allah, ampunilah dia, rahmatilah dia, bebaskanlah dia, maafkanlah dia (untuk perempuan)...'
+                    },
+                    {
+                        step: 'Takbir Keempat (Laki-laki)',
+                        title: 'Doa Setelah Takbir Keempat (Laki-laki) & Salam',
+                        arabic: 'اللَّهُمَّ لَا تَحْرِمْنَا أَجْرَهُ وَلَا تَفْتِنَّا بَعْدَهُ، وَاغْفِرْ لَنَا وَلَهُ',
+                        latin: "Allahumma la tahrimna ajrahu wa la taftinna ba'dahu, waghfir lana walah.",
+                        translation: 'Ya Allah, janganlah Engkau haramkan kami dari pahalanya dan janganlah Engkau beri fitnah bagi kami setelah kematiannya, serta ampunilah kami dan dia. (Dilanjutkan mengucapkan salam ke kanan dan ke kiri).'
+                    },
+                    {
+                        step: 'Takbir Keempat (Perempuan)',
+                        title: 'Doa Setelah Takbir Keempat (Perempuan) & Salam',
+                        arabic: 'اللَّهُمَّ لَا تَحْرِمْنَا أَجْرَهَا وَلَا تَفْتِنَّا بَعْدَهَا، وَاغْفِرْ لَنَا وَلَهَا',
+                        latin: "Allahumma la tahrimna ajraha wa la taftinna ba'daha, waghfir lana walaha.",
+                        translation: 'Ya Allah, janganlah Engkau haramkan kami dari pahalanya dan janganlah Engkau beri fitnah bagi kami setelah kematiannya, serta ampunilah kami dan dia (perempuan). (Dilanjutkan mengucapkan salam ke kanan dan ke kiri).'
+                    }
+                ],
+
+                sholatJenazahOverview: {
+                    ketentuanDasar: [
+                        { title: 'Sholat jenazah dilakukan dengan Berdiri, tanpa rukuk, tanpa sujud, dan dilakukan dengan Empat Kali Takbir', desc: 'Makmum masbuk (yang telat) untuk shalat jenazah: (a) jika masuk di takbir ketiga (misalnya), berarti ia dianggap berada di takbir pertama, tetap membaca surah Al-Fatihah, (b) jika imam salam, ia tinggal menyempurnakan yang kurang.' },
+                        { title: 'Hukum Sholat Jenazah adalah Fardu Kifayah', desc: 'Fardhu kifayah adalah kewajiban kolektif dalam Islam yang dibebankan kepada seluruh kelompok atau masyarakat...' },
+                        { title: 'Posisi Jenazah', desc: 'Posisi jenazah saat dishalatkan diletakkan membujur di depan orang yang menshalatkan...' },
+                        { title: 'Posisi Berdiri Imam', desc: 'Untuk Jenazah Laki-laki: Imam berdiri sejajar dengan bagian kepala atau dada jenazah. Untuk Jenazah Perempuan: Imam berdiri sejajar dengan bagian tengah tubuh...' },
+                        { title: 'Urutan Tata Cara dan Bacaan', desc: '1. Takbir Pertama: Membaca Surat Al-Fatihah. 2. Takbir Kedua: Membaca shalawat Nabi. 3. Takbir Ketiga: Membaca doa untuk jenazah. 4. Takbir Keempat: Membaca doa lagi untuk Jenazah. 5. Mengucapkan Salam.' }
+                    ],
+                    ketentuanRukun: [
+                        { title: '1. Niat', desc: 'Berniat di dalam hati dan dilafalkan sesuai jenis kelamin jenazah...' },
+                        { title: '2. Berdiri bagi yang mampu', desc: 'Melaksanakan sholat jenazah wajib dengan posisi berdiri bagi orang yang sehat dan mampu...' },
+                        { title: '3. Melakukan Empat Kali Takbir', desc: 'Dilakukan dengan empat kali takbir tanpa ruku\' dan sujud...' },
+                        { title: '4. Membaca Surat Al-Fatihah', desc: 'Membaca Surat Al-Fatihah dilakukan setelah takbir pertama...' },
+                        { title: '5. Membaca Shalawat Nabi', desc: 'Membaca shalawat kepada Nabi Muhammad shallallahu \'alaihi wa sallam...' },
+                        { title: '6. Mendoakan Jenazah', desc: 'Mendoakan jenazah secara khusus setelah takbir ketiga...' },
+                        { title: '7. Membaca Doa Setelah Takbir Keempat', desc: 'Membaca doa tambahan setelah takbir keempat sebelum salam...' },
+                        { title: '8. Salam', desc: 'Mengucapkan salam ke kanan dan ke kiri sebagai penutup sholat jenazah.' }
+                    ]
+                },
+
+                listHaji: [
+                    {
+                        step: '1. Ihram & Miqat',
+                        title: 'Niat Ihram Haji & Memakai Pakaian Ihram',
+                        arabic: 'لَبَّيْكَ اللَّهُمَّ حَجًّا. اللَّهُمَّ هَذِهِ حَجَّةٌ لَا رِيَاءَ فِيهَا وَلَا سُمْعَةَ',
+                        latin: "Labbaikallahumma hajjan. Allahumma hahihi hajjatun la riya'a fiha wa la sum'ah.",
+                        translation: 'Aku sambut panggilan-Mu ya Allah untuk berhaji. Ya Allah, haji ini tanpa riya\' dan tanpa sum\'ah (ingin dipuji).'
+                    },
+                    {
+                        step: '2. Wukuf di Arafah',
+                        title: 'Wukuf di Padang Arafah (9 Dzulhijjah)',
+                        arabic: 'لَا إِلَهَ إِلَّا اللَّهُ وَحْدَهُ لَا شَرِيكَ لَهُ، لَهُ الْمُلْكُ وَلَهُ الْحَمْدُ وَهُوَ عَلَى كُلِّ شَيْءٍ قَدِيرٌ',
+                        latin: "La ilaha illallahu wahdahu la syarika lah, lahul mulku wa lahul hamdu wa huwa 'ala kulli syai'in qadir.",
+                        translation: 'Tidak ada Tuhan selain Allah Yang Maha Esa, tidak ada sekutu bagi-Nya. Bagi-Nya kerajaan dan bagi-Nya segala puji, dan Dia Maha Kuasa atas segala sesuatu.'
+                    },
+                    {
+                        step: '3. Mabit & Lempar Jumrah',
+                        title: 'Mabit di Muzdalifah & Lempar Jumrah Aqabah di Mina',
+                        arabic: 'بِسْمِ اللَّهِ وَاللَّهُ أَكْبَرُ، رَجْمًا لِلشَّيَاطِينِ وَرِضاً لِلرَّحْمَنِ',
+                        latin: "Bismillahi wallahu akbar, rajman lisy-syayathini wa ridhan lir-rahman.",
+                        translation: 'Dengan nama Allah dan Allah Maha Besar, sebagai lemparan untuk setan dan keridaan bagi Tuhan Yang Maha Pengasih.'
+                    },
+                    {
+                        step: '4. Thawaf Ifadhah',
+                        title: 'Thawaf Ka\'bah (7 Putaran dengan Doa Khusus)',
+                        isThawafList: true,
+                        putaran: [
+                            {
+                                no: 'Putaran 1',
+                                title: 'Doa Putaran Pertama (Dimulai dari Hajar Aswad)',
+                                arabic: 'سُبْحَانَ اللَّهِ وَالْحَمْدُ لِلَّهِ وَلَا إِلَهَ إِلَّا اللَّهُ وَاللَّهُ أَكْبَرُ، وَلَا حَوْلَ وَلَا قُوَّةَ إِلَّا بِاللَّهِ الْعَلِيِّ الْعَظِيمِ',
+                                latin: "Subhanallahi walhamdulillah wa la ilaha illallahu wallahu akbar, wa la haula wa la quwwata illa billahil 'aliyyil 'azhim.",
+                                translation: 'Maha Suci Allah, segala puji bagi Allah, tidak ada Tuhan selain Allah, Allah Maha Besar. Tidak ada daya dan kekuatan melainkan dengan pertolongan Allah Yang Maha Tinggi lagi Maha Agung.'
+                            },
+                            {
+                                no: 'Putaran 2',
+                                title: 'Doa Putaran Kedua',
+                                arabic: 'اللَّهُمَّ إِيمَانًا بِكَ وَتَصْدِيقًا بِكِتَابِكَ وَوَفَاءً بِعَهْدِكَ وَاتِّبَاعًا لِسُنَّةِ نَبِيِّكَ مُحَمَّدٍ صَلَّى اللَّهُ عَلَيْهِ وَسَلَّمَ',
+                                latin: "Allahumma imanan bika wa tasdiqan bikitabika wa wafa'an bi'ahdika wattiba'an li sunnati nabiyyika Muhammadin shallallahu 'alaihi wa sallam.",
+                                translation: 'Ya Allah, karena beriman kepada-Mu, membenarkan kitab-kitab-Mu, menepati janji-Mu, dan mengikuti sunnah Nabi-Mu Muhammad SAW.'
+                            },
+                            {
+                                no: 'Putaran 3',
+                                title: 'Doa Putaran Ketiga',
+                                arabic: 'اللَّهُمَّ إِنِّي أَعُوذُ بِكَ مِنَ الشَّكِّ وَالشِّرْكِ وَالشِّقَاقِ وَالنِّفَاقِ وَسُوءِ الْأَخْلَاقِ وَسُوءِ الْمَنْظَرِ فِي الْمَالِ وَالْأَهْلِ وَالْوَلَدِ',
+                                latin: "Allahumma inni a'udzu bika minasy-syakki wasy-syirki wasy-syiqaqi wan-nifaqi wa suu'il akhlaqi wa suu'il manzari fil mali wal ahli wal walad.",
+                                translation: 'Ya Allah, sesungguhnya aku berlindung kepada-Mu dari keraguan, syirik, perpecahan, kemunafikan, akhlak yang buruk, serta pemandangan yang buruk pada harta, keluarga, dan anak.'
+                            },
+                            {
+                                no: 'Putaran 4',
+                                title: 'Doa Putaran Keempat',
+                                arabic: 'اللَّهُمَّ اجْعَلْهُ حَجًّا مَبْرُورًا، وَسَعْيًا مَشْكُورًا، وَذَنْبًا مَغْفُورًا، وَعَمَلًا صَالِحًا مَقْبُولًا، وَتِجَارَةً لَنْ تَبُورَ',
+                                latin: "Allahummaj'alhu hajjan mabruran, wa sa'yan masykuran, wa dzanban maghfuran, wa 'amalan shalihan maqbulan, wa tijaratan lan tabur.",
+                                translation: 'Ya Allah, jadikanlah hajiku haji yang mabrur, sa\'i yang disyukuri, dosa yang diampuni, amal saleh yang diterima, dan perdagangan yang tidak akan merugi.'
+                            },
+                            {
+                                no: 'Putaran 5',
+                                title: 'Doa Putaran Kelima',
+                                arabic: 'رَبِّ اغْفِرْ وَارْحَمْ وَاعْفُ وَتَكَرَّمْ وَتَجَاوَزْ عَمَّا تَعْلَمُ، إِنَّكَ تَعْلَمُ مَا لَا نَعْلَمُ، إِنَّكَ أَنْتَ اللَّهُ الْأَعَزُّ الْأَكْرَمُ',
+                                latin: "Rabbighfir warham wa'fu wa takarram wa tajawaz 'amma ta'lam, innaka ta'lamu ma la na'lam, innaka antallahul a'azzul akram.",
+                                translation: 'Ya Tuhanku, ampunilah, rahmatilah, maafkanlah, muliakanlah, dan hapuskanlah apa-apa yang Engkau ketahui. Sesungguhnya Engkau Maha Mengetahui apa yang tidak kami ketahui, Engkaulah Allah Yang Maha Perkasa lagi Maha Mulia.'
+                            },
+                            {
+                                no: 'Putaran 6',
+                                title: 'Doa Putaran Keenam',
+                                arabic: 'اللَّهُمَّ إِنَّ بَيْتَكَ كَثِيرٌ، وَعِلْمَكَ بَالِغٌ، وَأَنْتَ عَلَى كُلِّ شَيْءٍ قَدِيرٌ. وَصَلَّى اللَّهُ عَلَى سَيِّدِنَا مُحَمَّدٍ وَعَلَى آلِهِ وَصَحْبِهِ وَسَلَّمَ',
+                                latin: "Allahumma inna baitaka katsir, wa 'ilmaka baligh, wa anta 'ala kulli syai'in qadir. Wa shallallahu 'ala sayyidina Muhammadin wa 'ala alihi wa sahbihi wa sallam.",
+                                translation: 'Ya Allah, sesungguhnya rumah-Mu (Ka\'bah) banyak (diagungkan), ilmu-Mu luas, dan Engkau Maha Kuasa atas segala sesuatu. Semoga shalawat dan salam tercurah kepada junjungan kami Nabi Muhammad, keluarga, dan para sahabatnya.'
+                            },
+                            {
+                                no: 'Putaran 7',
+                                title: 'Doa Putaran Ketujuh (Terakhir)',
+                                arabic: 'اللَّهُمَّ إِنِّي أَسْأَلُكَ إِيمَانًا دَائِمًا، وَقَلْبًا خَاشِعًا، وَعِلْمًا نَافِعًا، وَيَقِينًا صَادِقًا، وَعَمَلًا صَالِحًا، وَرِزْقًا وَاسِعًا، وَالتَّوْبَةَ قَبْلَ الْمَوْتِ، وَالْمَغْفِرَةَ بَعْدَ الْمَوْتِ',
+                                latin: "Allahumma inni as'aluka imanan da'iman, wa qalban khasyi'an, wa 'ilman nafi'an, wa yaqinan shadiqan, wa 'amalan shalihan, wa rizqan wasi'an, at-taubata qablal maut, wal maghfirata ba'dal maut.",
+                                translation: 'Ya Allah, aku memohon kepada-Mu iman yang langgeng, hati yang khusyuk, ilmu yang bermanfaat, keyakinan yang benar, amal yang saleh, rezeki yang luas, taubat sebelum mati, dan ampunan setelah mati.'
+                            }
+                        ]
+                    },
+					{
+                        step: '5. Sa\'i Shafa-Marwah',
+                        title: 'Sa\'i antara Bukit Shafa dan Marwah (7 Kali Perjalanan)',
+                        arabic: 'إِنَّ الصَّفَا وَالْمَرْوَةَ مِنْ شَعَائِرِ اللَّهِ ۖ فَمَنْ حَجَّ الْبَيْتَ أَوِ اعْتَمَرَ فَلَا جُنَاحَ عَلَيْهِ أَنْ يَطَّوَّفَ بِهِمَا',
+                        latin: "Innas-shafa wal marwata min sya'airillah, faman hajjal baita awi'tamara fala junaha 'alaihi an yaththawwafa bihima.",
+                        translation: 'Sesungguhnya Shafa dan Marwah adalah sebagian dari syi\'ar Allah. Maka barangsiapa beribadah haji ke Baitullah atau berumrah, maka tidak ada dosa baginya mengerjakan sa\'i antara keduanya.'
+                    },
+                    {
+                        step: '6. Tahallul & Thawaf Wada\'',
+                        title: 'Tahallul (Gunting Rambut) & Thawaf Wada\' (Perpisahan)',
+                        arabic: 'اللَّهُمَّ هَذَا بَيْتُكَ وَأَنَا عَبْدُكَ وَابْنُ عَبْدِكَ وَابْنُ أَمَتِكَ...',
+                        latin: "Allahumma haza baituka wa ana 'abduka wabnu 'abdika wabnu amatika...",
+                        translation: 'Ya Allah, ini adalah rumah-Mu, dan aku adalah hamba-Mu, anak dari hamba laki-laki-Mu dan anak dari hamba perempuan-Mu...'
+                    }
+				],
+
+                hajiOverview: {
+                    syarat: [
+                        { title: 'Islam', desc: 'Beragama Islam.' },
+                        { title: 'Baligh', desc: 'Sudah dewasa / mencapai usia pubertas.' },
+                        { title: 'Berakal', desc: 'Sehat akalnya (tidak gila).' },
+                        { title: 'Merdeka', desc: 'Bukan seorang budak.' },
+                        { title: 'Istitha\'ah', desc: 'Mampu secara fisik, finansial, dan keamanan perjalanan.' }
+                    ],
+                    rukun: [
+                        { title: '1. Ihram', desc: 'Berniat mulai melaksanakan ibadah haji disertai pakaian ihram.' },
+                        { title: '2. Wukuf di Arafah', desc: 'Hadir di Padang Arafah pada tanggal 9 Dzulhijjah.' },
+                        { title: '3. Thawaf Ifadhah', desc: 'Mengelilingi Ka\'bah sebanyak 7 putaran setelah wukuf.' },
+                        { title: '4. Sa\'i', desc: 'Berlari-lari kecil / berjalan antara Bukit Shafa dan Marwah sebanyak 7 kali.' },
+                        { title: '5. Tahallul', desc: 'Mencukur atau memotong rambut minimal sehelai/tiga helai.' },
+                        { title: '6. Tertib', desc: 'Melakukan rukun-rukun tersebut secara berurutan.' }
+                    ],
+                    wajib: [
+                        { title: '1. Niat Ihram dari Miqat', desc: 'Memulai ihram sesuai batas tempat yang ditentukan.' },
+                        { title: '2. Mabit di Muzdalifah', desc: 'Bermalam sejenak di Muzdalifah pada malam 10 Dzulhijjah.' },
+                        { title: '3. Mabit di Mina', desc: 'Bermalam di Mina pada hari-hari tasyrik.' },
+                        { title: '4. Lempar Jumrah', desc: 'Melontar Jumrah (Ula, Wustha, Aqabah).' },
+                        { title: '5. Thawaf Wada\'', desc: 'Thawaf perpisahan sebelum meninggalkan kota Makkah.' }
+                    ]
+                }
+				
+            };
+        };
+
+        // Generate bintang
+        (function generateStars() {
+            const layer = document.getElementById('starsLayer');
+            if (!layer) return;
+            for (let i = 0; i < 120; i++) {
+                const star = document.createElement('span');
+                star.className = 'star';
+                const size = Math.random() * 2.2 + 0.6;
+                star.style.width = size + 'px';
+                star.style.height = size + 'px';
+                star.style.left = Math.random() * 100 + '%';
+                star.style.top = Math.random() * 100 + '%';
+                star.style.animationDelay = (Math.random() * 3) + 's';
+                star.style.animationDuration = (2 + Math.random() * 3) + 's';
+                const colors = ['#ffffff', '#fef9c3', '#bae6fd', '#e0e7ff'];
+                star.style.background = colors[Math.floor(Math.random() * colors.length)];
+                layer.appendChild(star);
+            }
+        })();
+    </script>
+</body>
+</html>

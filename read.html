@@ -1,0 +1,1278 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FazzQuranic - Belajar Baca Tulis Al-Quran Interaktif</title>
+	<link rel="shortcut icon" type="image/png" href="img/iconfazz.png">	
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome untuk Ikon -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts Inter & Amiri -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Amiri:wght@400;700&display=swap" rel="stylesheet">
+    <!-- Alpine.js CDN -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+	<script type="importmap">
+	  {
+		"imports": {
+		  "@google/genai": "https://esm.run/@google/genai"
+		}
+	  }
+	</script>
+	
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            padding-bottom: 100px;
+            position: relative;
+            overflow-x: hidden;
+        }
+		main {
+            padding-bottom: 12rem !important;
+        }
+
+        /* Lapisan background bintang & bulan */
+        .sky-bg {
+            position: fixed;
+            inset: 0;
+            z-index: -1;
+            overflow: hidden;
+            pointer-events: none;
+            background:
+                radial-gradient(ellipse at 20% 10%, rgba(16,185,129,0.08) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 80%, rgba(20,184,166,0.06) 0%, transparent 50%),
+                linear-gradient(180deg, #020617 0%, #0a0f1e 50%, #020617 100%);
+        }
+
+        /* Bulan Purnama */
+        .moon {
+            position: absolute;
+            top: 8%;
+            right: 10%;
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 35% 35%, #fefce8 0%, #fde68a 40%, #fbbf24 70%, #d97706 100%);
+            box-shadow:
+                0 0 40px 10px rgba(253, 224, 71, 0.5),
+                0 0 80px 30px rgba(251, 191, 36, 0.3),
+                0 0 140px 60px rgba(251, 191, 36, 0.15),
+                inset -10px -10px 30px rgba(180, 83, 9, 0.4);
+            animation: moonGlow 4s ease-in-out infinite alternate, moonFloat 12s ease-in-out infinite;
+        }
+
+        /* Kawah bulan (tekstur halus) */
+        .moon::before,
+        .moon::after {
+            content: '';
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(180, 83, 9, 0.25);
+        }
+        .moon::before {
+            width: 22px; height: 22px;
+            top: 30%; left: 25%;
+            box-shadow: 40px 30px 0 -4px rgba(180,83,9,0.2),
+                        15px 55px 0 -6px rgba(180,83,9,0.25),
+                        60px 60px 0 -8px rgba(180,83,9,0.15);
+        }
+        .moon::after {
+            width: 14px; height: 14px;
+            top: 60%; left: 55%;
+        }
+
+        @keyframes moonGlow {
+            0%   { box-shadow: 0 0 40px 10px rgba(253,224,71,0.4), 0 0 80px 30px rgba(251,191,36,0.25), 0 0 140px 60px rgba(251,191,36,0.12), inset -10px -10px 30px rgba(180,83,9,0.4); }
+            100% { box-shadow: 0 0 60px 18px rgba(253,224,71,0.6), 0 0 120px 45px rgba(251,191,36,0.4), 0 0 200px 90px rgba(251,191,36,0.2), inset -10px -10px 30px rgba(180,83,9,0.4); }
+        }
+        @keyframes moonFloat {
+            0%, 100% { transform: translateY(0px); }
+            50%      { transform: translateY(-15px); }
+        }
+
+        /* Bintang-bintang berkedip */
+        .stars-layer {
+            position: absolute;
+            inset: 0;
+        }
+        .star {
+            position: absolute;
+            background: #fff;
+            border-radius: 50%;
+            animation: twinkle 3s infinite ease-in-out;
+        }
+        .star::after {
+            content: '';
+            position: absolute;
+            inset: -3px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(255,255,255,0.8) 0%, transparent 70%);
+            opacity: 0.6;
+        }
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.2; transform: scale(0.8); }
+            50%      { opacity: 1;   transform: scale(1.2); }
+        }
+
+        /* Bintang jatuh (shooting star) */
+        .shooting-star {
+            position: absolute;
+            width: 2px;
+            height: 2px;
+            background: #fff;
+            border-radius: 50%;
+            box-shadow: 0 0 8px 2px rgba(255,255,255,0.8);
+            animation: shoot 180s linear infinite; /* 3 menit sekali */
+            opacity: 0;
+        }
+        .shooting-star::before {
+            content: '';
+            position: absolute;
+            top: 50%; left: 0;
+            width: 120px; height: 1px;
+            transform: translateY(-50%);
+            background: linear-gradient(90deg, rgba(255,255,255,0.9), transparent);
+        }
+        @keyframes shoot {
+            0%   { opacity: 0; transform: translate(0,0) rotate(-35deg); }
+            0.3% { opacity: 1; }
+            1%   { opacity: 1; transform: translate(-300px, 200px) rotate(-35deg); }
+            1.2% { opacity: 0; transform: translate(-400px, 280px) rotate(-35deg); }
+            100% { opacity: 0; transform: translate(-400px, 280px) rotate(-35deg); }
+        }
+
+        .font-arabic { font-family: 'Amiri', serif; }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #020617; }
+        ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 9999px; }
+        ::-webkit-scrollbar-thumb:hover { background: #10b981; }
+
+        /* SweetAlert2 Custom */
+        .swal2-popup {
+            font-family: 'Poppins', sans-serif !important;
+        }
+    </style>
+</head>
+<body class="text-slate-100 min-h-screen flex flex-col selection:bg-emerald-500 selection:text-white"
+      x-data="tarteelApp()">
+
+    <div class="sky-bg">
+        <!-- Bulan Purnama -->
+        <div class="moon"></div>
+
+        <!-- Lapisan Bintang (dibuat via JS agar acak) -->
+        <div class="stars-layer" id="starsLayer"></div>
+
+        <!-- Bintang jatuh -->
+        <div class="shooting-star" style="top: 15%; left: 60%; animation-delay: 0s;"></div>
+        <div class="shooting-star" style="top: 35%; left: 80%; animation-delay: 60s;"></div>
+        <div class="shooting-star" style="top: 55%; left: 40%; animation-delay: 120s;"></div>
+    </div>
+
+    <!-- Header Navbar -->
+    <header class="sticky top-0 z-50 bg-slate-950/80 backdrop-blur-xl border-b border-slate-800/80 px-4 lg:px-12 py-3.5 flex justify-between items-center shadow-lg shadow-emerald-950/20">
+        <div class="flex items-center gap-3">
+
+            <div class="p-3 bg-emerald-500/15 text-emerald-300 rounded-2xl border border-emerald-400/60 shadow-[0_0_25px_rgba(16,185,129,0.7),inset_0_0_15px_rgba(16,185,129,0.4)] backdrop-blur-md relative overflow-hidden group transition-all duration-1000 animate-[pulse_3s_cubic-bezier(0.4,0,0.6,1)_infinite]">
+                <i class="fa-solid fa-quran text-lg drop-shadow-[0_0_10px_rgba(16,185,129,0.9)]"></i>
+            </div>
+            <div>
+                <button onclick="fazzPage()" class="inline-flex items-center gap-2 px-4 py-1.5 rounded-lg bg-red-800/20 border border-red-800/30 text-green-300 text-sm font-medium mb-3 transition-all duration-300 hover:bg-red-800 hover:border-red-600 hover:text-white shadow-sm hover:shadow-red-900/50 hover:shadow-lg" title="Back to FazzQuranic Page">
+                    <h1 class="font-bold text-base bg-gradient-to-r from-emerald-400 to-teal-300 bg-clip-text text-transparent">FazzQuranic<span class="text-white"> Hijaiyah Edu</span></h1>
+                </button>
+                <p class="text-[10px] text-slate-400">Belajar Baca & Tulis Al-Quran Interaktif</p>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-3">
+            <div class="hidden sm:flex items-center gap-2 bg-slate-800/90 border border-amber-500/40 px-3.5 py-1.5 rounded-xl shadow-[0_0_20px_rgba(251,191,36,0.35),inset_0_0_10px_rgba(251,191,36,0.2)] hover:bg-amber-600 hover:border-amber-400 animate-[pulse_7s_cubic-bezier(0.4,0,0.6,1)_infinite]">
+				<i class="fa-solid fa-star text-amber-400 drop-shadow-[0_0_10px_rgba(251,191,36,0.9)]"></i>
+				<span class="text-xs font-semibold text-amber-200" x-text="stars + ' Bintang'"></span>
+			</div>
+            <!-- Badge Level Dinamis -->
+            <div class="flex items-center gap-2 bg-emerald-950/50 border border-emerald-500/40 px-3 py-1.5 rounded-xl shadow-[0_0_10px_rgba(16,185,129,0.2)]">
+                <i class="fa-solid fa-graduation-cap text-emerald-400"></i>
+                <span class="text-xs font-semibold text-emerald-300" x-text="'Level ' + currentLevel + ': ' + levelNames[currentLevel]"></span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 max-w-5xl w-full mx-auto p-4 lg:p-6 pb-64 space-y-6">
+
+        <!-- TAB 1: HOME / DASHBOARD -->
+        <div x-show="activeTab === 'home'" x-transition.opacity.duration.300 class="space-y-6">
+            <div class="relative overflow-hidden bg-gradient-to-r from-emerald-900/40 via-teal-950/40 to-slate-900 border border-emerald-500/30 rounded-3xl p-6 lg:p-8 shadow-[0_0_30px_rgba(16,185,129,0.15)]">
+                <div class="relative z-10 space-y-3">
+                    <span class="px-3 py-1 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-full text-[10px] font-bold tracking-wider uppercase" x-text="'Progres Level ' + currentLevel"></span>
+                    <h2 class="text-2xl lg:text-3xl font-bold tracking-tight">Assalamu'alaikum, Sahabat Fazz! 👋</h2>
+                    <p class="text-xs lg:text-sm text-slate-300 max-w-xl">Pilih level belajar di bawah atau lanjutkan materi sesuai tingkat kemampuanmu saat ini.</p>
+
+                    <!-- Progress Bar Level XP -->
+                    <div class="space-y-1 max-w-md pt-1">
+                        <div class="flex justify-between text-[11px] text-slate-400 font-medium">
+                            <span x-text="'XP: ' + userXP + ' / ' + maxXP"></span>
+                            <span x-text="100-Math.round((userXP/maxXP)*100) + '% Menuju Level Berikutnya'"></span>
+                        </div>
+                        <div class="w-full bg-slate-800 h-2.5 rounded-full overflow-hidden border border-slate-700/50">
+                            <div class="bg-gradient-to-r from-emerald-500 to-teal-400 h-full transition-all duration-500" :style="'width: ' + Math.min(100, (userXP/maxXP)*100) + '%'"></div>
+                        </div>
+                    </div>
+
+                    <div class="pt-2 flex flex-wrap gap-3">
+                        <button @click="activeTab = 'baca'" class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold rounded-xl shadow-[0_0_15px_rgba(16,185,129,0.5)] transition transform active:scale-95 flex items-center gap-2">
+                            <span>Mulai Belajar</span>
+                            <i class="fa-solid fa-arrow-right text-[10px]"></i>
+                        </button>
+                        <button @click="startQuiz()" class="px-5 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold rounded-xl border border-slate-700 transition flex items-center gap-2">
+                            <span>Uji Kuis Level Ini</span>
+                            <i class="fa-solid fa-shuffle text-[10px]"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="absolute -right-6 -bottom-10 text-emerald-500/10 font-arabic text-9xl select-none pointer-events-none">ب</div>
+            </div>
+
+            <!-- Kartu Pilihan Level -->
+            <div class="space-y-3">
+                <h3 class="text-sm font-semibold text-slate-300 px-1">Pilih Jenjang / Level Belajar:</h3>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <!-- Level 1 -->
+                    <div @click="switchLevel(1)" :class="currentLevel === 1 ? 'border-emerald-500 bg-emerald-500/10 shadow-[0_0_20px_rgba(16,185,129,0.2)]' : 'border-slate-800 bg-slate-900/70'" class="border p-5 rounded-2xl cursor-pointer transition-all duration-300">
+                        <div class="flex justify-between items-center mb-3">
+                            <div class="w-9 h-9 bg-emerald-500/20 text-emerald-400 rounded-xl flex items-center justify-center font-bold text-xs">L1</div>
+                            <span class="text-[10px] bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded-full font-medium" x-show="currentLevel === 1">Aktif</span>
+                        </div>
+                        <h4 class="font-semibold text-sm mb-1">Iqro Dasar</h4>
+                        <p class="text-xs text-slate-400">Pengenalan 28 huruf tunggal hijaiyah (Alif - Ya).</p>
+                    </div>
+
+                    <!-- Level 2 -->
+                    <div @click="switchLevel(2)" :class="currentLevel === 2 ? 'border-emerald-500 bg-emerald-500/10 shadow-[0_0_20px_rgba(16,185,129,0.2)]' : 'border-slate-800 bg-slate-900/70'" class="border p-5 rounded-2xl cursor-pointer transition-all duration-300">
+                        <div class="flex justify-between items-center mb-3">
+                            <div class="w-9 h-9 bg-teal-500/20 text-teal-400 rounded-xl flex items-center justify-center font-bold text-xs">L2</div>
+                            <span class="text-[10px] bg-teal-500/20 text-teal-300 px-2 py-0.5 rounded-full font-medium" x-show="currentLevel === 2">Aktif</span>
+                        </div>
+                        <h4 class="font-semibold text-sm mb-1">Harakat Lengkap</h4>
+                        <p class="text-xs text-slate-400">Lengkap Fathah (a), Kasrah (i), Dhammah (u) untuk semua huruf.</p>
+                    </div>
+
+                    <!-- Level 3 -->
+                    <div @click="switchLevel(3)" :class="currentLevel === 3 ? 'border-emerald-500 bg-emerald-500/10 shadow-[0_0_20px_rgba(16,185,129,0.2)]' : 'border-slate-800 bg-slate-900/70'" class="border p-5 rounded-2xl cursor-pointer transition-all duration-300">
+                        <div class="flex justify-between items-center mb-3">
+                            <div class="w-9 h-9 bg-amber-500/20 text-amber-400 rounded-xl flex items-center justify-center font-bold text-xs">L3</div>
+                            <span class="text-[10px] bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded-full font-medium" x-show="currentLevel === 3">Aktif</span>
+                        </div>
+                        <h4 class="font-semibold text-sm mb-1">Ahli Quran (Kata Sambung)</h4>
+                        <p class="text-xs text-slate-400">Kumpulan lengkap kata pendek tiga huruf bersambung.</p>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- TAB 2: MODUL MEMBACA (MENYESUAIKAN LEVEL) -->
+        <div x-show="activeTab === 'baca'" x-transition.opacity.duration.300 class="space-y-6" style="display: none;">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h2 class="text-xl font-bold" x-text="'Modul Level ' + currentLevel + ': ' + levelNames[currentLevel]"></h2>
+                    <p class="text-xs text-slate-400">Pilih materi di bawah untuk melihat detail.</p>
+                </div>
+                <button @click="activeTab = 'home'" class="text-xs text-slate-400 hover:text-white bg-slate-900 px-3 py-1.5 rounded-xl border border-slate-800"><i class="fa-solid fa-arrow-left mr-1"></i> Kembali</button>
+            </div>
+
+            <!-- Panel Detail Materi Aktif -->
+            <div class="bg-slate-900/80 border border-slate-800 p-6 rounded-3xl text-center space-y-4 shadow-xl">
+                <div class="w-28 h-28 mx-auto bg-gradient-to-tr from-emerald-600/20 to-teal-500/20 border border-emerald-500/40 rounded-3xl flex items-center justify-center shadow-[0_0_25px_rgba(16,185,129,0.25)]">
+                    <span class="font-arabic text-5xl text-emerald-400" x-text="selectedItem.arabic"></span>
+                </div>
+                <div>
+                    <h3 class="text-lg font-bold" x-text="selectedItem.name"></h3>
+                    <p class="text-xs text-slate-400 mt-1 max-w-sm mx-auto" x-text="selectedItem.desc"></p>
+                </div>
+                <div class="flex justify-center gap-3">
+                    <button @click="playAudio(selectedItem.name)" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-semibold shadow-[0_0_10px_rgba(16,185,129,0.5)] transition flex items-center gap-2">
+						<i class="fa-solid fa-volume-high"></i> Putar Audio
+					</button>
+                    <button x-show="currentLevel === 1" @click="activeTab = 'tulis'" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-semibold transition flex items-center gap-2">
+                        <i class="fa-solid fa-pen-nib"></i> Latih Tulis Ini
+                    </button>
+                </div>
+            </div>
+
+            <!-- Grid Materi Sesuai Level -->
+            <div class="grid grid-cols-3 sm:grid-cols-6 gap-3 pb-24 max-h-[60vh] overflow-y-auto pr-1">
+                <template x-for="(item, index) in getCurrentModuleList()">
+                    <div @click="selectedItem = item"
+                         :class="selectedItem.arabic === item.arabic ? 'border-emerald-500 bg-emerald-500/10 shadow-[0_0_15px_rgba(16,185,129,0.3)]' : 'border-slate-800 bg-slate-900/60 hover:border-slate-700'"
+                         class="border rounded-2xl p-4 text-center cursor-pointer transition-all duration-200 flex flex-col items-center justify-center gap-1">
+                        <span class="font-arabic text-3xl text-emerald-300" x-text="item.arabic"></span>
+                        <span class="text-[10px] text-slate-400 truncate w-full" x-text="item.name"></span>
+                    </div>
+                </template>
+            </div>
+        </div>
+
+        <!-- TAB 3: MODUL LATIHAN MENULIS -->
+        <div x-show="activeTab === 'tulis'" x-transition.opacity.duration.300 class="space-y-6" style="display: none;"
+             x-init="initCanvas()">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h2 class="text-xl font-bold">Latihan Menulis Huruf</h2>
+                    <p class="text-xs text-slate-400">Tulis huruf <span class="text-emerald-400 font-bold" x-text="selectedItem.name"></span> di bawah.</p>
+                </div>
+                <button @click="activeTab = 'home'" class="text-xs text-slate-400 hover:text-white bg-slate-900 px-3 py-1.5 rounded-xl border border-slate-800"><i class="fa-solid fa-arrow-left mr-1"></i> Kembali</button>
+            </div>
+
+            <div class="bg-slate-900/80 border border-slate-800 p-6 rounded-3xl text-center space-y-4 shadow-xl flex flex-col items-center mb-24">
+                <div class="relative w-64 h-64 bg-slate-950 border border-slate-800 rounded-2xl overflow-hidden shadow-inner flex items-center justify-center">
+                    <span class="absolute font-arabic text-9xl text-slate-800/60 select-none pointer-events-none" x-text="selectedItem.arabic"></span>
+                    <canvas id="drawCanvas" class="absolute inset-0 cursor-crosshair touch-none" width="256" height="256"></canvas>
+                </div>
+
+                <div class="flex gap-3">
+                    <button @click="clearCanvas()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold transition flex items-center gap-2">
+                        <i class="fa-solid fa-rotate-right"></i> Hapus / Ulangi
+                    </button>
+                    <button @click="finishWriting()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-semibold shadow-[0_0_10px_rgba(16,185,129,0.5)] transition flex items-center gap-2">
+                        <i class="fa-solid fa-check"></i> Selesai & Cek
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 4: KUIS INTERAKTIF ACAK (MENYESUAIKAN LEVEL) -->
+        <div x-show="activeTab === 'kuis'" x-transition.opacity.duration.300 class="space-y-6" style="display: none;">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h2 class="text-xl font-bold" x-text="'Kuis Level ' + currentLevel + ' (' + levelNames[currentLevel] + ')'"></h2>
+                    <p class="text-xs text-slate-400">Soal diacak otomatis sesuai materi level aktif.</p>
+                </div>
+                <button @click="activeTab = 'home'" class="text-xs text-slate-400 hover:text-white bg-slate-900 px-3 py-1.5 rounded-xl border border-slate-800"><i class="fa-solid fa-arrow-left mr-1"></i> Kembali</button>
+            </div>
+
+            <template x-if="!quizFinished">
+                <div class="bg-slate-900/80 border border-slate-800 p-6 lg:p-8 rounded-3xl text-center space-y-6 shadow-xl max-w-md mx-auto mb-24">
+                    <div class="flex justify-between items-center text-xs text-slate-400 font-medium border-b border-slate-800 pb-3">
+                        <span>Pertanyaan <span x-text="currentQuestionIndex + 1"></span> dari <span x-text="quizQuestions.length"></span></span>
+                        <button @click="startQuiz()" class="text-emerald-400 hover:underline flex items-center gap-1">
+                            <i class="fa-solid fa-shuffle text-[10px]"></i> Acak Ulang
+                        </button>
+                    </div>
+
+                    <div class="py-2">
+                        <h3 class="text-sm font-semibold text-slate-400">Manakah bentuk tulisan untuk pelafalan:</h3>
+                        <p class="text-xl font-bold text-emerald-400 mt-2" x-text="currentQuestion ? currentQuestion.correct.name : ''"></p>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <template x-for="option in currentOptions">
+                            <button @click="answerQuiz(option)"
+                                    class="p-4 bg-slate-800/80 hover:bg-emerald-600/30 hover:border-emerald-500 border border-slate-700 rounded-2xl font-arabic text-3xl text-emerald-300 transition shadow-md active:scale-95"
+                                    x-text="option.arabic">
+                            </button>
+                        </template>
+                    </div>
+                </div>
+            </template>
+
+            <template x-if="quizFinished">
+                <div class="bg-slate-900/80 border border-slate-800 p-8 rounded-3xl text-center space-y-6 shadow-xl max-w-md mx-auto mb-24">
+                    <div class="w-16 h-16 mx-auto bg-amber-500/20 text-amber-400 border border-amber-500/30 rounded-full flex items-center justify-center text-2xl shadow-[0_0_20px_rgba(251,191,36,0.3)]">
+                        <i class="fa-solid fa-trophy"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-bold">Kuis Selesai! 🎉</h3>
+                        <p class="text-xs text-slate-400 mt-1">Skor Anda: <span class="text-emerald-400 font-bold text-base" x-text="quizScore"></span> dari <span x-text="quizQuestions.length"></span></p>
+                    </div>
+                    <button @click="startQuiz()" class="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-semibold shadow-[0_0_15px_rgba(16,185,129,0.5)] transition">
+                        Main Kuis Lagi (Acak Baru)
+                    </button>
+                </div>
+            </template>
+        </div>
+
+    </main>
+
+    <!-- Bottom Navigation Bar -->
+	<!--
+    <nav class="fixed bottom-6 left-4 right-4 max-w-md mx-auto z-50 bg-slate-900/95 backdrop-blur-xl border border-slate-800 rounded-3xl px-4 py-3 flex justify-around items-center shadow-2xl shadow-emerald-950/80">
+        <button @click="activeTab = 'home'" :class="activeTab === 'home' ? 'text-emerald-400 bg-emerald-500/10 scale-105 shadow-lg' : 'text-slate-400 hover:text-slate-200'" class="flex flex-col items-center justify-center w-12 h-12 rounded-2xl transition-all">
+            <i class="fa-solid fa-house text-base"></i>
+        </button>
+        <button @click="activeTab = 'baca'" :class="activeTab === 'baca' ? 'text-emerald-400 bg-emerald-500/10 scale-105 shadow-lg' : 'text-slate-400 hover:text-slate-200'" class="flex flex-col items-center justify-center w-12 h-12 rounded-2xl transition-all">
+            <i class="fa-solid fa-book-open text-base"></i>
+        </button>
+        <button @click="activeTab = 'tulis'" :class="activeTab === 'tulis' ? 'text-emerald-400 bg-emerald-500/10 scale-105 shadow-lg' : 'text-slate-400 hover:text-slate-200'" class="flex flex-col items-center justify-center w-12 h-12 rounded-2xl transition-all">
+            <i class="fa-solid fa-pen-nib text-base"></i>
+        </button>
+        <button @click="startQuiz()" :class="activeTab === 'kuis' ? 'text-emerald-400 bg-emerald-500/10 scale-105 shadow-lg' : 'text-slate-400 hover:text-slate-200'" class="flex flex-col items-center justify-center w-12 h-12 rounded-2xl transition-all">
+            <i class="fa-solid fa-award text-base"></i>
+        </button>
+    </nav> -->
+<!-- ====== NAVBAR ANIMATED ====== -->
+<style>
+  /* Entrance */
+  @keyframes nav-slide-up {
+    from { transform: translateY(120%); opacity: 0; }
+    to   { transform: translateY(0);    opacity: 1; }
+  }
+  /* Icon pop saat klik */
+  @keyframes nav-pop {
+    0%   { transform: scale(1)    rotate(0); }
+    35%  { transform: scale(0.8)  rotate(-12deg); }
+    70%  { transform: scale(1.18) rotate(8deg); }
+    100% { transform: scale(1)    rotate(0); }
+  }
+  /* Dot pulse */
+  @keyframes nav-dot-pulse {
+    0%,100% { transform: translateX(-50%) scale(1);   opacity: 1; }
+    50%     { transform: translateX(-50%) scale(1.7); opacity: .35; }
+  }
+  /* Glow breathing untuk tombol aktif */
+  @keyframes nav-glow {
+    0%,100% { box-shadow: 0 0 0 0 rgba(16,185,129,.35), 0 0 12px rgba(16,185,129,.25); }
+    50%     { box-shadow: 0 0 0 6px rgba(16,185,129,0),   0 0 18px rgba(16,185,129,.45); }
+  }
+  /* Popup item stagger */
+  @keyframes popup-item-in {
+    from { opacity: 0; transform: translateX(12px); }
+    to   { opacity: 1; transform: translateX(0); }
+  }
+
+  .nav-bar        { animation: nav-slide-up .6s cubic-bezier(.2,.9,.3,1.2) both; }
+
+  .nav-btn        { position: relative; transition: all .3s cubic-bezier(.2,.9,.3,1.2); }
+  .nav-btn i      { transition: transform .35s cubic-bezier(.2,.9,.3,1.4), color .3s; }
+  .nav-btn:hover  { transform: translateY(-2px); }
+  .nav-btn:hover i{ transform: translateY(-3px) scale(1.15); }
+  .nav-btn:active i { animation: nav-pop .45s ease; }
+
+  .nav-btn.active {
+    color: #34d399 !important;
+    background: linear-gradient(180deg, rgba(16,185,129,.22), rgba(16,185,129,.06));
+    animation: nav-glow 2.4s ease-in-out infinite;
+  }
+  .nav-btn.active i { filter: drop-shadow(0 0 6px rgba(52,211,153,.85)); }
+
+  .nav-btn.active::after {
+    content:''; position:absolute; bottom:-4px; left:50%;
+    width:6px; height:6px; border-radius:9999px;
+    background:#34d399;
+    transform: translateX(-50%);
+    animation: nav-dot-pulse 1.6s ease-in-out infinite;
+    box-shadow: 0 0 8px rgba(52,211,153,.9);
+  }
+
+  /* Tooltip */
+  .nav-btn .tooltip {
+    position: absolute; bottom: calc(100% + 10px); left: 50%;
+    transform: translateX(-50%) translateY(6px);
+    background: rgba(15,23,42,.96); color:#a7f3d0;
+    font-size: 10px; font-weight: 600; white-space: nowrap;
+    padding: 4px 8px; border-radius: 8px;
+    border: 1px solid rgba(16,185,129,.35);
+    opacity: 0; pointer-events: none;
+    transition: all .25s ease;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+  .nav-btn .tooltip::after {
+    content:''; position:absolute; top:100%; left:50%;
+    transform: translateX(-50%);
+    border:4px solid transparent; border-top-color: rgba(15,23,42,.96);
+  }
+  .nav-btn:hover .tooltip { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  /* Shuffle button rotate */
+  .shuffle-icon { transition: transform .45s cubic-bezier(.2,.9,.3,1.4); }
+  .shuffle-icon.spin { transform: rotate(180deg); color:#34d399; }
+
+  /* Popup stagger */
+  .popup-item { opacity: 0; animation: popup-item-in .35s ease forwards; }
+  .popup-item:nth-child(1) { animation-delay: .04s; }
+  .popup-item:nth-child(2) { animation-delay: .08s; }
+  .popup-item:nth-child(3) { animation-delay: .12s; }
+  .popup-item:nth-child(4) { animation-delay: .16s; }
+  .popup-item:nth-child(5) { animation-delay: .20s; }
+</style>
+
+<nav x-data="{showSwitchPopup: false }"
+     class="nav-bar fixed bottom-6 left-4 right-4 max-w-md mx-auto z-50
+            bg-slate-900/95 backdrop-blur-xl border border-slate-800
+            rounded-3xl px-4 py-3 flex justify-around items-center
+            shadow-2xl shadow-emerald-950/80">
+
+  <!-- Home -->
+  <button @click="activeTab='home'; navigator.vibrate?.(10)"
+          :class="activeTab==='home' && 'active'"
+          class="nav-btn flex items-center justify-center w-12 h-12 rounded-2xl text-slate-400 hover:text-slate-200">
+    <i class="fa-solid fa-house text-base"></i>
+    <span class="tooltip">Beranda</span>
+  </button>
+
+  <!-- Baca -->
+  <button @click="activeTab='baca'; navigator.vibrate?.(10)"
+          :class="activeTab==='baca' && 'active'"
+          class="nav-btn flex items-center justify-center w-12 h-12 rounded-2xl text-slate-400 hover:text-slate-200">
+    <i class="fa-solid fa-book-open text-base"></i>
+    <span class="tooltip">Baca</span>
+  </button>
+
+  <!-- Tulis -->
+  <button @click="activeTab='tulis'; navigator.vibrate?.(10)"
+          :class="activeTab==='tulis' && 'active'"
+          class="nav-btn flex items-center justify-center w-12 h-12 rounded-2xl text-slate-400 hover:text-slate-200">
+    <i class="fa-solid fa-pen-nib text-base"></i>
+    <span class="tooltip">Tulis</span>
+  </button>
+
+  <!-- Kuis -->
+  <button @click="activeTab='kuis'; navigator.vibrate?.(10); startQuiz()"
+          :class="activeTab==='kuis' && 'active'"
+          class="nav-btn flex items-center justify-center w-12 h-12 rounded-2xl text-slate-400 hover:text-slate-200">
+    <i class="fa-solid fa-award text-base"></i>
+    <span class="tooltip">Kuis</span>
+  </button>
+
+  <!-- Shuffle / Popup Pindah Halaman -->
+  <div class="relative shrink-0 z-20" @click.outside="showSwitchPopup = false">
+
+    <button @click.stop="showSwitchPopup = !showSwitchPopup; navigator.vibrate?.(10)"
+            class="nav-btn flex items-center justify-center w-11 h-11 shrink-0 rounded-2xl
+                   bg-slate-800/80 border border-slate-700/50 shadow-inner
+                   text-slate-400 hover:text-emerald-300 transition-all duration-300">
+      <i class="fa-solid fa-shuffle text-sm shuffle-icon"
+         :class="showSwitchPopup ? 'spin' : ''"></i>
+      <span class="tooltip">Pindah Halaman</span>
+    </button>
+
+    <!-- Backdrop (opsional, biar popup fokus) -->
+    <div x-show="showSwitchPopup"
+         x-transition:enter="transition ease-out duration-200"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-150"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0"
+         @click="showSwitchPopup=false"
+         class="fixed inset-0 bg-black/50 backdrop-blur-sm z-40"
+         style="display:none;"></div>
+
+    <!-- Popup Menu -->
+    <div x-show="showSwitchPopup"
+         x-transition:enter="transition ease-out duration-250"
+         x-transition:enter-start="opacity-0 translate-y-3 scale-95"
+         x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+         x-transition:leave="transition ease-in duration-150"
+         x-transition:leave-start="opacity-100 translate-y-0 scale-100"
+         x-transition:leave-end="opacity-0 translate-y-3 scale-95"
+         class="fixed right-4 bottom-20 w-60 bg-slate-900/95 backdrop-blur-2xl
+                border border-slate-700/80 rounded-2xl shadow-2xl py-2 z-50
+                [-webkit-backdrop-filter:blur(24px)]"
+         style="display:none;">
+
+      <div class="px-4 py-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider
+                  border-b border-slate-800 mb-1 flex items-center gap-2">
+        <i class="fa-solid fa-arrow-right-arrow-left text-emerald-400"></i>
+        Pindah Halaman
+      </div>
+
+      <div class="max-h-60 overflow-y-auto overscroll-contain">
+        <button onclick="window.location.href='index.html'"
+                class="popup-item w-full text-left px-4 py-2.5 text-xs text-slate-300
+                       hover:bg-emerald-600 hover:text-white hover:pl-5
+                       transition-all duration-200 flex items-center gap-2 group">
+          <i class="fa-solid fa-book-open text-emerald-400 w-4 group-hover:scale-125 transition-transform"></i>
+          Fazz Smart Quranic
+        </button>
+
+        <button onclick="window.location.href='iklim.html'"
+                class="popup-item w-full text-left px-4 py-2.5 text-xs text-slate-300
+                       hover:bg-emerald-600 hover:text-white hover:pl-5
+                       transition-all duration-200 flex items-center gap-2 group">
+          <i class="fa-solid fa-cloud-sun text-emerald-400 w-4 group-hover:scale-125 transition-transform"></i>
+          Fazz AgroClimate AI
+        </button>
+
+        <button onclick="switchPage('altimeter.html', 'Fazz GeoAltimeter')"
+                class="popup-item w-full text-left px-4 py-2.5 text-xs text-slate-300
+                       hover:bg-emerald-600 hover:text-white hover:pl-5
+                       transition-all duration-200 flex items-center gap-2 group">
+          <i class="fa-solid fa-mountain text-emerald-400 w-4 group-hover:scale-125 transition-transform"></i>
+          Fazz GeoAltimeter
+        </button>
+
+        <button onclick="window.location.href='kifayah.html'"
+                class="popup-item w-full text-left px-4 py-2.5 text-xs text-slate-300
+                       hover:bg-emerald-600 hover:text-white hover:pl-5
+                       transition-all duration-200 flex items-center gap-2 group">
+          <i class="fa-solid fa-calculator text-emerald-400 w-4 group-hover:scale-125 transition-transform"></i>
+          Kalkulator Waris
+        </button>
+
+        <button onclick="window.location.href='sholat.html'"
+                class="popup-item w-full text-left px-4 py-2.5 text-xs text-slate-300
+                       hover:bg-emerald-600 hover:text-white hover:pl-5
+                       transition-all duration-200 flex items-center gap-2 group">
+          <i class="fa-solid fa-person-praying text-emerald-400 w-4 group-hover:scale-125 transition-transform"></i>
+          Belajar Shalat dll
+        </button>
+      </div>
+    </div>
+
+  </div>
+</nav>
+	
+
+    <!-- Skrip Aplikasi -->
+    <script>
+        // ============================================
+        // === HELPER SWEETALERT2 (TEMA GELAP EMERALD) ===
+        // ============================================
+        const swalDark = Swal.mixin({
+            background: '#0f172a',
+            color: '#e2e8f0',
+            confirmButtonColor: '#10b981',
+            cancelButtonColor: '#334155',
+            customClass: {
+                popup: 'rounded-3xl border border-emerald-500/30',
+                title: 'text-emerald-300',
+                confirmButton: 'rounded-xl font-semibold px-6 py-2.5',
+                cancelButton: 'rounded-xl font-semibold px-6 py-2.5'
+            }
+        });
+
+        function swalSuccess(title, text = '') {
+            return swalDark.fire({
+                icon: 'success',
+                title: title,
+                text: text,
+                timer: 1800,
+                timerProgressBar: true,
+                showConfirmButton: false
+            });
+        }
+
+        function swalInfo(title, text = '') {
+            return swalDark.fire({
+                icon: 'info',
+                title: title,
+                text: text,
+                timer: 1800,
+                timerProgressBar: true,
+                showConfirmButton: false
+            });
+        }
+
+        function swalError(title, text = '') {
+            return swalDark.fire({
+                icon: 'error',
+                title: title,
+                text: text,
+                confirmButtonText: 'OK'
+            });
+        }
+
+        // ============================================
+        // === APLIKASI ALPINE.JS ===
+        // ============================================
+        function tarteelApp() {
+            return {
+                activeTab: 'home',
+                stars: 7,
+                currentLevel: 1,
+                userXP: 21,
+                maxXP: 100,
+                levelNames: {
+                    1: 'Iqro Dasar',
+                    2: 'Harakat Lengkap',
+                    3: 'Ahli Quran (Kata Sambung)'
+                },
+				selectedHurufIndex: 0,
+					get selectedHuruf() {
+					return this.level1Data[this.selectedHurufIndex];
+				},
+
+                // Level 1: 28 Huruf Hijaiyah Tunggal
+                level1Data: [
+                    { name: 'Alif', arabic: 'ا', desc: 'Huruf pertama.' },
+                    { name: 'Ba', arabic: 'ب', desc: 'Satu titik di bawah.' },
+                    { name: 'Ta', arabic: 'ت', desc: 'Dua titik di atas.' },
+                    { name: 'Tsa', arabic: 'ث', desc: 'Tiga titik di atas.' },
+                    { name: 'Jim', arabic: 'ج', desc: 'Satu titik di tengah.' },
+                    { name: 'Ha', arabic: 'ح', desc: 'Tanpa titik.' },
+                    { name: 'Kha', arabic: 'خ', desc: 'Satu titik di atas.' },
+                    { name: 'Dal', arabic: 'د', desc: 'Melengkung kanan.' },
+                    { name: 'Dzal', arabic: 'ذ', desc: 'Satu titik di atas.' },
+                    { name: 'Ra', arabic: 'ر', desc: 'Melengkung bawah.' },
+                    { name: 'Zai', arabic: 'ز', desc: 'Satu titik di atas.' },
+                    { name: 'Sin', arabic: 'س', desc: 'Tiga gigi kecil.' },
+                    { name: 'Syin', arabic: 'ش', desc: 'Tiga gigi titik tiga.' },
+                    { name: 'Shod', arabic: 'ص', desc: 'Kepala berongga.' },
+                    { name: 'Dhod', arabic: 'ض', desc: 'Kepala berongga titik.' },
+                    { name: 'Tho', arabic: 'ط', desc: 'Garis vertikal.' },
+                    { name: 'Zho', arabic: 'ظ', desc: 'Garis vertikal titik.' },
+                    { name: 'Ain', arabic: 'ع', desc: 'Tengah tenggorokan.' },
+                    { name: 'Ghoin', arabic: 'غ', desc: 'Titik atas tebal.' },
+                    { name: 'Fa', arabic: 'ف', desc: 'Lingkaran terbuka.' },
+                    { name: 'Qof', arabic: 'ق', desc: 'Dua titik atas.' },
+                    { name: 'Kaf', arabic: 'ك', desc: 'Garis hiasan.' },
+                    { name: 'Lam', arabic: 'ل', desc: 'Tongkat panjang.' },
+                    { name: 'Mim', arabic: 'م', desc: 'Lingkaran kecil.' },
+                    { name: 'Nun', arabic: 'ن', desc: 'Mangkok titik satu.' },
+                    { name: 'Wau', arabic: 'و', desc: 'Kepala bulat ekor.' },
+                    { name: 'Ha (kecil)', arabic: 'ه', desc: 'Bulatan tengah.' },
+                    { name: 'Lam-Alif', arabic: 'لا', desc: 'Gabungan Lam Alif.' },
+                    { name: 'Ya', arabic: 'ي', desc: 'Dua titik bawah.' }
+                ],
+
+                // Level 2: Harakat Lengkap
+                level2Data: [
+                    { name: 'A / I / U (Alif)', arabic: 'أَ إِ أُ', desc: 'Alif berharakat Fathah, Kasrah, Dhammah.' },
+                    { name: 'Ba / Bi / Bu', arabic: 'بَ بِ بُ', desc: 'Ba dengan harakat lengkap.' },
+                    { name: 'Ta / Ti / Tu', arabic: 'تَ تِ تُ', desc: 'Ta dengan harakat lengkap.' },
+                    { name: 'Tsa / Tsi / Tsu', arabic: 'ثَ ثِ ثُ', desc: 'Tsa dengan harakat lengkap.' },
+                    { name: 'Ja / Ji / Ju', arabic: 'جَ جِ جُ', desc: 'Jim dengan harakat lengkap.' },
+                    { name: 'Ha / Hi / Hu', arabic: 'حَ حِ حُ', desc: 'Ha dengan harakat lengkap.' },
+                    { name: 'Kha / Khi / Khu', arabic: 'خَ خِ خُ', desc: 'Kha dengan harakat lengkap.' },
+                    { name: 'Da / Di / Du', arabic: 'دَ دِ دُ', desc: 'Dal dengan harakat lengkap.' },
+                    { name: 'Dza / Dzi / Dzu', arabic: 'ذَ ذِ ذُ', desc: 'Dzal dengan harakat lengkap.' },
+                    { name: 'Ra / Ri / Ru', arabic: 'رَ رِ رُ', desc: 'Ra dengan harakat lengkap.' },
+                    { name: 'Za / Zi / Zu', arabic: 'زَ زِ زُ', desc: 'Zai dengan harakat lengkap.' },
+                    { name: 'Sa / Si / Su', arabic: 'سَ سِ سُ', desc: 'Sin dengan harakat lengkap.' },
+                    { name: 'Sya / Syi / Syu', arabic: 'شَ شِ شُ', desc: 'Syin dengan harakat lengkap.' },
+                    { name: 'Sha / Shi / Shu', arabic: 'صَ صِ صُ', desc: 'Shod dengan harakat lengkap.' },
+                    { name: 'Dha / Dhi / Dhu', arabic: 'ضَ ضِ ضُ', desc: 'Dhod dengan harakat lengkap.' },
+                    { name: 'Tha / Thi / Thu', arabic: 'طَ طِ طُ', desc: 'Tho dengan harakat lengkap.' },
+                    { name: 'Zha / Zhi / Zhu', arabic: 'ظَ ظِ ظُ', desc: 'Zho dengan harakat lengkap.' },
+                    { name: 'A / I / U (Ain)', arabic: 'عَ عَ عُ', desc: 'Ain dengan harakat lengkap.' },
+                    { name: 'Gha / Ghi / Ghu', arabic: 'غَ غِ غُ', desc: 'Ghoin dengan harakat lengkap.' },
+                    { name: 'Fa / Fi / Fu', arabic: 'فَ فِ فُ', desc: 'Fa dengan harakat lengkap.' },
+                    { name: 'Qa / Qi / Qu', arabic: 'قَ قِ قُ', desc: 'Qof dengan harakat lengkap.' },
+                    { name: 'Ka / Ki / Ku', arabic: 'كَ كِ كُ', desc: 'Kaf dengan harakat lengkap.' },
+                    { name: 'La / Li / Lu', arabic: 'لَ لِ لُ', desc: 'Lam dengan harakat lengkap.' },
+                    { name: 'Ma / Mi / Mu', arabic: 'مَ مِ مُ', desc: 'Mim dengan harakat lengkap.' },
+                    { name: 'Na / Ni / Nu', arabic: 'نَ نِ نُ', desc: 'Nun dengan harakat lengkap.' },
+                    { name: 'Wa / Wi / Wu', arabic: 'وَ وِ وُ', desc: 'Wau dengan harakat lengkap.' },
+                    { name: 'Ha / Hi / Hu (Kecil)', arabic: 'هَ هِ هُ', desc: 'Ha kecil dengan harakat lengkap.' },
+                    { name: 'Ya / Yi / Yu', arabic: 'يَ يِ يُ', desc: 'Ya dengan harakat lengkap.' }
+                ],
+
+                // Level 3: Kata Sambung Lengkap
+                level3Data: [
+                    // === KATA KERJA (FI'IL) ===
+                    { name: 'Kataba (Menulis)', arabic: 'كَتَبَ', desc: 'Ka-ta-ba' },
+                    { name: 'Qoro\'a (Membaca)', arabic: 'قَرَأَ', desc: 'Qo-ro-a' },
+                    { name: 'Dzahaba (Pergi)', arabic: 'ذَهَبَ', desc: 'Dza-ha-ba' },
+                    { name: 'Hasana (Bagus)', arabic: 'حَسَنَ', desc: 'Ha-sa-na' },
+                    { name: 'Amila (Mengerjakan)', arabic: 'عَمِلَ', desc: 'A-mi-la' },
+                    { name: 'Kholaqo (Menciptakan)', arabic: 'خَلَقَ', desc: 'Kho-la-qo' },
+                    { name: 'Jalasa (Duduk)', arabic: 'جَلَسَ', desc: 'Ja-la-sa' },
+                    { name: 'Sami\'a (Mendengar)', arabic: 'سَمِعَ', desc: 'Sa-mi-a' },
+                    { name: 'Fataha (Membuka)', arabic: 'فَتَحَ', desc: 'Fa-ta-ha' },
+                    { name: 'Khoroja (Keluar)', arabic: 'خَرَجَ', desc: 'Kho-ro-ja' },
+                    { name: 'Syariba (Minum)', arabic: 'شَرِبَ', desc: 'Sya-ri-ba' },
+                    { name: 'A\'ala (Agung/Tinggi)', arabic: 'عَلَا', desc: 'A-la' },
+                    { name: 'Akhodza (Mengambil)', arabic: 'أَخَذَ', desc: 'A-kho-dza' },
+                    { name: 'Bata\'sa (Gagah/Keras)', arabic: 'بَتَسَ', desc: 'Ba-ta-sa' },
+                    { name: 'Hasada (Dengki)', arabic: 'حَسَدَ', desc: 'Ha-sa-da' },
+                    { name: 'Rosada (Lurus)', arabic: 'رَشَدَ', desc: 'Ro-sya-da' },
+                    { name: 'Jadala (Berdebat)', arabic: 'جَدَلَ', desc: 'Ja-da-la' },
+                    { name: 'Sajada (Bersujud)', arabic: 'سَجَدَ', desc: 'Sa-ja-da' },
+                    { name: 'Nashoro (Menolong)', arabic: 'نَصَرَ', desc: 'Na-sho-ro' },
+                    { name: 'Dhoroba (Memukul)', arabic: 'ضَرَبَ', desc: 'Dho-ro-ba' },
+                    { name: 'Rojala (Berjalan kaki)', arabic: 'رَجَلَ', desc: 'Ro-ja-la' },
+                    { name: 'Dakhala (Masuk)', arabic: 'دَخَلَ', desc: 'Da-kho-la' },
+                    { name: 'Kadzaba (Berdusta)', arabic: 'كَذَبَ', desc: 'Ka-dza-ba' },
+                    { name: 'Syakaro (Bersyukur)', arabic: 'شَكَرَ', desc: 'Sya-ka-ro' },
+                    { name: 'Shobaro (Bersabar)', arabic: 'صَبَرَ', desc: 'Sho-bo-ro' },
+                    { name: 'Dhohaka (Tertawa)', arabic: 'ضَحِكَ', desc: 'Dho-hi-ka' },
+                    { name: 'Bakaa (Menangis)', arabic: 'بَكَى', desc: 'Ba-kaa' },
+                    { name: 'Hafizho (Menjaga)', arabic: 'حَفِظَ', desc: 'Ha-fi-zho' },
+                    { name: 'Nadhoro (Melihat)', arabic: 'نَظَرَ', desc: 'Na-zho-ro' },
+                    { name: 'Kabadza (Memegang)', arabic: 'قَبَضَ', desc: 'Qo-bo-dho' },
+                    { name: 'Robiha (Beruntung)', arabic: 'رَبِحَ', desc: 'Ro-bi-ha' },
+                    { name: 'Khosiro (Rugi)', arabic: 'خَسِرَ', desc: 'Kho-si-ro' },
+                    { name: 'Fahima (Memahami)', arabic: 'فَهِمَ', desc: 'Fa-hi-ma' },
+                    { name: 'Alima (Mengetahui)', arabic: 'عَلِمَ', desc: 'A-li-ma' },
+                    { name: 'Jahila (Bodoh)', arabic: 'جَهِلَ', desc: 'Ja-hi-la' },
+                    { name: 'Karuma (Mulia)', arabic: 'كَرُمَ', desc: 'Ka-ru-ma' },
+                    { name: 'Bakhila (Kikir)', arabic: 'بَخِلَ', desc: 'Ba-khi-la' },
+                    { name: 'Robaha (Bersenang)', arabic: 'رَبَحَ', desc: 'Ro-ba-ha' },
+                    { name: 'Syahida (Menyaksikan)', arabic: 'شَهِدَ', desc: 'Sya-hi-da' },
+                    { name: 'Wajada (Menemukan)', arabic: 'وَجَدَ', desc: 'Wa-ja-da' },
+                    { name: 'Wa\'ada (Berjanji)', arabic: 'وَعَدَ', desc: 'Wa-a-da' },
+                    { name: 'Washola (Menyambung)', arabic: 'وَصَلَ', desc: 'Wa-sho-la' },
+                    { name: 'Waqofa (Berhenti)', arabic: 'وَقَفَ', desc: 'Wa-qo-fa' },
+                    { name: 'Nazala (Turun)', arabic: 'نَزَلَ', desc: 'Na-za-la' },
+                    { name: 'Sho\'ida (Naik)', arabic: 'صَعِدَ', desc: 'Sho-i-da' },
+                    { name: 'Robasa (Mengawasi)', arabic: 'رَقَبَ', desc: 'Ro-qo-ba' },
+                    { name: 'Hakama (Memutuskan)', arabic: 'حَكَمَ', desc: 'Ha-ka-ma' },
+                    { name: 'Rohima (Menyayangi)', arabic: 'رَحِمَ', desc: 'Ro-hi-ma' },
+                    { name: 'Ghofaro (Mengampuni)', arabic: 'غَفَرَ', desc: 'Gho-fa-ro' },
+                    { name: 'Kafaro (Mengingkari)', arabic: 'كَفَرَ', desc: 'Ka-fa-ro' },
+                    { name: 'Rosala (Mengutus)', arabic: 'رَسَلَ', desc: 'Ro-sa-la' },
+                    { name: 'Balagho (Menyampaikan)', arabic: 'بَلَغَ', desc: 'Ba-lo-gho' },
+                    { name: 'Saroqa (Mencuri)', arabic: 'سَرَقَ', desc: 'Sa-ro-qo' },
+                    { name: 'Kadama (Mendahului)', arabic: 'قَدَمَ', desc: 'Qo-da-ma' },
+                    { name: 'Akhroja (Mengeluarkan)', arabic: 'أَخْرَجَ', desc: 'Akh-ro-ja' },
+                    { name: 'Adkhala (Memasukkan)', arabic: 'أَدْخَلَ', desc: 'Ad-kho-la' },
+                    { name: 'Ansyala (Menurunkan)', arabic: 'أَنْزَلَ', desc: 'An-za-la' },
+                    { name: 'Arsala (Mengirim)', arabic: 'أَرْسَلَ', desc: 'Ar-sa-la' },
+                    { name: 'Ahsana (Memperbaiki)', arabic: 'أَحْسَنَ', desc: 'Ah-sa-na' },
+                    { name: 'A\'tho (Memberi)', arabic: 'أَعْطَى', desc: 'A\'tho' },
+                    { name: 'Managho (Mencegah)', arabic: 'مَنَعَ', desc: 'Ma-na-\'a' },
+                    { name: 'Nafaha (Menolong)', arabic: 'نَفَعَ', desc: 'Na-fa-\'a' },
+                    { name: 'Dhofa\'a (Mendorong)', arabic: 'دَفَعَ', desc: 'Da-fa-\'a' },
+                    { name: 'Rofa\'a (Mengangkat)', arabic: 'رَفَعَ', desc: 'Ro-fa-\'a' },
+                    { name: 'Qotho\'a (Memotong)', arabic: 'قَطَعَ', desc: 'Qo-tho-\'a' },
+                    { name: 'Jama\'a (Mengumpulkan)', arabic: 'جَمَعَ', desc: 'Ja-ma-\'a' },
+                    { name: 'Faroqo (Memisahkan)', arabic: 'فَرَقَ', desc: 'Fa-ro-qo' },
+                    { name: 'Saro\'a (Cepat)', arabic: 'سَرَعَ', desc: 'Sa-ro-\'a' },
+
+                    // === KATA BENDA (ISIM) ===
+                    { name: 'Baitun (Rumah)', arabic: 'بَيْتٌ', desc: 'Bai-tun' },
+                    { name: 'Kitaabun (Buku)', arabic: 'كِتَابٌ', desc: 'Ki-taa-bun' },
+                    { name: 'Qolamun (Pena)', arabic: 'قَلَمٌ', desc: 'Qo-la-mun' },
+                    { name: 'Baabun (Pintu)', arabic: 'بَابٌ', desc: 'Baa-bun' },
+                    { name: 'Maaun (Air)', arabic: 'مَاءٌ', desc: 'Maa-un' },
+                    { name: 'Khubzun (Roti)', arabic: 'خُبْزٌ', desc: 'Khub-zun' },
+                    { name: 'Labanun (Susu)', arabic: 'لَبَنٌ', desc: 'La-ba-nun' },
+                    { name: 'Syamsun (Matahari)', arabic: 'شَمْسٌ', desc: 'Syam-sun' },
+                    { name: 'Qomarun (Bulan)', arabic: 'قَمَرٌ', desc: 'Qo-ma-run' },
+                    { name: 'Najmun (Bintang)', arabic: 'نَجْمٌ', desc: 'Naj-mun' },
+                    { name: 'Samaaun (Langit)', arabic: 'سَمَاءٌ', desc: 'Sa-maa-un' },
+                    { name: 'Ardhun (Bumi)', arabic: 'أَرْضٌ', desc: 'Ar-dhun' },
+                    { name: 'Jabalun (Gunung)', arabic: 'جَبَلٌ', desc: 'Ja-ba-lun' },
+                    { name: 'Bahrum (Laut)', arabic: 'بَحْرٌ', desc: 'Bah-run' },
+                    { name: 'Nahrum (Sungai)', arabic: 'نَهْرٌ', desc: 'Nah-run' },
+                    { name: 'Syajarotun (Pohon)', arabic: 'شَجَرَةٌ', desc: 'Sya-ja-ro-tun' },
+                    { name: 'Waroqun (Daun)', arabic: 'وَرَقٌ', desc: 'Wa-ro-qun' },
+                    { name: 'Tsamarotun (Buah)', arabic: 'ثَمَرَةٌ', desc: 'Tsa-ma-ro-tun' },
+                    { name: 'Zahrotun (Bunga)', arabic: 'زَهْرَةٌ', desc: 'Zah-ro-tun' },
+                    { name: 'Tho\'irun (Burung)', arabic: 'طَائِرٌ', desc: 'Tho-i-run' },
+                    { name: 'Samaakun (Ikan)', arabic: 'سَمَكٌ', desc: 'Sa-ma-kun' },
+                    { name: 'Qiththun (Kucing)', arabic: 'قِطٌّ', desc: 'Qith-thun' },
+                    { name: 'Kalabun (Anjing)', arabic: 'كَلْبٌ', desc: 'Kal-bun' },
+                    { name: 'Hisoonun (Kuda)', arabic: 'حِصَانٌ', desc: 'Hi-shoo-nun' },
+                    { name: 'BaQorotun (Sapi)', arabic: 'بَقَرَةٌ', desc: 'Ba-qo-ro-tun' },
+                    { name: 'Ghonamun (Kambing)', arabic: 'غَنَمٌ', desc: 'Gho-na-mun' },
+                    { name: 'Jamalun (Unta)', arabic: 'جَمَلٌ', desc: 'Ja-ma-lun' },
+                    { name: 'Insaanun (Manusia)', arabic: 'إِنْسَانٌ', desc: 'In-saa-nun' },
+                    { name: 'Rojulun (Lelaki)', arabic: 'رَجُلٌ', desc: 'Ro-ju-lun' },
+                    { name: 'Imro\'atun (Wanita)', arabic: 'اِمْرَأَةٌ', desc: 'Im-ro-a-tun' },
+                    { name: 'Waladun (Anak)', arabic: 'وَلَدٌ', desc: 'Wa-la-dun' },
+                    { name: 'Ummun (Ibu)', arabic: 'أُمٌّ', desc: 'Um-mun' },
+                    { name: 'Abun (Ayah)', arabic: 'أَبٌ', desc: 'A-bun' },
+                    { name: 'Akhun (Saudara)', arabic: 'أَخٌ', desc: 'A-khun' },
+                    { name: 'Ukhtun (Saudari)', arabic: 'أُخْتٌ', desc: 'Ukh-tun' },
+                    { name: 'Jaddun (Kakek)', arabic: 'جَدٌّ', desc: 'Jad-dun' },
+                    { name: 'Jaddatun (Nenek)', arabic: 'جَدَّةٌ', desc: 'Jad-da-tun' },
+                    { name: 'Thoolibun (Pelajar)', arabic: 'طَالِبٌ', desc: 'Thoo-li-bun' },
+                    { name: 'Mudarrisun (Guru)', arabic: 'مُدَرِّسٌ', desc: 'Mu-dar-ri-sun' },
+                    { name: 'Thobiibun (Dokter)', arabic: 'طَبِيبٌ', desc: 'Tho-bii-bun' },
+                    { name: 'Muhandisun (Insinyur)', arabic: 'مُهَنْدِسٌ', desc: 'Mu-han-di-sun' },
+                    { name: 'Taa-jirun (Pedagang)', arabic: 'تَاجِرٌ', desc: 'Taa-ji-run' },
+                    { name: 'Muzzaari\'un (Petani)', arabic: 'مُزَارِعٌ', desc: 'Mu-zaa-ri-\'un' },
+                    { name: 'Masjidun (Masjid)', arabic: 'مَسْجِدٌ', desc: 'Mas-ji-dun' },
+                    { name: 'Madrosatun (Sekolah)', arabic: 'مَدْرَسَةٌ', desc: 'Mad-ro-sa-tun' },
+                    { name: 'Suuqun (Pasar)', arabic: 'سُوقٌ', desc: 'Suu-qun' },
+                    { name: 'Madiinatun (Kota)', arabic: 'مَدِينَةٌ', desc: 'Ma-dii-na-tun' },
+                    { name: 'Qoryatun (Desa)', arabic: 'قَرْيَةٌ', desc: 'Qor-ya-tun' },
+                    { name: 'Thoriqun (Jalan)', arabic: 'طَرِيقٌ', desc: 'Tho-rii-qun' },
+                    { name: 'Kubrun (Besar)', arabic: 'كَبِيرٌ', desc: 'Ka-bii-run' },
+                    { name: 'Shoghiirun (Kecil)', arabic: 'صَغِيرٌ', desc: 'Sho-ghii-run' },
+                    { name: 'Jadiidun (Baru)', arabic: 'جَدِيدٌ', desc: 'Ja-dii-dun' },
+                    { name: 'Qodiimun (Lama)', arabic: 'قَدِيمٌ', desc: 'Qo-dii-mun' },
+                    { name: 'Thowiilun (Panjang)', arabic: 'طَوِيلٌ', desc: 'Tho-wii-lun' },
+                    { name: 'Qoshiirun (Pendek)', arabic: 'قَصِيرٌ', desc: 'Qo-shii-run' },
+                    { name: 'Jamiilun (Indah)', arabic: 'جَمِيلٌ', desc: 'Ja-mii-lun' },
+                    { name: 'Qobiihun (Buruk)', arabic: 'قَبِيحٌ', desc: 'Qo-bii-hun' },
+                    { name: 'Sa\'iidun (Bahagia)', arabic: 'سَعِيدٌ', desc: 'Sa-\'ii-dun' },
+                    { name: 'Haziinun (Sedih)', arabic: 'حَزِينٌ', desc: 'Ha-zii-nun' },
+                    { name: 'Ghoniyyun (Kaya)', arabic: 'غَنِيٌّ', desc: 'Gho-niy-yun' },
+                    { name: 'Faqiirun (Miskin)', arabic: 'فَقِيرٌ', desc: 'Fa-qii-run' },
+                    { name: 'Qowiyyun (Kuat)', arabic: 'قَوِيٌّ', desc: 'Qo-wiy-yun' },
+                    { name: 'Dho\'iifun (Lemah)', arabic: 'ضَعِيفٌ', desc: 'Dho-\'ii-fun' },
+                    { name: 'Syadiidun (Keras)', arabic: 'شَدِيدٌ', desc: 'Sya-dii-dun' },
+                    { name: 'Khofiifun (Ringan)', arabic: 'خَفِيفٌ', desc: 'Kho-fii-fun' },
+                    { name: 'Tsaqiilun (Berat)', arabic: 'ثَقِيلٌ', desc: 'Tsa-qii-lun' },
+                    { name: 'Sahhihun (Sehat)', arabic: 'صَحِيحٌ', desc: 'Sho-hii-hun' },
+                    { name: 'Mariidhun (Sakit)', arabic: 'مَرِيضٌ', desc: 'Ma-rii-dhun' },
+                    { name: 'Haqqun (Benar)', arabic: 'حَقٌّ', desc: 'Haq-qun' },
+                    { name: 'Baathilun (Salah)', arabic: 'بَاطِلٌ', desc: 'Baa-thi-lun' },
+                    { name: 'Haliibun (Susu)', arabic: 'حَلِيبٌ', desc: 'Ha-lii-bun' },
+                    { name: 'Tuffaahun (Apel)', arabic: 'تُفَّاحٌ', desc: 'Tuf-faa-hun' },
+                    { name: 'Mauzun (Pisang)', arabic: 'مَوْزٌ', desc: 'Mau-zun' },
+                    { name: 'Burtuqoolun (Jeruk)', arabic: 'بُرْتُقَالٌ', desc: 'Bur-tu-qoo-lun' },
+                    { name: '\'Inabun (Anggur)', arabic: 'عِنَبٌ', desc: '\'I-na-bun' },
+                    { name: 'Tamrun (Kurma)', arabic: 'تَمْرٌ', desc: 'Tam-run' },
+                    { name: 'Zaitunun (Zaitun)', arabic: 'زَيْتُونٌ', desc: 'Zai-tuu-nun' },
+                    { name: 'Baidhun (Telur)', arabic: 'بَيْضٌ', desc: 'Bai-dhun' },
+                    { name: 'Lahmun (Daging)', arabic: 'لَحْمٌ', desc: 'Lah-mun' },
+                    { name: 'Samakun (Ikan)', arabic: 'سَمَكٌ', desc: 'Sa-ma-kun' },
+                    { name: 'Ruzzun (Beras)', arabic: 'رُزٌّ', desc: 'Ruz-zun' },
+                    { name: 'Sukkarun (Gula)', arabic: 'سُكَّرٌ', desc: 'Suk-ka-run' },
+                    { name: 'Milhun (Garam)', arabic: 'مِلْحٌ', desc: 'Mil-hun' },
+                    { name: 'Fakihah (Buah)', arabic: 'فَاكِهَةٌ', desc: 'Faa-ki-hah' },
+                    { name: 'Khudhroh (Sayur)', arabic: 'خُضْرَةٌ', desc: 'Khudh-roh' },
+                    { name: 'Samowi (Langit-ku)', arabic: 'سَمَاوِي', desc: 'Sa-maa-wi' },
+                    { name: 'Hayaatun (Kehidupan)', arabic: 'حَيَاةٌ', desc: 'Ha-yaa-tun' },
+                    { name: 'Mautun (Kematian)', arabic: 'مَوْتٌ', desc: 'Mau-tun' },
+                    { name: 'Ilmun (Ilmu)', arabic: 'عِلْمٌ', desc: 'Il-mun' },
+                    { name: 'Aqlun (Akal)', arabic: 'عَقْلٌ', desc: 'Aq-lun' },
+                    { name: 'Qolbun (Hati)', arabic: 'قَلْبٌ', desc: 'Qol-bun' },
+                    { name: 'Nafsun (Jiwa)', arabic: 'نَفْسٌ', desc: 'Naf-sun' },
+                    { name: 'Rabbun (Tuhan)', arabic: 'رَبٌّ', desc: 'Rab-bun' },
+                    { name: 'Deenun (Agama)', arabic: 'دِينٌ', desc: 'Dii-nun' },
+                    { name: 'Imaanun (Iman)', arabic: 'إِيمَانٌ', desc: 'Ii-maa-nun' },
+                    { name: 'Islaamun (Islam)', arabic: 'إِسْلَامٌ', desc: 'Is-laa-mun' },
+                    { name: 'Akhiiroh (Akhirat)', arabic: 'آخِرَةٌ', desc: 'Aa-khi-roh' },
+                    { name: 'DunYaa (Dunia)', arabic: 'دُنْيَا', desc: 'Dun-yaa' },
+                    { name: 'Jannatun (Surga)', arabic: 'جَنَّةٌ', desc: 'Jan-na-tun' },
+                    { name: 'Naarun (Neraka)', arabic: 'نَارٌ', desc: 'Naa-run' },
+                    { name: 'Shiroothun (Jalan)', arabic: 'صِرَاطٌ', desc: 'Shi-roo-thun' },
+                    { name: 'Hikmatun (Hikmah)', arabic: 'حِكْمَةٌ', desc: 'Hik-ma-tun' },
+                    { name: 'Rahmatun (Rahmat)', arabic: 'رَحْمَةٌ', desc: 'Rah-ma-tun' },
+                    { name: 'Barokah (Berkah)', arabic: 'بَرَكَةٌ', desc: 'Ba-ro-kah' },
+                    { name: 'Ni\'matun (Nikmat)', arabic: 'نِعْمَةٌ', desc: 'Ni\'-ma-tun' },
+                    { name: 'Shobrun (Sabar)', arabic: 'صَبْرٌ', desc: 'Shob-run' },
+                    { name: 'Syukrun (Syukur)', arabic: 'شُكْرٌ', desc: 'Syuk-run' },
+                    { name: 'Taqwaa (Takwa)', arabic: 'تَقْوَى', desc: 'Taq-waa' },
+                    { name: 'Ikhlas (Ikhlas)', arabic: 'إِخْلَاصٌ', desc: 'Ikh-laa-shun' },
+                    { name: 'Shidiqun (Jujur)', arabic: 'صِدْقٌ', desc: 'Shid-qun' },
+                    { name: 'Amaanatun (Amanah)', arabic: 'أَمَانَةٌ', desc: 'A-maa-na-tun' },
+                    { name: 'Adlun (Adil)', arabic: 'عَدْلٌ', desc: 'Ad-lun' },
+                    { name: 'Karoomatun (Kemuliaan)', arabic: 'كَرَامَةٌ', desc: 'Ka-roo-ma-tun' },
+                    { name: 'Hikmah (Bijaksana)', arabic: 'حِكْمَةٌ', desc: 'Hik-mah' },
+                    { name: 'Ilmun Nafi\' (Ilmu bermanfaat)', arabic: 'عِلْمٌ نَافِعٌ', desc: 'Il-mun naa-fi\'' },
+                    { name: 'Rizqun (Rezeki)', arabic: 'رِزْقٌ', desc: 'Riz-qun' },
+                    { name: 'Ajalun (Ajal)', arabic: 'أَجَلٌ', desc: 'A-ja-lun' },
+                    { name: 'Qodrun (Takdir)', arabic: 'قَدْرٌ', desc: 'Qod-run' },
+                    { name: 'Hudaa (Petunjuk)', arabic: 'هُدًى', desc: 'Hu-daa' },
+                    { name: 'Nuurun (Cahaya)', arabic: 'نُورٌ', desc: 'Nuu-run' },
+                    { name: 'Zholaamun (Kegelapan)', arabic: 'ظَلَامٌ', desc: 'Zho-laa-mun' },
+                    { name: 'Hayaatum Thoyyibah (Hidup baik)', arabic: 'حَيَاةٌ طَيِّبَةٌ', desc: 'Ha-yaa-tun tho-yyi-bah' }
+                ],
+
+                selectedItem: { name: 'Alif', arabic: 'ا', desc: 'Huruf pertama.' },
+
+                quizQuestions: [],
+                currentQuestionIndex: 0,
+                currentOptions: [],
+                currentQuestion: null,
+                quizScore: 0,
+                quizFinished: false,
+
+                getCurrentModuleList() {
+                    if (this.currentLevel === 1) return this.level1Data;
+                    if (this.currentLevel === 2) return this.level2Data;
+                    return this.level3Data;
+                },
+
+                switchLevel(lvl) {
+                    this.currentLevel = lvl;
+                    const list = this.getCurrentModuleList();
+                    this.selectedItem = list[0];
+                },
+
+                addXP(amount) {
+                    this.userXP += amount;
+                    if (this.userXP >= this.maxXP) {
+                        this.userXP = 0;
+                        if (this.currentLevel < 3) {
+                            this.currentLevel++;
+                            this.switchLevel(this.currentLevel);
+                            swalDark.fire({
+                                icon: 'success',
+                                title: 'Naik Level! 🎉',
+                                html: `Selamat! Anda naik ke <b class="text-emerald-400">Level ${this.currentLevel}</b><br><span class="text-sm text-slate-400">${this.levelNames[this.currentLevel]}</span>`,
+                                confirmButtonText: 'Lanjut Belajar'
+                            });
+                        } else {
+                            swalDark.fire({
+                                icon: 'success',
+                                title: 'Level Tertinggi! 🌟',
+                                text: 'Luar biasa! Anda telah mencapai level tertinggi!',
+                                confirmButtonText: 'Mantap'
+                            });
+                        }
+                    }
+                },
+
+				playAudio(text) {
+					if (!text) return;
+					
+					if (!('speechSynthesis' in window)) {
+						console.warn("Web Speech API tidak didukung di browser ini.");
+						return;
+					}
+					
+					window.speechSynthesis.cancel();
+
+					const utterance = new SpeechSynthesisUtterance(text);
+					utterance.lang = 'ar-SA'; // Bahasa Arab (Saudi)
+					utterance.rate = 0.9;     // Sedikit diperlambat agar lebih jelas untuk belajar
+					utterance.pitch = 1.0;
+					
+					if (navigator.userAgent.includes('Safari') && !navigator.userAgent.includes('Chrome')) {
+						setTimeout(() => {
+							if (window.speechSynthesis.paused) {
+								window.speechSynthesis.resume();
+							}
+						}, 100);
+					}
+					
+					utterance.onend = () => {
+						if (typeof this.addXP === 'function') {
+							this.addXP(5);
+						}
+					};
+
+					utterance.onerror = (event) => {
+						console.error("Gagal memutar audio Web Speech API:", event);
+					};
+					
+					window.speechSynthesis.speak(utterance);
+				},
+
+                async finishWriting() {
+					const canvas = document.getElementById('drawCanvas');
+					if (!canvas) return;
+
+					// 1. Cek apakah canvas kosong
+					const ctx = canvas.getContext('2d');
+					const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+					const hasDrawing = imageData.data.some((pixel, index) => index % 4 === 3 && pixel > 0);
+
+					if (!hasDrawing) {
+						swalError('Kanvas Masih Kosong!', 'Silakan tulis huruf terlebih dahulu sebelum menekan Selesai.');
+						return;
+					}
+
+					// 2. Buat kanvas sementara berlatar belakang putih agar coretan jelas
+					const tempCanvas = document.createElement('canvas');
+					tempCanvas.width = canvas.width;
+					tempCanvas.height = canvas.height;
+					const tempCtx = tempCanvas.getContext('2d');
+
+					tempCtx.fillStyle = '#FFFFFF';
+					tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+					tempCtx.drawImage(canvas, 0, 0);
+
+					// Convert ke format Base64 (JPEG)
+					const base64Data = tempCanvas.toDataURL('image/jpeg', 0.8).split(',')[1];
+
+					// 3. Tampilkan Loading
+					Swal.fire({
+						title: 'Dianalisis oleh Gemini AI...',
+						text: 'Mohon tunggu sebentar, Gemini sedang mengecek tulisanmu.',
+						allowOutsideClick: false,
+						didOpen: () => {
+							Swal.showLoading();
+						}
+					});
+
+					try {
+						
+						const GAS_URL = 'https://script.google.com/macros/s/AKfycbwcGfNfQRP7e6m480d1FvI3k_Rk5VaYyQXhd1t5O7VcrPoYlvhcM4pYQk3_Vgiv5OFeAA/exec';
+
+						const response = await fetch(GAS_URL, {
+							method: 'POST',
+							headers: {
+								'Content-Type': 'text/plain;charset=utf-8', 
+							},
+							body: JSON.stringify({
+								base64Image: base64Data,
+								targetName: this.selectedItem.name,
+								targetArabic: this.selectedItem.arabic
+							})
+						});
+
+						const rawText = await response.text();
+						const cleanJsonText = rawText.replace(/```json|```/g, '').trim();
+						const result = JSON.parse(cleanJsonText);
+
+						if (result.isCorrect) {
+							this.addXP(10);
+							this.stars += 2;
+							swalSuccess(
+								'Luar Biasa! ✍️', 
+								`Gemini menilai tulisanmu sudah sesuai dengan huruf "${this.selectedItem.name}". (+10 XP, +2 Bintang)`
+							);
+						} else {
+							swalError(
+								'Belum Sesuai', 
+								`Menurut Gemini AI: ${result.detected || 'Tulisan belum sesuai'}. Coba rapikan lagi ya!`
+							);
+						}
+
+					} catch (error) {
+						console.error("Gagal analisa Gemini via GAS:", error);
+						swalError('Gagal Terhubung', 'Terjadi kesalahan saat menghubungkan ke server analisis.');
+					}
+				},
+
+                startQuiz() {
+                    this.activeTab = 'kuis';
+                    this.quizFinished = false;
+                    this.quizScore = 0;
+                    this.currentQuestionIndex = 0;
+
+                    let activeData = this.getCurrentModuleList();
+                    let shuffled = [...activeData].sort(() => 0.5 - Math.random());
+
+                    this.quizQuestions = shuffled.slice(0, Math.min(5, activeData.length)).map(correctItem => {
+                        let distractors = activeData.filter(l => l.arabic !== correctItem.arabic)
+                                                    .sort(() => 0.5 - Math.random())
+                                                    .slice(0, 3);
+                        let options = [...distractors, correctItem].sort(() => 0.5 - Math.random());
+                        return { correct: correctItem, options: options };
+                    });
+
+                    this.loadQuestion();
+                },
+
+                loadQuestion() {
+                    if (this.currentQuestionIndex < this.quizQuestions.length) {
+                        this.currentQuestion = this.quizQuestions[this.currentQuestionIndex];
+                        this.currentOptions = this.currentQuestion.options;
+                    } else {
+                        this.quizFinished = true;
+                    }
+                },
+
+                answerQuiz(selectedOption) {
+                    if (selectedOption.arabic === this.currentQuestion.correct.arabic) {
+                        this.quizScore += 1;
+                        this.stars += 2;
+                        swalSuccess('Benar! 🎉', '+15 XP & +2 Bintang');
+                        this.addXP(15);
+                    } else {
+                        swalError(
+                            'Kurang Tepat',
+                            `Jawaban yang benar adalah: ${this.currentQuestion.correct.name}`
+                        );
+                    }
+
+                    this.currentQuestionIndex++;
+                    this.loadQuestion();
+                },
+
+                initCanvas() {
+                    setTimeout(() => {
+                        const canvas = document.getElementById('drawCanvas');
+                        if (!canvas) return;
+                        const ctx = canvas.getContext('2d');
+                        let isDrawing = false;
+
+                        ctx.strokeStyle = '#34d399';
+                        ctx.lineWidth = 6;
+                        ctx.lineCap = 'round';
+                        ctx.lineJoin = 'round';
+
+                        canvas.onmousedown = (e) => { isDrawing = true; ctx.beginPath(); ctx.moveTo(e.offsetX, e.offsetY); };
+                        canvas.onmousemove = (e) => { if (!isDrawing) return; ctx.lineTo(e.offsetX, e.offsetY); ctx.stroke(); };
+                        canvas.onmouseup = () => isDrawing = false;
+                        canvas.onmouseleave = () => isDrawing = false;
+
+                        canvas.ontouchstart = (e) => {
+                            isDrawing = true;
+                            const rect = canvas.getBoundingClientRect();
+                            const touch = e.touches[0];
+                            ctx.beginPath();
+                            ctx.moveTo(touch.clientX - rect.left, touch.clientY - rect.top);
+                            e.preventDefault();
+                        };
+                        canvas.ontouchmove = (e) => {
+                            if (!isDrawing) return;
+                            const rect = canvas.getBoundingClientRect();
+                            const touch = e.touches[0];
+                            ctx.lineTo(touch.clientX - rect.left, touch.clientY - rect.top);
+                            ctx.stroke();
+                            e.preventDefault();
+                        };
+                        canvas.ontouchend = () => isDrawing = false;
+                    }, 100);
+                }
+            }
+        }
+
+        function clearCanvas() {
+            const canvas = document.getElementById('drawCanvas');
+            if (canvas) {
+                const ctx = canvas.getContext('2d');
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+            }
+        }
+
+        // === Generator Bintang Acak ===
+        (function generateStars() {
+            const layer = document.getElementById('starsLayer');
+            if (!layer) return;
+            const starCount = 120;
+            for (let i = 0; i < starCount; i++) {
+                const star = document.createElement('span');
+                star.className = 'star';
+                const size = Math.random() * 2.2 + 0.6;
+                star.style.width = size + 'px';
+                star.style.height = size + 'px';
+                star.style.left = Math.random() * 100 + '%';
+                star.style.top = Math.random() * 100 + '%';
+                star.style.animationDelay = (Math.random() * 3) + 's';
+                star.style.animationDuration = (2 + Math.random() * 3) + 's';
+                const colors = ['#ffffff', '#fef9c3', '#bae6fd', '#e0e7ff'];
+                star.style.background = colors[Math.floor(Math.random() * colors.length)];
+                layer.appendChild(star);
+            }
+        })();
+
+        // === Navigasi Kembali ke FazzQuranic ===
+        function fazzPage() {
+            Swal.fire({
+                title: 'Memuat Halaman',
+                html: `Kembali ke halaman <b>FazzQuranic</b>...`,
+                timer: 1200,
+                timerProgressBar: true,
+                showConfirmButton: false,
+                background: '#0f172a',
+                color: '#fff',
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            }).then(() => {
+                window.location.href = `index.html`;
+            });
+        }
+		
+		function switchPage(pageKey,halaman) {
+		  Swal.fire({
+		  title: 'Memuat Halaman',
+		  html: `Menuju halaman <b>` + halaman +`</b>...`,
+			  timer: 1200,
+			  timerProgressBar: true,
+			  showConfirmButton: false,
+			  background: '#0f172a',  
+			  color: '#fff',
+			  showClass: {
+				popup: 'animate__animated animate__fadeInDown animate__faster'
+			  },
+			  hideClass: {
+				popup: 'animate__animated animate__fadeOutUp animate__faster'
+			  },
+			  didOpen: () => {
+				Swal.showLoading();
+			  }
+			}).then(() => {
+				window.location.href = pageKey;
+			});
+		}
+		
+    </script>
+</body>
+</html>

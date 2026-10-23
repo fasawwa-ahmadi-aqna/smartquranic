@@ -1,0 +1,958 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FazzQuranic - Faroidh Engine</title>
+  <link rel="shortcut icon" type="image/png" href="img/iconfazz.png">		
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Animate.css -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Amiri:wght@400;700&display=swap" rel="stylesheet">
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap');
+    body { font-family: 'Plus Jakarta Sans', sans-serif; }
+	main {
+		padding-bottom: 12rem !important;
+	}
+    .font-arabic { font-family: 'Amiri', serif; }
+    .glass-card {
+      background: rgba(30, 41, 59, 0.85);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen pb-12">
+
+  <!-- Header & Tab Bar -->
+  <header class="border-b border-slate-800 bg-slate-900/80 sticky top-0 z-50 backdrop-blur-md">
+    <div class="max-w-6xl mx-auto px-4 py-4 flex flex-col sm:flex-row justify-between items-center gap-4">
+      <div class="flex items-center gap-3">
+        <div class="p-3 bg-emerald-500/15 text-emerald-300 rounded-2xl border border-emerald-400/60 shadow-[0_0_25px_rgba(16,185,129,0.7),inset_0_0_15px_rgba(16,185,129,0.4)] backdrop-blur-md relative overflow-hidden group transition-all duration-1000 animate-[pulse_3s_cubic-bezier(0.4,0,0.6,1)_infinite]">
+			<!-- Efek kilau lembut di background dalam kotak (opsional untuk kesan futuristik) -->
+			<div class="absolute inset-0 bg-emerald-400/10 blur-xl rounded-xl"></div>
+			
+			<!-- Ikon dengan tambahan drop-shadow agar ikut menyala -->
+			<i data-lucide="scale" class="w-6 h-6 relative z-10 drop-shadow-[0_0_8px_rgba(52,211,153,0.8)]"></i>
+		</div>
+        <div>
+		  <button onclick="fazzPage()" class="inline-flex items-center gap-2 px-4 py-1.5 rounded-lg bg-red-800/20 border border-red-800/30 text-green-300 text-sm font-medium mb-3 transition-all duration-300 hover:bg-red-800 hover:border-red-600 hover:text-white shadow-sm hover:shadow-red-900/50 hover:shadow-lg" title="Back to FazzQuranic Page">	
+          <h1 class="font-bold text-lg text-white leading-tight">FazzQuranic - Faroid Engine </h1>
+		  </button>
+          <p class="text-xs text-slate-400">Sistem Perhitungan Waris Berdasarkan Fiqih Islam </p>
+        </div>
+      </div>
+
+      <!-- Tab Navigation Buttons -->
+      <div class="flex p-1 bg-slate-800/80 rounded-xl border border-slate-700/60 w-full sm:w-auto">
+        <button id="tab-btn-kalkulator" onclick="switchTab('kalkulator')" class="flex-1 sm:flex-none px-5 py-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-2 transition-all bg-emerald-500 text-white shadow-md">
+          <i data-lucide="calculator" class="w-4 h-4"></i> Kalkulator Waris
+        </button>
+        <button id="tab-btn-dalil" onclick="switchTab('dalil')" class="flex-1 sm:flex-none px-5 py-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-2 transition-all text-slate-400 hover:text-white">
+          <i data-lucide="book-open" class="w-4 h-4"></i> Dasar Hukum & Dalil
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-6xl mx-auto px-4 pt-8">
+
+    <!-- TAB 1: KALKULATOR -->
+    <div id="view-kalkulator" class="grid grid-cols-1 lg:grid-cols-12 gap-8 animate__animated animate__fadeIn">
+      
+      <!-- Formulir Input -->
+      <div class="lg:col-span-7 space-y-6">
+        
+        <!-- Informasi Harta -->
+        <div class="glass-card rounded-2xl p-6 shadow-xl">
+          <div class="flex items-center gap-2 mb-4 text-emerald-400 font-semibold border-b border-slate-800 pb-3">
+            <i data-lucide="wallet" class="w-5 h-5"></i>
+            <h2>1. Informasi Jenazah & Harta</h2>
+          </div>
+
+          <div class="space-y-4">
+            <div>
+              <label class="block text-xs font-medium text-slate-400 mb-1">Jenis Kelamin Almarhum/ah</label>
+              <div class="grid grid-cols-2 gap-3">
+                <button type="button" id="btn-gender-L" onclick="setGender('L')" class="py-2.5 px-4 rounded-xl border border-emerald-500/50 bg-emerald-500/20 text-white font-medium flex justify-center items-center gap-2 transition-all">
+                  <i data-lucide="user" class="w-4 h-4"></i> Laki-laki
+                </button>
+                <button type="button" id="btn-gender-P" onclick="setGender('P')" class="py-2.5 px-4 rounded-xl border border-slate-800 bg-slate-900/50 text-slate-400 font-medium flex justify-center items-center gap-2 hover:border-slate-700 transition-all">
+                  <i data-lucide="user-check" class="w-4 h-4"></i> Perempuan
+                </button>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs font-medium text-slate-400 mb-1">Total Harta Kotor (Rp)</label>
+                <input type="number" id="harta_kotor" value="1000000000" oninput="validasiSisaHartaDanWasiat()" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-emerald-500 transition-all text-sm" />
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-slate-400 mb-1">Biaya Pemakaman (Rp)</label>
+                <input type="number" id="biaya_pemakaman" value="5000000" oninput="validasiSisaHartaDanWasiat()" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-emerald-500 transition-all text-sm" />
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-slate-400 mb-1">Total Hutang (Rp)</label>
+                <input type="number" id="total_hutang" value="0" oninput="validasiSisaHartaDanWasiat()" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-emerald-500 transition-all text-sm" />
+              </div>
+              <div>
+                <div class="flex justify-between items-center mb-1">
+                  <label class="block text-xs font-medium text-slate-400">Wasiat (Rp)</label>
+                  <span id="label-batas-wasiat" class="text-[10px] text-emerald-400 font-semibold">Maks 1/3 Sisa: Rp 316.666.667</span>
+                </div>
+                <input type="number" id="wasiat" value="50000000" oninput="validasiSisaHartaDanWasiat()" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-emerald-500 transition-all text-sm" />
+              </div>
+            </div>
+
+            <!-- Warning Box Wasiat -->
+            <div id="wasiat-error-box" class="hidden p-4 bg-amber-500/10 border border-amber-500/30 rounded-xl text-amber-300 text-xs space-y-2">
+              <div class="flex items-start gap-2.5">
+                <i data-lucide="alert-triangle" class="w-5 h-5 text-amber-400 shrink-0 mt-0.5"></i>
+                <div>
+                  <p class="font-semibold text-amber-200">Wasiat Melebihi Batas Syariat (1/3 dari Sisa Harta)</p>
+                  <p id="wasiat-error-text" class="mt-1 text-slate-300 leading-relaxed"></p>
+                </div>
+              </div>
+              <div class="pt-2 flex justify-end">
+                <button type="button" onclick="sesuaikanWasiatOtomatis()" class="px-3 py-1.5 bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-200 font-medium rounded-lg text-xs transition-all flex items-center gap-1.5">
+                  <i data-lucide="wand-2" class="w-3.5 h-3.5"></i> Set Wasiat Maksimal (1/3)
+                </button>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Informasi Ahli Waris -->
+        <div class="glass-card rounded-2xl p-6 shadow-xl space-y-4">
+          <div class="flex items-center gap-2 border-b border-slate-800 pb-3 text-emerald-400 font-semibold">
+            <i data-lucide="users" class="w-5 h-5"></i>
+            <h2>2. Ahli Waris yang Masih Hidup</h2>
+          </div>
+
+          <!-- Kategori Pasangan & Orang Tua -->
+          <div class="space-y-2">
+            <p class="text-[11px] font-semibold text-emerald-400 uppercase tracking-wider">Utama (Pasangan & Orang Tua)</p>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+              <div class="p-2.5 bg-slate-900/60 rounded-xl border border-slate-800 flex justify-between items-center">
+                <span class="font-medium text-slate-300" id="label-pasangan">Istri</span>
+                <input type="number" min="0" max="4" value="1" id="input-PASANGAN" class="w-16 bg-slate-800 border border-slate-700 rounded-lg px-2 py-1 text-center text-white" />
+              </div>
+              <div class="p-2.5 bg-slate-900/60 rounded-xl border border-slate-800 flex justify-between items-center">
+                <span class="font-medium text-slate-300">Ayah</span>
+                <input type="number" min="0" max="1" value="0" id="input-AYAH" class="w-16 bg-slate-800 border border-slate-700 rounded-lg px-2 py-1 text-center text-white" />
+              </div>
+              <div class="p-2.5 bg-slate-900/60 rounded-xl border border-slate-800 flex justify-between items-center">
+                <span class="font-medium text-slate-300">Ibu</span>
+                <input type="number" min="0" max="1" value="0" id="input-IBU" class="w-16 bg-slate-800 border border-slate-700 rounded-lg px-2 py-1 text-center text-white" />
+              </div>
+              <div class="p-2.5 bg-slate-900/60 rounded-xl border border-slate-800 flex justify-between items-center">
+                <span class="font-medium text-slate-300">Kakek (dari Ayah)</span>
+                <input type="number" min="0" max="1" value="0" id="input-KAKEK" class="w-16 bg-slate-800 border border-slate-700 rounded-lg px-2 py-1 text-center text-white" />
+              </div>
+              <div class="p-2.5 bg-slate-900/60 rounded-xl border border-slate-800 flex justify-between items-center md:col-span-2">
+                <span class="font-medium text-slate-300">Nenek (dari Ibu/Ayah)</span>
+                <input type="number" min="0" max="2" value="0" id="input-NENEK" class="w-16 bg-slate-800 border border-slate-700 rounded-lg px-2 py-1 text-center text-white" />
+              </div>
+            </div>
+          </div>
+
+          <!-- Kategori Keturunan -->
+          <div class="space-y-2 pt-2 border-t border-slate-800/60">
+            <p class="text-[11px] font-semibold text-emerald-400 uppercase tracking-wider">Keturunan (Anak & Cucu)</p>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+              <div class="p-2.5 bg-slate-900/60 rounded-xl border border-slate-800 flex justify-between items-center">
+                <span class="font-medium text-slate-300">Anak Laki-Laki</span>
+                <input type="number" min="0" value="1" id="input-ANAK_L" class="w-16 bg-slate-800 border border-slate-700 rounded-lg px-2 py-1 text-center text-white" />
+              </div>
+              <div class="p-2.5 bg-slate-900/60 rounded-xl border border-slate-800 flex justify-between items-center">
+                <span class="font-medium text-slate-300">Anak Perempuan</span>
+                <input type="number" min="0" value="1" id="input-ANAK_P" class="w-16 bg-slate-800 border border-slate-700 rounded-lg px-2 py-1 text-center text-white" />
+              </div>
+              <div class="p-2.5 bg-slate-900/60 rounded-xl border border-slate-800 flex justify-between items-center">
+                <span class="font-medium text-slate-300">Cucu Laki (dr Anak L)</span>
+                <input type="number" min="0" value="0" id="input-CUCU_L" class="w-16 bg-slate-800 border border-slate-700 rounded-lg px-2 py-1 text-center text-white" />
+              </div>
+              <div class="p-2.5 bg-slate-900/60 rounded-xl border border-slate-800 flex justify-between items-center">
+                <span class="font-medium text-slate-300">Cucu Peremp (dr Anak L)</span>
+                <input type="number" min="0" value="0" id="input-CUCU_P" class="w-16 bg-slate-800 border border-slate-700 rounded-lg px-2 py-1 text-center text-white" />
+              </div>
+            </div>
+          </div>
+
+          <!-- Kategori Saudara -->
+          <div class="space-y-2 pt-2 border-t border-slate-800/60">
+            <p class="text-[11px] font-semibold text-emerald-400 uppercase tracking-wider">Saudara & Saudari</p>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+              <div class="p-2.5 bg-slate-900/60 rounded-xl border border-slate-800 flex justify-between items-center">
+                <span class="font-medium text-slate-300">Saudara Laki (Kandung)</span>
+                <input type="number" min="0" value="0" id="input-SAUDARA_L_KANDUNG" class="w-16 bg-slate-800 border border-slate-700 rounded-lg px-2 py-1 text-center text-white" />
+              </div>
+              <div class="p-2.5 bg-slate-900/60 rounded-xl border border-slate-800 flex justify-between items-center">
+                <span class="font-medium text-slate-300">Saudari Peremp (Kandung)</span>
+                <input type="number" min="0" value="0" id="input-SAUDARA_P_KANDUNG" class="w-16 bg-slate-800 border border-slate-700 rounded-lg px-2 py-1 text-center text-white" />
+              </div>
+              <div class="p-2.5 bg-slate-900/60 rounded-xl border border-slate-800 flex justify-between items-center">
+                <span class="font-medium text-slate-300">Saudara Laki (Seayah)</span>
+                <input type="number" min="0" value="0" id="input-SAUDARA_L_SEAYAH" class="w-16 bg-slate-800 border border-slate-700 rounded-lg px-2 py-1 text-center text-white" />
+              </div>
+              <div class="p-2.5 bg-slate-900/60 rounded-xl border border-slate-800 flex justify-between items-center">
+                <span class="font-medium text-slate-300">Saudari Peremp (Seayah)</span>
+                <input type="number" min="0" value="0" id="input-SAUDARA_P_SEAYAH" class="w-16 bg-slate-800 border border-slate-700 rounded-lg px-2 py-1 text-center text-white" />
+              </div>
+              <div class="p-2.5 bg-slate-900/60 rounded-xl border border-slate-800 flex justify-between items-center md:col-span-2">
+                <span class="font-medium text-slate-300">Saudara/i Seibu (Laki / Peremp)</span>
+                <input type="number" min="0" value="0" id="input-SAUDARA_SEIBU" class="w-16 bg-slate-800 border border-slate-700 rounded-lg px-2 py-1 text-center text-white" />
+              </div>
+            </div>
+          </div>
+
+          <button id="btn-hitung" onclick="prosesKalkulasi()" class="mt-4 w-full py-3.5 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-bold rounded-xl shadow-lg shadow-emerald-500/20 flex justify-center items-center gap-2 transition-all transform active:scale-95 disabled:opacity-50">
+            <i data-lucide="calculator" class="w-5 h-5"></i> Hitung Pembagian Waris
+          </button>
+        </div>
+      </div>
+
+      <!-- Panel Hasil (Right Column) -->
+      <div class="lg:col-span-5 space-y-6">
+        <div id="hasil-container" class="glass-card rounded-2xl p-6 shadow-xl hidden animate__animated animate__fadeInRight">
+          
+          <div class="flex justify-between items-center mb-4 border-b border-slate-800 pb-3">
+            <h2 class="text-emerald-400 font-semibold flex items-center gap-2">
+              <i data-lucide="pie-chart" class="w-5 h-5"></i> Hasil Perhitungan
+            </h2>
+            <span id="badge-status" class="px-2.5 py-1 text-xs font-bold rounded-md bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+              NORMAL
+            </span>
+          </div>
+
+          <div class="p-4 bg-slate-900/90 rounded-xl mb-4 space-y-2 text-xs">
+            <div class="flex justify-between text-slate-400">
+              <span>Harta Kotor:</span>
+              <span id="res-harta-kotor" class="font-medium text-slate-200">Rp 0</span>
+            </div>
+            <div class="flex justify-between text-slate-400">
+              <span>Hutang & Pemakaman:</span>
+              <span id="res-pengurangan" class="font-medium text-red-400">- Rp 0</span>
+            </div>
+            <div class="flex justify-between text-slate-400">
+              <span>Wasiat Valid:</span>
+              <span id="res-wasiat" class="font-medium text-amber-400">- Rp 0</span>
+            </div>
+            <div class="border-t border-slate-800 pt-2 flex justify-between font-bold text-sm text-emerald-400">
+              <span>Harta Bersih Siap Bagi:</span>
+              <span id="res-harta-bersih">Rp 0</span>
+            </div>
+          </div>
+
+          <div class="space-y-3 mb-6" id="daftar-hasil"></div>
+
+          <div id="firestore-status" class="p-3 bg-slate-900/50 rounded-xl border border-slate-800 text-xs text-slate-400 flex items-center gap-2">
+            <i data-lucide="database" class="w-4 h-4 text-emerald-400"></i>
+            <span id="firestore-text">Menyiapkan penyimpanan Firestore...</span>
+          </div>
+        </div>
+
+        <div class="glass-card rounded-2xl p-6 text-center text-slate-400 space-y-3">
+          <i data-lucide="shield-check" class="w-8 h-8 mx-auto text-emerald-500/60"></i>
+          <h3 class="font-medium text-slate-300 text-sm">Prinsip Syariat Sesuai Fiqih Faraidh</h3>
+          <p class="text-xs text-slate-500 leading-relaxed">
+            Mencakup aturan *Hijab Hirmān* (saudara/cucu terhalang oleh ahli waris utama), kondisi *Ukht Syaqiqah* ($1/2$ atau $2/3$), pelengkap dua pertiga (*Takmilat as-Sudus*), serta kondisi khusus *'Awl* dan *Radd*.
+          </p>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- TAB 2: DASAR HUKUM -->
+    <div id="view-dalil" class="hidden space-y-6 animate__animated animate__fadeIn">
+      <div class="p-6 bg-slate-900/60 rounded-2xl border border-slate-800 flex items-center justify-between">
+        <div>
+          <h2 class="text-lg font-bold text-white flex items-center gap-2">
+            <i data-lucide="book-marked" class="w-5 h-5 text-emerald-400"></i> Landasan Syariat Hukum Waris Islam
+          </h2>
+          <p class="text-xs text-slate-400 mt-1">Rujukan Al-Qur'an dan Al-Hadits yang menjadi dasar algoritma sistem faraidh ini.</p>
+        </div>
+      </div>
+
+      <div class="space-y-6">
+        <!-- QS. An-Nisa 11 -->
+        <div class="glass-card rounded-2xl p-6 border border-slate-800/80 space-y-4">
+          <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+            <span class="text-xs font-bold px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+              QS. An-Nisa (4) : 11
+            </span>
+            <span class="text-xs text-slate-400">Anak & Orang Tua</span>
+          </div>
+          <p class="text-right text-lg sm:text-xl font-arabic text-emerald-200 leading-loose">
+            يُوصِيكُمُ اللَّهُ فِي أَوْلَادِكُمْ ۖ لِلذَّكَرِ مِثْلُ حَظِّ الْأُنْثَيَيْنِ ۚ فَإِنْ كُنَّ نِسَاءً فَوْقَ اثْنَتَيْنِ فَلَهُنَّ ثُلُثَا مَا تَرَكَ ۖ وَإِنْ كَانَتْ وَاحِدَةً فَلَهَا النِّصْفُ ۚ وَلِأَبَوَيْهِ لِكُلِّ وَاحِدٍ مِنْهُمَا السُّدُسُ مِمَّا تَرَكَ إِنْ كَانَ لَهُ وَلَدٌ ۚ فَإِنْ لَمْ يَكُنْ لَهُ وَلَدٌ وَوَرِثَهُ أَبَوَاهُ فَلِأُمِّهِ الثُّلُثُ ۚ فَإِنْ كَانَ لَهُ إِخْوَةٌ فَلِأُمِّهِ السُّدُسُ ۚ مِنْ بَعْدِ وَصِيَّةٍ يُوصِي بِهَا أَوْ دَيْنٍ ۗ آبَاؤُكُمْ وَأَبْنَاؤُكُمْ لَا تَدْرُونَ أَيُّهُمْ أَقْرَبُ لَكُمْ نَفْعًا ۚ فَرِيضَةً مِنَ اللَّهِ ۗ إِنَّ اللَّهَ كَانَ عَلِيمًا حَكِيمًا
+          </p>
+          <div class="p-4 bg-slate-900/70 rounded-xl text-xs text-slate-300 leading-relaxed italic border-l-2 border-emerald-500">
+            "Allah mensyari'atkan bagimu tentang (pembagian pusaka untuk) anak-anakmu. Yaitu: bahagian seorang anak lelaki sama dengan bagahian dua orang anak perempuan; dan jika anak itu semuanya perempuan lebih dari dua, maka bagi mereka dua pertiga dari harta yang ditinggalkan; jika anak perempuan itu seorang saja, maka ia memperoleh separo harta. Dan untuk dua orang ibu-bapa, bagi masing-masingnya seperenam dari harta yang ditinggalkan, jika yang meninggal itu mempunyai anak; jika orang yang meninggal tidak mempunyai anak dan ia diwarisi oleh ibu-bapanya (saja), maka ibunya mendapat sepertiga; jika yang meninggal itu mempunyai beberapa saudara, maka ibunya mendapat seperenam. (Pembagian-pembagian tersebut di atas) sesudah dipenuhi wasiat yang ia buat atau (dan) sesudah dibayar hutangnya. (Tentang) orang tuamu dan anak-anakmu, kamu tidak mengetahui siapa di antara mereka yang lebih dekat (banyak) manfaatnya bagimu. Ini adalah ketetapan dari Allah. Sesungguhnya Allah Maha Mengetahui lagi Maha Bijaksana."
+          </div>
+        </div>
+
+        <!-- QS. An-Nisa 12 -->
+        <div class="glass-card rounded-2xl p-6 border border-slate-800/80 space-y-4">
+          <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+            <span class="text-xs font-bold px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+              QS. An-Nisa (4) : 12
+            </span>
+            <span class="text-xs text-slate-400">Suami, Istri & Saudara Seibu</span>
+          </div>
+          <p class="text-right text-lg sm:text-xl font-arabic text-emerald-200 leading-loose">
+             وَلَكُمْ نِصْفُ مَا تَرَكَ اَزْوَاجُكُمْ اِنْ لَّمْ يَكُنْ لَّهُنَّ وَلَدٌ ۚ فَاِنْ كَانَ لَهُنَّ وَلَدٌ فَلَكُمُ الرُّبُعُ مِمَّا تَرَكْنَ مِنْۢ بَعْدِ وَصِيَّةٍ يُّوْصِيْنَ بِهَآ اَوْ دَيْنٍ ۗ وَلَهُنَّ الرُّبُعُ مِمَّا تَرَكْتُمْ اِنْ لَّمْ يَكُنْ لَّكُمْ وَلَدٌ ۚ فَاِنْ كَانَ لَكُمْ وَلَدٌ فَلَهُنَّ الثُّمُنُ مِمَّا تَرَكْتُمْ مِّنْۢ بَعْدِ وَصِيَّةٍ تُوْصُوْنَ بِهَآ اَوْ دَيْنٍ ۗ وَاِنْ كَانَ رَجُلٌ يُّوْرَثُ كَلٰلَةً اَوِ امْرَاَةٌ وَّلَهٗٓ اَخٌ اَوْ اُخْتٌ فَلِكُلِّ وَاحِدٍ مِّنْهُمَا السُّدُسُۚ فَاِنْ كَانُوْٓا اَكْثَرَ مِنْ ذٰلِكَ فَهُمْ شُرَكَاۤءُ فِى الثُّلُثِ مِنْۢ بَعْدِ وَصِيَّةٍ يُّوْصٰى بِهَآ اَوْ دَيْنٍۙ غَيْرَ مُضَاۤرٍّ ۚ وَصِيَّةً مِّنَ اللّٰهِ ۗ وَاللّٰهُ عَلِيْمٌ حَلِيْمٌۗ
+          </p>
+          <div class="p-4 bg-slate-900/70 rounded-xl text-xs text-slate-300 leading-relaxed italic border-l-2 border-emerald-500">
+            "Bagimu (para suami) seperdua dari harta yang ditinggalkan oleh istri-istrimu, jika mereka tidak mempunyai anak. Jika mereka (istri-istrimu) itu mempunyai anak, kamu mendapat seperempat dari harta yang ditinggalkannya setelah (dipenuhi) wasiat yang mereka buat atau (dan setelah dibayar) utangnya. Bagi mereka (para istri) seperempat harta yang kamu tinggalkan jika kamu tidak mempunyai anak. Jika kamu mempunyai anak, bagi mereka (para istri) seperdelapan dari harta yang kamu tinggalkan (setelah dipenuhi) wasiat yang kamu buat atau (dan setelah dibayar) utang-utangmu. Jika seseorang, baik laki-laki maupun perempuan, meninggal dunia tanpa meninggalkan ayah dan anak, tetapi mempunyai seorang saudara laki-laki (seibu) atau seorang saudara perempuan (seibu), bagi masing-masing dari kedua jenis saudara itu seperenam harta. Akan tetapi, jika mereka (saudara-saudara seibu itu) lebih dari seorang, mereka bersama-sama dalam bagian yang sepertiga itu, setelah (dipenuhi wasiat) yang dibuatnya atau (dan setelah dibayar) utangnya dengan tidak menyusahkan (ahli waris). Demikianlah ketentuan Allah. Allah Maha Mengetahui lagi Maha Penyantun."
+          </div>
+        </div>
+
+        <!-- QS. An-Nisa 176 -->
+        <div class="glass-card rounded-2xl p-6 border border-slate-800/80 space-y-4">
+          <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+            <span class="text-xs font-bold px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+              QS. An-Nisa (4) : 176
+            </span>
+            <span class="text-xs text-slate-400">Saudara Kandung / Seayah (Kalalah)</span>
+          </div>
+          <p class="text-right text-lg sm:text-xl font-arabic text-emerald-200 leading-loose">
+            يَسْتَفْتُوْنَكَۗ قُلِ اللّٰهُ يُفْتِيْكُمْ فِى الْكَلٰلَةِ ۗاِنِ امْرُؤٌا هَلَكَ لَيْسَ لَهٗ وَلَدٌ وَّلَهٗٓ اُخْتٌ فَلَهَا نِصْفُ مَا تَرَكَۚ وَهُوَ يَرِثُهَآ اِنْ لَّمْ يَكُنْ لَّهَا وَلَدٌ ۚ فَاِنْ كَانَتَا اثْنَتَيْنِ فَلَهُمَا الثُّلُثٰنِ مِمَّا تَرَكَ ۗوَاِنْ كَانُوْٓا اِخْوَةً رِّجَالًا وَّنِسَاۤءً فَلِلذَّكَرِ مِثْلُ حَظِّ الْاُنْثَيَيْنِۗ يُبَيِّنُ اللّٰهُ لَكُمْ اَنْ تَضِلُّوْا ۗ وَاللّٰهُ بِكُلِّ شَيْءٍ عَلِيْمٌ ࣖ
+          </p>
+          <div class="p-4 bg-slate-900/70 rounded-xl text-xs text-slate-300 leading-relaxed italic border-l-2 border-emerald-500">
+            "Mereka meminta fatwa kepadamu (tentang kalālah). Katakanlah, “Allah memberi fatwa kepadamu tentang kalālah, (yaitu) jika seseorang meninggal dan dia tidak mempunyai anak, tetapi mempunyai seorang saudara perempuan, bagiannya (saudara perempuannya itu) seperdua dari harta yang ditinggalkannya. Adapun saudara laki-lakinya mewarisi (seluruh harta saudara perempuan) jika dia tidak mempunyai anak. Akan tetapi, jika saudara perempuan itu dua orang, bagi keduanya dua pertiga dari harta yang ditinggalkan. Jika mereka (ahli waris itu terdiri atas) beberapa saudara laki-laki dan perempuan, bagian seorang saudara laki-laki sama dengan bagian dua orang saudara perempuan. Allah menerangkan (hukum ini) kepadamu agar kamu tidak tersesat. Allah Maha Mengetahui segala sesuatu"
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+  
+<!-- ====== NAVBAR SHOLAT ANIMATED ====== -->
+<style>
+  @keyframes nav-slide-up {
+    from { transform: translateY(120%); opacity: 0; }
+    to   { transform: translateY(0);    opacity: 1; }
+  }
+  @keyframes nav-pop {
+    0%   { transform: scale(1); }
+    40%  { transform: scale(0.85) rotate(-8deg); }
+    70%  { transform: scale(1.15) rotate(6deg); }
+    100% { transform: scale(1) rotate(0); }
+  }
+  @keyframes nav-dot-pulse {
+    0%, 100% { transform: scale(1);   opacity: 1; }
+    50%      { transform: scale(1.6); opacity: 0.5; }
+  }
+  @keyframes nav-glow {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(16,185,129,0.0); }
+    50%      { box-shadow: 0 0 0 8px rgba(16,185,129,0.0); }
+  }
+
+  .nav-bar       { animation: nav-slide-up 0.6s cubic-bezier(.2,.9,.3,1.2) both; }
+  .nav-btn       { position: relative; transition: all .3s cubic-bezier(.2,.9,.3,1.2); }
+  .nav-btn i     { transition: transform .35s cubic-bezier(.2,.9,.3,1.4), color .3s; }
+  .nav-btn:hover i        { transform: translateY(-3px) scale(1.15); }
+  .nav-btn:hover          { background: rgba(16,185,129,0.12); }
+  .nav-btn:active i       { animation: nav-pop .4s ease; }
+  .nav-btn.active         { background: linear-gradient(180deg, rgba(16,185,129,0.20), rgba(16,185,129,0.05)); }
+  .nav-btn.active i       { color: #34d399; filter: drop-shadow(0 0 6px rgba(52,211,153,.8)); }
+  .nav-btn.active::after  {
+    content:''; position:absolute; bottom:-6px; left:50%;
+    width:6px; height:6px; border-radius:9999px;
+    background:#34d399; transform: translateX(-50%);
+    animation: nav-dot-pulse 1.6s ease-in-out infinite;
+  }
+
+  /* Tooltip */
+  .nav-btn .tooltip {
+    position: absolute; bottom: calc(100% + 10px); left: 50%;
+    transform: translateX(-50%) translateY(6px);
+    background: rgba(15,23,42,0.95); color:#a7f3d0;
+    font-size: 10px; font-weight: 600; white-space: nowrap;
+    padding: 4px 8px; border-radius: 8px;
+    border: 1px solid rgba(16,185,129,0.3);
+    opacity: 0; pointer-events: none;
+    transition: all .25s ease;
+    backdrop-filter: blur(8px);
+  }
+  .nav-btn .tooltip::after {
+    content:''; position:absolute; top:100%; left:50%;
+    transform: translateX(-50%);
+    border:4px solid transparent; border-top-color: rgba(15,23,42,0.95);
+  }
+  .nav-btn:hover .tooltip { opacity: 1; transform: translateX(-50%) translateY(0); }
+</style>
+
+<nav
+  x-data="{ active: 'home' }"
+  class="nav-bar fixed bottom-6 left-4 right-4 max-w-md mx-auto z-50
+         bg-slate-900/95 backdrop-blur-xl
+         border border-emerald-800/50 rounded-3xl
+         px-3 py-3 flex justify-around items-center
+         shadow-2xl shadow-emerald-950/80
+         before:absolute before:inset-0 before:rounded-3xl
+         before:bg-gradient-to-r before:from-transparent before:via-emerald-500/5 before:to-transparent
+         before:pointer-events-none overflow-visible">
+  <!-- Beranda -->
+  <button @click="active='home'; switchPage('kifayah.html', 'FazzQuranic Faroid Engine')"
+          :class="active==='home' && 'active'"
+          class="nav-btn flex items-center justify-center w-11 h-11 rounded-2xl text-slate-300 hover:text-emerald-300"
+          title="Beranda">
+    <i class="fa-solid fa-house text-base"></i>
+    <span class="tooltip">Beranda</span>
+  </button>
+  <!-- Sastratika -->
+  <button onclick="window.location.href='index.html'"
+          class="nav-btn flex items-center justify-center w-11 h-11 rounded-2xl text-slate-300 hover:text-emerald-300"
+          title="Fazz Smart Quranic">
+    <i class="fa-solid fa-hands-praying text-base"></i>
+    <span class="tooltip">Sastratika</span>
+  </button>
+  <!-- Faroid -->
+  <button onclick="window.location.href='iklim.html'"
+          class="nav-btn flex items-center justify-center w-11 h-11 rounded-2xl text-slate-300 hover:text-emerald-300"
+          title="Fazz AgroClimate">
+    <i class="fa-solid fa-cloud-sun text-base"></i>
+    <span class="tooltip">AgroCLimate</span>
+  </button>
+  <!-- AgroClimate -->
+  <button onclick="switchPage('altimeter.html', 'Fazz GeoAltimeter')"
+          class="nav-btn flex items-center justify-center w-11 h-11 rounded-2xl text-slate-300 hover:text-emerald-300"
+          title="Fazz GeoAltimeter">
+    <i class="fa-solid fa-mountain text-base"></i>
+    <span class="tooltip">GeoAltimeter</span>
+  </button>
+  <!-- Hijaiyah -->
+  <button onclick="window.location.href='read.html'"
+          class="nav-btn flex items-center justify-center w-11 h-11 rounded-2xl text-slate-300 hover:text-emerald-300"
+          title="Fazz Hijaiyah Edu">
+    <i class="fa-solid fa-book-quran text-base"></i>
+    <span class="tooltip">Hijaiyah</span>
+  </button>
+  <!-- Sholat -->
+  <button onclick="window.location.href='sholat.html'"
+          class="nav-btn flex items-center justify-center w-11 h-11 rounded-2xl text-slate-300 hover:text-emerald-300"
+          title="Fazz Sholat Edu">
+    <i class="fa-solid fa-person-praying text-base"></i>
+    <span class="tooltip">Sholat</span>
+  </button>
+</nav>
+
+  
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyYOUR_API_KEY_HERE",
+      authDomain: "waris-app.firebaseapp.com",
+      projectId: "waris-app",
+      storageBucket: "waris-app.appspot.com",
+      messagingSenderId: "123456789",
+      appId: "1:123456789:web:abcdef"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    window.simpanKeFirestore = async function(payload, hasil) {
+      const fsText = document.getElementById("firestore-text");
+      try {
+        fsText.innerText = "Menyimpan riwayat ke Firestore...";
+        await addDoc(collection(db, "riwayat_kalkulasi"), { payload, hasil, createdAt: serverTimestamp() });
+        fsText.innerText = "Tersimpan otomatis ke Firestore!";
+      } catch (err) {
+        fsText.innerText = "Disimpan secara lokal (Ganti Config Firebase untuk cloud storage).";
+      }
+    };
+  </script>
+
+  <script>
+    let genderAlmarhum = 'L';
+    let batasMaksimalWasiatGlobal = 0;
+
+    function switchTab(tabName) {
+      const viewKalkulator = document.getElementById('view-kalkulator');
+      const viewDalil = document.getElementById('view-dalil');
+      const btnKalkulator = document.getElementById('tab-btn-kalkulator');
+      const btnDalil = document.getElementById('tab-btn-dalil');
+
+      if (tabName === 'kalkulator') {
+        viewKalkulator.classList.remove('hidden');
+        viewDalil.classList.add('hidden');
+        btnKalkulator.className = "flex-1 sm:flex-none px-5 py-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-2 transition-all bg-emerald-500 text-white shadow-md";
+        btnDalil.className = "flex-1 sm:flex-none px-5 py-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-2 transition-all text-slate-400 hover:text-white";
+      } else {
+        viewKalkulator.classList.add('hidden');
+        viewDalil.classList.remove('hidden');
+        btnDalil.className = "flex-1 sm:flex-none px-5 py-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-2 transition-all bg-emerald-500 text-white shadow-md";
+        btnKalkulator.className = "flex-1 sm:flex-none px-5 py-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-2 transition-all text-slate-400 hover:text-white";
+      }
+      lucide.createIcons();
+    }
+
+    function setGender(g) {
+      genderAlmarhum = g;
+      const btnL = document.getElementById('btn-gender-L');
+      const btnP = document.getElementById('btn-gender-P');
+      const labelPasangan = document.getElementById('label-pasangan');
+
+      if (g === 'L') {
+        btnL.className = "py-2.5 px-4 rounded-xl border border-emerald-500/50 bg-emerald-500/20 text-white font-medium flex justify-center items-center gap-2 transition-all";
+        btnP.className = "py-2.5 px-4 rounded-xl border border-slate-800 bg-slate-900/50 text-slate-400 font-medium flex justify-center items-center gap-2 hover:border-slate-700 transition-all";
+        labelPasangan.innerText = "Istri (Maks 4)";
+      } else {
+        btnP.className = "py-2.5 px-4 rounded-xl border border-emerald-500/50 bg-emerald-500/20 text-white font-medium flex justify-center items-center gap-2 transition-all";
+        btnL.className = "py-2.5 px-4 rounded-xl border border-slate-800 bg-slate-900/50 text-slate-400 font-medium flex justify-center items-center gap-2 hover:border-slate-700 transition-all";
+        labelPasangan.innerText = "Suami (Maks 1)";
+      }
+    }
+
+    function formatRupiah(num) {
+      return "Rp " + new Intl.NumberFormat("id-ID").format(Math.round(num));
+    }
+
+    function validasiSisaHartaDanWasiat() {
+      const kotor = parseFloat(document.getElementById('harta_kotor').value) || 0;
+      const pemakaman = parseFloat(document.getElementById('biaya_pemakaman').value) || 0;
+      const hutang = parseFloat(document.getElementById('total_hutang').value) || 0;
+      const wasiatInput = parseFloat(document.getElementById('wasiat').value) || 0;
+
+      const sisaHarta = Math.max(0, kotor - (pemakaman + hutang));
+      const batasMaksimalWasiat = sisaHarta / 3;
+      batasMaksimalWasiatGlobal = batasMaksimalWasiat;
+
+      document.getElementById('label-batas-wasiat').innerText = `Maks 1/3 Sisa: ${formatRupiah(batasMaksimalWasiat)}`;
+
+      const errorBox = document.getElementById('wasiat-error-box');
+      const errorText = document.getElementById('wasiat-error-text');
+      const btnHitung = document.getElementById('btn-hitung');
+
+      if (wasiatInput > batasMaksimalWasiat + 1) {
+        errorBox.classList.remove('hidden');
+        errorText.innerHTML = `Wasiat (${formatRupiah(wasiatInput)}) melebihi batas 1/3 sisa harta (${formatRupiah(batasMaksimalWasiat)}). Harap perbaiki angka wasiat!`;
+        btnHitung.disabled = true;
+      } else {
+        errorBox.classList.add('hidden');
+        btnHitung.disabled = false;
+      }
+    }
+
+    function sesuaikanWasiatOtomatis() {
+      document.getElementById('wasiat').value = Math.floor(batasMaksimalWasiatGlobal);
+      validasiSisaHartaDanWasiat();
+    }
+
+    // ENGINE FARAIDH LENGKAP & PRESISI
+	// ==========================================
+	// 1. ENGINE KALKULASI FARAIDH PRESISI
+	// ==========================================
+	function prosesKalkulasi() {
+	  const kotor = parseFloat(document.getElementById('harta_kotor').value) || 0;
+	  const pemakaman = parseFloat(document.getElementById('biaya_pemakaman').value) || 0;
+	  const hutang = parseFloat(document.getElementById('total_hutang').value) || 0;
+	  const wasiatInput = parseFloat(document.getElementById('wasiat').value) || 0;
+
+	  // Harta Bersih Siap Bagi (Setelah dikurangi Hak Harta Terdahulu)
+	  const sisaSebelumWasiat = Math.max(0, kotor - (pemakaman + hutang));
+	  const wasiatValid = Math.min(wasiatInput, sisaSebelumWasiat / 3);
+	  const hartaBersih = sisaSebelumWasiat - wasiatValid;
+
+	  // Input Jumlah Ahli Waris
+	  const pasangan = parseInt(document.getElementById('input-PASANGAN').value) || 0;
+	  const ayah = parseInt(document.getElementById('input-AYAH').value) || 0;
+	  const ibu = parseInt(document.getElementById('input-IBU').value) || 0;
+	  const kakek = parseInt(document.getElementById('input-KAKEK').value) || 0;
+	  const nenek = parseInt(document.getElementById('input-NENEK').value) || 0;
+
+	  const anakL = parseInt(document.getElementById('input-ANAK_L').value) || 0;
+	  const anakP = parseInt(document.getElementById('input-ANAK_P').value) || 0;
+	  const cucuL = parseInt(document.getElementById('input-CUCU_L').value) || 0;
+	  const cucuP = parseInt(document.getElementById('input-CUCU_P').value) || 0;
+
+	  const skL = parseInt(document.getElementById('input-SAUDARA_L_KANDUNG').value) || 0;
+	  const skP = parseInt(document.getElementById('input-SAUDARA_P_KANDUNG').value) || 0;
+	  const saL = parseInt(document.getElementById('input-SAUDARA_L_SEAYAH').value) || 0;
+	  const saP = parseInt(document.getElementById('input-SAUDARA_P_SEAYAH').value) || 0;
+	  const sSeibu = parseInt(document.getElementById('input-SAUDARA_SEIBU').value) || 0;
+
+	  // Status Keberadaan Keturunan
+	  const adaAnakL = anakL > 0;
+	  const adaAnakP = anakP > 0;
+	  const adaAnak = adaAnakL || adaAnakP;
+	  const adaCucuL = !adaAnakL && cucuL > 0;
+	  const adaKeturunan = adaAnak || adaCucuL || (cucuP > 0 && !adaAnakL);
+
+	  let porsiList = [];
+	  let mahjubList = [];
+
+	  // 1. PASANGAN (Suami / Istri)
+	  if (pasangan > 0) {
+		if (genderAlmarhum === 'L') {
+		  const den = adaKeturunan ? 8 : 4;
+		  porsiList.push({ 
+			nama: 'Istri', 
+			num: 1, 
+			den: den, 
+			orang: pasangan, 
+			isPasangan: true, 
+			ketHukum: `Ashabul Furud (1/${den} - QS. An-Nisa:12)` 
+		  });
+		} else {
+		  const den = adaKeturunan ? 4 : 2;
+		  porsiList.push({ 
+			nama: 'Suami', 
+			num: 1, 
+			den: den, 
+			orang: 1, 
+			isPasangan: true, 
+			ketHukum: `Ashabul Furud (1/${den} - QS. An-Nisa:12)` 
+		  });
+		}
+	  }
+
+	  // 2. IBU & NENEK
+	  if (ibu > 0) {
+		const totalSaudaraAwal = skL + skP + saL + saP + sSeibu;
+		const den = (adaKeturunan || totalSaudaraAwal >= 2) ? 6 : 3;
+		porsiList.push({ 
+		  nama: 'Ibu', 
+		  num: 1, 
+		  den: den, 
+		  orang: 1, 
+		  ketHukum: `Ashabul Furud (1/${den} - QS. An-Nisa:11)` 
+		});
+		if (nenek > 0) mahjubList.push({ nama: 'Nenek', orang: nenek, ketHukum: 'Mahjub oleh Ibu' });
+	  } else if (nenek > 0) {
+		porsiList.push({ 
+		  nama: 'Nenek', 
+		  num: 1, 
+		  den: 6, 
+		  orang: nenek, 
+		  ketHukum: 'Ashabul Furud (1/6 pengganti Ibu)' 
+		});
+	  }
+
+	  // 3. AYAH & KAKEK
+	  let ayahJadiAshabah = false;
+	  let kakekJadiAshabah = false;
+
+	  if (ayah > 0) {
+		if (adaKeturunan) {
+		  porsiList.push({ nama: 'Ayah', num: 1, den: 6, orang: 1, ketHukum: 'Ashabul Furud (1/6 - QS. An-Nisa:11)' });
+		  if (!adaAnakL && !adaCucuL) ayahJadiAshabah = true; // Mengambil sisa jika hanya ada anak P / cucu P
+		} else {
+		  ayahJadiAshabah = true;
+		}
+		if (kakek > 0) mahjubList.push({ nama: 'Kakek', orang: kakek, ketHukum: 'Mahjub oleh Ayah' });
+	  } else if (kakek > 0) {
+		if (adaKeturunan) {
+		  porsiList.push({ nama: 'Kakek', num: 1, den: 6, orang: 1, ketHukum: 'Ashabul Furud (1/6 pengganti Ayah)' });
+		  if (!adaAnakL && !adaCucuL) kakekJadiAshabah = true;
+		} else {
+		  kakekJadiAshabah = true;
+		}
+	  }
+
+	  // 4. ANAK PEREMPUAN & CUCU PEREMPUAN (Tanpa Anak Laki-Laki)
+	  if (adaAnakP && !adaAnakL) {
+		if (anakP === 1) {
+		  porsiList.push({ 
+			nama: 'Anak Perempuan (Tunggal)', 
+			num: 1, 
+			den: 2, 
+			orang: 1, 
+			ketHukum: 'Ashabul Furud (1/2 - QS. An-Nisa:11)' 
+		  });
+		  if (cucuP > 0 && cucuL === 0) {
+			porsiList.push({ 
+			  nama: 'Cucu Perempuan', 
+			  num: 1, 
+			  den: 6, 
+			  orang: cucuP, 
+			  ketHukum: 'Ashabul Furud (1/6 pelengkap 2/3)' 
+			});
+		  }
+		} else {
+		  porsiList.push({ 
+			nama: 'Anak Perempuan (Jamak)', 
+			num: 2, 
+			den: 3, 
+			orang: anakP, 
+			ketHukum: `Ashabul Furud (2/3 dibagi ${anakP} orang - QS. An-Nisa:11)` 
+		  });
+		  if (cucuP > 0 && cucuL === 0) {
+			mahjubList.push({ nama: 'Cucu Perempuan', orang: cucuP, ketHukum: 'Mahjub (Anak Perempuan sudah memenuhi 2/3)' });
+		  }
+		}
+	  } else if (!adaAnak && cucuP > 0 && cucuL === 0) {
+		if (cucuP === 1) {
+		  porsiList.push({ nama: 'Cucu Perempuan (Tunggal)', num: 1, den: 2, orang: 1, ketHukum: 'Ashabul Furud (1/2 pengganti Anak P)' });
+		} else {
+		  porsiList.push({ nama: 'Cucu Perempuan (Jamak)', num: 2, den: 3, orang: cucuP, ketHukum: 'Ashabul Furud (2/3 pengganti Anak P)' });
+		}
+	  }
+
+	  // 5. SAUDARA SEIBU (Kalalah)
+	  const terhijabSaudaraSeibu = adaKeturunan || ayah > 0 || kakek > 0;
+	  if (sSeibu > 0) {
+		if (terhijabSaudaraSeibu) {
+		  mahjubList.push({ nama: 'Saudara/i Seibu', orang: sSeibu, ketHukum: 'Mahjub oleh Keturunan / Ayah / Kakek' });
+		} else {
+		  if (sSeibu === 1) {
+			porsiList.push({ nama: 'Saudara/i Seibu (Tunggal)', num: 1, den: 6, orang: 1, ketHukum: 'Ashabul Furud (1/6 - QS. An-Nisa:12)' });
+		  } else {
+			porsiList.push({ nama: 'Saudara/i Seibu (Jamak)', num: 1, den: 3, orang: sSeibu, ketHukum: 'Ashabul Furud (1/3 dibagi rata - QS. An-Nisa:12)' });
+		  }
+		}
+	  }
+
+	  // 6. SAUDARI KANDUNG (Kalalah - Tanpa Anak Laki, Cucu Laki, Ayah, & Tanpa Saudara Laki-Laki Kandung)
+	  const terhijabSaudaraKandung = adaAnakL || cucuL > 0 || ayah > 0;
+	  if (!terhijabSaudaraKandung) {
+		if (skL === 0 && skP > 0) {
+		  if (skP === 1) {
+			// 1 SAUDARI KANDUNG TUNGGAL -> 1/2 HARTA
+			porsiList.push({ 
+			  nama: 'Saudari Kandung (Tunggal)', 
+			  num: 1, 
+			  den: 2, 
+			  orang: 1, 
+			  ketHukum: 'Ashabul Furud (1/2 - QS. An-Nisa:176)' 
+			});
+		  } else {
+			// >= 2 SAUDARI KANDUNG JAMAK -> 2/3 HARTA
+			porsiList.push({ 
+			  nama: 'Saudari Kandung (Jamak)', 
+			  num: 2, 
+			  den: 3, 
+			  orang: skP, 
+			  ketHukum: `Ashabul Furud (2/3 dibagi ${skP} orang - QS. An-Nisa:176)` 
+			});
+		  }
+		}
+	  } else if (skP > 0 || skL > 0) {
+		if (terhijabSaudaraKandung) {
+		  mahjubList.push({ nama: 'Saudara/i Kandung', orang: skL + skP, ketHukum: 'Mahjub oleh Anak Laki / Cucu Laki / Ayah' });
+		}
+	  }
+
+	  // PENYAMAKAN PENYEBUT (KPK) ASHABUL FURUD
+	  const gbd = (a, b) => (b === 0 ? a : gbd(b, a % b));
+	  const kpk = (a, b) => (a * b) / gbd(a, b);
+	  let penyebutUtama = porsiList.length > 0 ? porsiList.map(p => p.den).reduce((acc, val) => kpk(acc, val), 1) : 1;
+
+	  let totalPembilang = 0;
+	  porsiList.forEach(p => {
+		p.pembilangSama = p.num * (penyebutUtama / p.den);
+		totalPembilang += p.pembilangSama;
+	  });
+
+	  let status = "NORMAL";
+	  let penyebutFinal = penyebutUtama;
+
+	  // SISA HARTA UNTUK ASHABAH / EVALUASI AWL / RADD
+	  const sisaPorsiPecahan = Math.max(0, (penyebutUtama - totalPembilang) / penyebutUtama);
+	  const nominalSisa = sisaPorsiPecahan * hartaBersih;
+
+	  if (adaAnakL) {
+		const totalPoin = (anakL * 2) + anakP;
+		const nilaiPoin = nominalSisa / totalPoin;
+		porsiList.push({ nama: `Anak Laki-Laki (${anakL} Org)`, nominal: nilaiPoin * 2 * anakL, orang: anakL, ketHukum: 'Ashabah bi Nafsihi (Rasio 2:1 - QS. An-Nisa:11)' });
+		if (adaAnakP) porsiList.push({ nama: `Anak Perempuan (${anakP} Org)`, nominal: nilaiPoin * 1 * anakP, orang: anakP, ketHukum: 'Ashabah bi Ghairiha (Rasio 1:2)' });
+	  } else if (cucuL > 0) {
+		const totalPoinC = (cucuL * 2) + cucuP;
+		const nilaiPoinC = nominalSisa / totalPoinC;
+		porsiList.push({ nama: `Cucu Laki-Laki (${cucuL} Org)`, nominal: nilaiPoinC * 2 * cucuL, orang: cucuL, ketHukum: 'Ashabah (Pengganti Anak L)' });
+		if (cucuP > 0) porsiList.push({ nama: `Cucu Perempuan (${cucuP} Org)`, nominal: nilaiPoinC * 1 * cucuP, orang: cucuP, ketHukum: 'Ashabah bi Ghairiha' });
+	  } else if (ayahJadiAshabah) {
+		const idxA = porsiList.findIndex(p => p.nama === 'Ayah');
+		if (idxA !== -1) {
+		  porsiList[idxA].nominalSisa = nominalSisa;
+		  porsiList[idxA].ketHukum += ' + Ashabah Sisa';
+		} else {
+		  porsiList.push({ nama: 'Ayah', nominal: nominalSisa, orang: 1, ketHukum: 'Ashabah bi Nafsihi (Menerima Seluruh Sisa)' });
+		}
+	  } else if (kakekJadiAshabah) {
+		const idxK = porsiList.findIndex(p => p.nama === 'Kakek');
+		if (idxK !== -1) {
+		  porsiList[idxK].nominalSisa = nominalSisa;
+		  porsiList[idxK].ketHukum += ' + Ashabah Sisa';
+		} else {
+		  porsiList.push({ nama: 'Kakek', nominal: nominalSisa, orang: 1, ketHukum: 'Ashabah bi Nafsihi (Pengganti Ayah)' });
+		}
+	  } else if (!terhijabSaudaraKandung && skL > 0) {
+		const totalPoinS = (skL * 2) + skP;
+		const nilaiPoinS = nominalSisa / totalPoinS;
+		porsiList.push({ nama: `Saudara Laki Kandung (${skL} Org)`, nominal: nilaiPoinS * 2 * skL, orang: skL, ketHukum: 'Ashabah bi Nafsihi (Rasio 2:1)' });
+		if (skP > 0) porsiList.push({ nama: `Saudari Peremp Kandung (${skP} Org)`, nominal: nilaiPoinS * 1 * skP, orang: skP, ketHukum: 'Ashabah bi Ghairiha' });
+	  } else if (totalPembilang > penyebutUtama) {
+		// KONDISI 'AWL
+		status = "AWL";
+		penyebutFinal = totalPembilang;
+	  } else if (totalPembilang < penyebutUtama) {
+		// KONDISI RADD (Pengembalian Sisa Harta)
+		status = "RADD";
+		let totalPenerimaRadd = 0;
+		porsiList.forEach(p => { if (!p.isPasangan) totalPenerimaRadd += p.pembilangSama; });
+
+		const pPasangan = porsiList.find(p => p.isPasangan);
+		const sisaNul = pPasangan ? (penyebutUtama - pPasangan.pembilangSama) : penyebutUtama;
+
+		porsiList.forEach(p => {
+		  if (!p.isPasangan) {
+			// Simpan porsi pecahan asli syariat untuk label UI
+			p.pembilangAsli = p.pembilangSama;
+			p.penyebutAsli = penyebutUtama;
+
+			// Kalkulasi ulang bagian Radd
+			p.pembilangSama = (p.pembilangSama / totalPenerimaRadd) * sisaNul;
+			p.ketHukum += ' + Hak Radd (Pengembalian Sisa)';
+		  }
+		});
+	  }
+
+	  // Masukkan Ahli Waris Terhalang (Mahjub)
+	  mahjubList.forEach(m => {
+		porsiList.push({ nama: m.nama, nominal: 0, orang: m.orang, ketHukum: `Mahjub (${m.ketHukum})` });
+	  });
+
+	  // Kirim Data ke Fungsi Render Hasil UI
+	  renderHasil({ 
+		kotor, 
+		penguranganWajib: pemakaman + hutang, 
+		wasiatValid, 
+		hartaBersih, 
+		status, 
+		penyebutFinal, 
+		porsiList 
+	  });
+	}
+
+	// ==========================================
+	// 2. FUNGSI DISPLAY & RENDER KARTU HASIL UI
+	// ==========================================
+	function renderHasil(res) {
+	  document.getElementById('hasil-container').classList.remove('hidden');
+	  document.getElementById('res-harta-kotor').innerText = formatRupiah(res.kotor);
+	  document.getElementById('res-pengurangan').innerText = "- " + formatRupiah(res.penguranganWajib);
+	  document.getElementById('res-wasiat').innerText = "- " + formatRupiah(res.wasiatValid);
+	  document.getElementById('res-harta-bersih').innerText = formatRupiah(res.hartaBersih);
+
+	  const badge = document.getElementById('badge-status');
+	  badge.innerText = res.status;
+	  if (res.status === 'AWL') {
+		badge.className = "px-2.5 py-1 text-xs font-bold rounded-md bg-amber-500/20 text-amber-300 border border-amber-500/30";
+	  } else if (res.status === 'RADD') {
+		badge.className = "px-2.5 py-1 text-xs font-bold rounded-md bg-blue-500/20 text-blue-300 border border-blue-500/30";
+	  } else {
+		badge.className = "px-2.5 py-1 text-xs font-bold rounded-md bg-emerald-500/20 text-emerald-300 border border-emerald-500/30";
+	  }
+
+	  const container = document.getElementById('daftar-hasil');
+	  container.innerHTML = "";
+
+	  res.porsiList.forEach(p => {
+		let nominalFinal = 0;
+		let labelPorsi = "";
+
+		if (p.nominal !== undefined) {
+		  nominalFinal = p.nominal;
+		  labelPorsi = p.nominal === 0 ? "• Terhalang (Mahjub)" : "• Penerima Sisa (Ashabah)";
+		} else {
+		  const porsiEfektif = p.pembilangSama / res.penyebutFinal;
+		  nominalFinal = porsiEfektif * res.hartaBersih;
+		  if (p.nominalSisa !== undefined) nominalFinal += p.nominalSisa;
+
+		  // Format khusus jika ada pengembalian sisa (Radd)
+		  if (p.pembilangAsli !== undefined) {
+			labelPorsi = `• Porsi Utamanya (${p.pembilangAsli}/${p.penyebutAsli}) + Sisa Radd`;
+		  } else {
+			labelPorsi = `• Porsi (${Math.round(p.pembilangSama)}/${res.penyebutFinal})`;
+		  }
+		}
+
+		const nominalPerOrang = p.orang > 1 ? nominalFinal / p.orang : nominalFinal;
+		const isMahjub = nominalFinal === 0;
+
+		const el = document.createElement('div');
+		el.className = `p-3.5 bg-slate-900/90 rounded-xl border ${isMahjub ? 'border-slate-800/50 opacity-60' : 'border-slate-800'} flex justify-between items-center animate__animated animate__fadeInUp`;
+		el.innerHTML = `
+		  <div class="pr-3">
+			<h4 class="font-semibold text-white text-sm">${p.nama}</h4>
+			<p class="text-xs text-slate-400">${p.orang} Orang ${labelPorsi}</p>
+			<p class="text-[11px] text-emerald-400 font-medium mt-0.5 leading-snug">${p.ketHukum}</p>
+		  </div>
+		  <div class="text-right shrink-0">
+			<div class="font-bold ${isMahjub ? 'text-slate-500' : 'text-emerald-400'} text-sm">${formatRupiah(nominalFinal)}</div>
+			${(p.orang > 1 && !isMahjub) ? `<div class="text-[10px] text-slate-400 mt-0.5">@ ${formatRupiah(nominalPerOrang)} / org</div>` : ''}
+		  </div>
+		`;
+		container.appendChild(el);
+	  });
+
+	  lucide.createIcons();
+	}
+	
+	function fazzPage() {
+	  Swal.fire({
+	  title: 'Memuat Halaman',
+	  html: `Kembali ke halaman <b>FazzQuranic</b>...`,
+		  timer: 1200,
+		  timerProgressBar: true,
+		  showConfirmButton: false,
+		  background: '#0f172a',  
+		  color: '#fff',
+		  showClass: {
+			popup: 'animate__animated animate__fadeInDown animate__faster'
+		  },
+		  hideClass: {
+			popup: 'animate__animated animate__fadeOutUp animate__faster'
+		  },
+		  didOpen: () => {
+			Swal.showLoading();
+		  }
+		}).then(() => {
+			window.location.href = `index.html`;
+		});
+	}
+	
+	function switchPage(pageKey,halaman) {
+	  Swal.fire({
+	  title: 'Memuat Halaman',
+	  html: `Menuju halaman <b>` + halaman +`</b>...`,
+		  timer: 1200,
+		  timerProgressBar: true,
+		  showConfirmButton: false,
+		  background: '#0f172a',  
+		  color: '#fff',
+		  showClass: {
+			popup: 'animate__animated animate__fadeInDown animate__faster'
+		  },
+		  hideClass: {
+			popup: 'animate__animated animate__fadeOutUp animate__faster'
+		  },
+		  didOpen: () => {
+			Swal.showLoading();
+		  }
+		}).then(() => {
+			window.location.href = pageKey;
+		});
+	}
+
+    window.onload = function() {
+      validasiSisaHartaDanWasiat();
+      lucide.createIcons();
+    };
+  </script>
+</body>
+</html>

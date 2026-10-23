@@ -1,0 +1,1864 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FazzAgroClimate AI - Smart Farming & Precision Agronomy Suite</title>
+	<link rel="shortcut icon" type="image/png" href="img/iconfazz.png">	
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts & FontAwesome -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/webcamjs/1.0.26/webcam.min.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+	<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+	<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+		main {
+            padding-bottom: 5rem !important;
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-8px); }
+        }
+        .animate-float { animation: float 4s ease-in-out infinite; }
+        .custom-scroll::-webkit-scrollbar { width: 6px; }
+        .custom-scroll::-webkit-scrollbar-track { background: rgba(0,0,0,0.03); border-radius: 10px; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: rgba(16, 185, 129, 0.3); border-radius: 10px; }
+    </style>
+	
+</head>
+<body class="bg-gradient-to-br from-emerald-900 via-teal-800 to-slate-900 min-h-screen text-slate-100 flex flex-col justify-between p-4 md:p-8">
+
+    <!-- Header -->
+    <header class="max-w-5xl mx-auto w-full text-center mb-6 animate-float">
+        <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-500/20 border border-emerald-400/30 text-emerald-300 text-sm font-medium mb-3">
+            <i class="fa-solid fa-microscope"></i> Smart Farming Management & Precision Agronomy Suite
+        </div>
+		<button onclick="window.location.href='index.html'" class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-red-800/20 border border-red-800/30 text-green-300 text-sm font-medium mb-3 transition-all duration-300 hover:bg-red-800 hover:border-red-600 hover:text-white shadow-sm hover:shadow-red-900/50 hover:shadow-lg">
+			<i class="fa-solid fa-home"></i> Back to FazzQuranic
+		</button>
+        <h1 class="text-3xl md:text-5xl font-bold tracking-tight text-white mb-2">
+		  <span class="text-amber-400" style="text-shadow: 0 0 10px rgba(251, 191, 36, 0.8), 0 0 20px rgba(251, 191, 36, 0.5), 0 0 30px rgba(245, 158, 11, 0.3);">Fazz</span> 
+		  AgroClimate 
+		  <span class="text-emerald-400" style="text-shadow: 0 0 10px rgba(52, 211, 153, 0.8), 0 0 20px rgba(52, 211, 153, 0.5), 0 0 30px rgba(16, 185, 129, 0.3);">AI</span>
+		</h1>
+        <p class="text-slate-300 text-sm md:text-base max-w-xl mx-auto">Sistem Pendukung Keputusan Tani, Kalender Musim, & Deteksi Penyakit Berbasis AI.</p>
+		<h3 class="text-3xl md:text-5xl font-bold tracking-tight text-white mb-2">
+		  <span class="text-blue-300" style="font-size:28px; text-shadow: 0 0 10px rgba(147, 197, 255, 0.8), 0 0 20px rgba(147, 197, 255, 0.5), 0 0 30px rgba(147, 197, 255, 0.3);">I'M UII</span>
+		</h3>
+    </header>
+
+    <!-- Navigation Tabs -->
+    <nav class="max-w-5xl mx-auto w-full mb-6">
+        <div class="glass-card p-1.5 rounded-2xl flex flex-wrap gap-2 justify-center shadow-lg">
+            <button onclick="switchTab('analisis')" id="tab-analisis" class="flex-1 min-w-[140px] py-2.5 px-4 rounded-xl font-bold text-xs md:text-sm transition-all bg-emerald-600 text-white shadow-md">
+                <i class="fa-solid fa-compass mr-1.5"></i> Analisis & Lahan
+            </button>
+            <button onclick="switchTab('kalender')" id="tab-kalender" class="flex-1 min-w-[140px] py-2.5 px-4 rounded-xl font-bold text-xs md:text-sm transition-all text-slate-700 hover:bg-slate-100">
+                <i class="fa-solid fa-calendar-days mr-1.5"></i> Jadwal Tanam
+            </button>
+            <button onclick="switchTab('doctor')" id="tab-doctor" class="flex-1 min-w-[140px] py-2.5 px-4 rounded-xl font-bold text-xs md:text-sm transition-all text-slate-700 hover:bg-slate-100">
+                <i class="fa-solid fa-stethoscope mr-1.5"></i> AI Doctor (Hama)
+            </button>
+        </div>
+    </nav>
+
+    <!-- Main Container -->
+    <main class="max-w-5xl mx-auto w-full space-y-6 flex-1">
+        
+        <!-- SECTION 1: ANALISIS LAHAN & HAMA -->
+        <div id="section-analisis" class="space-y-6">
+            <!-- Action Card -->
+            <div class="glass-card rounded-3xl p-6 md:p-8 shadow-2xl text-slate-800 transition-all duration-300">
+                <div class="flex flex-col md:flex-row items-center justify-between gap-6">
+                    <div>
+                        <h2 class="text-xl font-bold text-slate-900 mb-1 flex items-center gap-2">
+                            <i class="fa-solid fa-location-crosshairs text-emerald-600"></i> Deteksi Lokasi & Cuaca
+                        </h2>
+                        <p class="text-slate-600 text-sm">Gunakan GPS untuk membaca elevasi mikro dan mendapatkan 9+ rekomendasi komoditas.</p>
+                    </div>
+                    <button onclick="detectLocationAndAnalyze()" id="btn-detect" class="w-full md:w-auto px-6 py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-2xl shadow-lg shadow-emerald-600/30 transition-all duration-300 flex items-center justify-center gap-2 active:scale-95">
+                        <i class="fa-solid fa-compass"></i> Mulai Analisis Agronomi
+                    </button>
+                </div>
+
+                <!-- Loading State -->
+                <div id="loading-state" class="hidden mt-8 text-center py-6">
+                    <div class="inline-block w-10 h-10 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mb-3"></div>
+                    <p id="loading-text" class="text-slate-600 font-medium text-sm">Menghubungkan ke satelit cuaca & memetakan database agronomi...</p>
+                </div>
+            </div>
+
+            <!-- Result Section (Hidden by Default) -->
+            <div id="result-section" class="hidden space-y-6">
+                <!-- Weather, Elevation & Location Info Cards -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div class="glass-card rounded-2xl p-4 text-slate-800">
+                        <div class="text-slate-500 text-xs font-semibold uppercase tracking-wider mb-1"><i class="fa-solid fa-cloud text-blue-500 mr-1"></i> Cuaca Real-Time</div>
+                        <div id="res-weather" class="font-bold text-slate-900 text-sm truncate">Memuat...</div>
+                    </div>
+                    <div class="glass-card rounded-2xl p-4 text-slate-800">
+                        <div class="text-slate-500 text-xs font-semibold uppercase tracking-wider mb-1"><i class="fa-solid fa-temperature-half text-amber-500 mr-1"></i> Suhu & Kelembapan</div>
+                        <div id="res-temp" class="font-bold text-emerald-800 text-sm">-</div>
+                    </div>
+                    <div class="glass-card rounded-2xl p-4 text-slate-800">
+                        <div class="text-slate-500 text-xs font-semibold uppercase tracking-wider mb-1"><i class="fa-solid fa-wind text-teal-600 mr-1"></i> Kecepatan Angin</div>
+                        <div id="res-wind" class="font-bold text-teal-800 text-sm">-</div>
+                    </div>
+                    <div class="glass-card rounded-2xl p-4 text-slate-800">
+                        <div class="text-slate-500 text-xs font-semibold uppercase tracking-wider mb-1"><i class="fa-solid fa-mountain text-slate-700 mr-1"></i> Elevasi & Zona</div>
+                        <div id="res-altitude" class="font-bold text-slate-900 text-xs truncate">-</div>
+                    </div>
+                </div>
+				
+				<!-- Forecasting Weather, Elevation & Location Info Cards -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+					<div class="glass-card rounded-2xl p-4 text-slate-800">
+						<div class="text-slate-500 text-xs font-semibold uppercase tracking-wider mb-1"><i class="fa-solid fa-cloud text-blue-500 mr-1"></i> Cuaca Bulan Ini</div>
+						<div id="first-weather" class="font-bold text-slate-900 text-sm truncate">Memuat...</div>
+					</div>
+					<div class="glass-card rounded-2xl p-4 text-slate-800">
+						<div class="text-slate-500 text-xs font-semibold uppercase tracking-wider mb-1"><i class="fa-solid fa-cloud text-amber-500 mr-1"></i> Cuaca Bulan Depan</div>
+						<div id="second-weather" class="font-bold text-emerald-800 text-sm">-</div>
+					</div>
+					<div class="glass-card rounded-2xl p-4 text-slate-800">
+						<div class="text-slate-500 text-xs font-semibold uppercase tracking-wider mb-1"><i class="fa-solid fa-cloud text-teal-600 mr-1"></i> Cuaca Bulan Ketiga</div>
+						<div id="third-weather" class="font-bold text-teal-800 text-sm">-</div>
+					</div>
+				</div>
+
+                <!-- Crops Recommendation Container -->
+                <div class="glass-card rounded-3xl p-6 md:p-8 text-slate-800">
+                    <div class="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-2 border-b border-slate-200 pb-4">
+                        <div>
+                            <h3 class="text-xl font-bold text-slate-900 flex items-center gap-2">
+                                <i class="fa-solid fa-seedling text-emerald-600"></i> Rekomendasi Tanaman Ilmiah (Agronomi)
+                            </h3>
+                            <p id="res-location-subtitle" class="text-emerald-700 text-sm font-semibold mt-1 flex items-center gap-1.5">
+                                <i class="fa-solid fa-location-dot text-emerald-600"></i> Memuat wilayah spesifik...
+                            </p>
+                        </div>
+                        <span id="crop-count-badge" class="px-3 py-1 bg-emerald-100 text-emerald-800 font-bold rounded-xl text-xs self-start md:self-auto shadow-sm">0 Pilihan Tanaman</span>
+                    </div>
+                    
+                    <p class="text-xs text-slate-500 mb-4 italic"><i class="fa-solid fa-circle-info text-emerald-600 mr-1"></i> Klik pada card tanaman untuk membuka SOP lengkap & kalkulator pupuk.</p>
+
+                    <div id="crop-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-h-[600px] overflow-y-auto custom-scroll pr-2">
+                        <!-- Dynamic Crops Cards Generated by JS -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTION 2: JADWAL TANAM (CROP CALENDAR PLANNER) -->
+        <div id="section-kalender" class="hidden space-y-6">
+            <div class="glass-card rounded-3xl p-6 md:p-8 shadow-2xl text-slate-800">
+                <h2 class="text-xl font-bold text-slate-900 mb-1 flex items-center gap-2">
+                    <i class="fa-solid fa-calendar-days text-emerald-600"></i> Kalender Musim & Jadwal Tanam (Planner)
+                </h2>
+                <p class="text-slate-600 text-sm mb-6">Pilih komoditas dan tentukan tanggal mulai tanam untuk menghasilkan timeline operasional pertanian otomatis.</p>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1.5">Pilih Komoditas Tanaman</label>
+                        <select id="calendar-crop" class="w-full bg-white border border-slate-300 rounded-xl px-4 py-2.5 text-xs font-semibold text-slate-800 focus:outline-none focus:border-emerald-600">
+							<!-- ============ DATARAN RENDAH (< 300 MDPL) ============ -->
+							<optgroup label="🌾 Dataran Rendah (< 300 MDPL)">
+								<option value="padi">Padi Sawah / Irigasi (Durasi: 3-4 Bulan)</option>
+								<option value="kangkung">Kangkung Darat (Durasi: 25-30 Hari)</option>
+								<option value="timun">Timun Hijau (Durasi: 2 Bulan)</option>
+								<option value="jagung">Jagung Manis (Durasi: 2.5 Bulan)</option>
+								<option value="kacang_hijau">Kacang Hijau (Durasi: 2 Bulan)</option>
+								<option value="semangka">Semangka (Durasi: 2 Bulan)</option>
+								<option value="singkong">Ubi Kayu / Singkong (Durasi: 8-10 Bulan)</option>
+								<option value="bayam">Bayam Hijau (Durasi: 25 Hari)</option>
+								<option value="kacang_panjang">Kacang Panjang (Durasi: 2 Bulan)</option>
+								<option value="kedelai">Kedelai (Durasi: 2.5-3 Bulan)</option>
+								<option value="melon">Melon (Durasi: 2.5 Bulan)</option>
+								<option value="terong">Terong Lahap / Hijau (Durasi: 3 Bulan)</option>
+								<option value="kacang_tanah">Kacang Tanah (Durasi: 3 Bulan)</option>
+								<option value="ubi_jalar">Ubi Jalar (Durasi: 3.5-4 Bulan)</option>
+								<option value="tebu">Tebu (Durasi: 10-12 Bulan)</option>
+							</optgroup>
+
+							<!-- ============ DATARAN MENENGAH (300 - 700 MDPL) ============ -->
+							<optgroup label="🌿 Dataran Menengah (300 - 700 MDPL)">
+								<option value="cabai_merah">Cabai Merah Keriting (Durasi: 3 Bulan)</option>
+								<option value="tomat">Tomat Buah (Durasi: 2.5 Bulan)</option>
+								<option value="terong_ungu">Terong Ungu (Durasi: 2.5 Bulan)</option>
+								<option value="buncis">Buncis Merambat (Durasi: 2 Bulan)</option>
+								<option value="pepaya">Pepaya California (Durasi: 3-4 Bulan)</option>
+								<option value="sawi_pakcoy">Sawi Pakcoy (Durasi: 1 Bulan)</option>
+								<option value="seledri">Seledri Sub-Pegunungan (Durasi: 2 Bulan)</option>
+								<option value="cabai_rawit">Cabai Rawit Hijau (Durasi: 3 Bulan)</option>
+								<option value="kopi_robusta">Kopi Robusta (Durasi: Panen Tahunan)</option>
+								<option value="pisang_kepok">Pisang Candi / Kepok (Durasi: 11-12 Bulan)</option>
+								<option value="alpukat">Alpukat Aligator / Miki (Durasi: 3-4 Tahun)</option>
+								<option value="bawang_merah">Bawang Merah Off-Season (Durasi: 2 Bulan)</option>
+								<option value="oyong">Oyong / Luffa (Durasi: 2 Bulan)</option>
+								<option value="merica">Lada / Merica (Durasi: Panen Tahunan)</option>
+							</optgroup>
+
+							<!-- ============ DATARAN TINGGI TRANSISI (701 - 1000 MDPL) ============ -->
+							<optgroup label="🌲 Dataran Tinggi Transisi (701 - 1000 MDPL)">
+								<option value="kopi_arabika">Kopi Arabika (Bawah) (Durasi: 9-12 Bulan)</option>
+								<option value="buncis_tegak">Buncis Tegak (Durasi: 2 Bulan)</option>
+								<option value="daun_bawang">Daun Bawang (Durasi: 2 Bulan)</option>
+								<option value="kubis_putih">Kol / Kubis Putih (Durasi: 2.5 Bulan)</option>
+								<option value="seledri_pegunungan">Seledri Pegunungan (Durasi: 2.5 Bulan)</option>
+								<option value="labu_siam">Labu Siam (Durasi: 3 Bulan)</option>
+								<option value="sawi_putih">Sawi Putih / Chinese Cabbage (Durasi: 2 Bulan)</option>
+								<option value="paprika">Cabai Paprika (Durasi: 3.5 Bulan)</option>
+								<option value="bawang_merah_seed">Bawang Merah Lokananta (Seed) (Durasi: 2.5 Bulan)</option>
+								<option value="markisa">Markisa Manis (Durasi: 8-10 Bulan)</option>
+								<option value="ubi_ungu">Ubi Jalar Ungu (Durasi: 4 Bulan)</option>
+								<option value="talas">Talus / Talas Bogor (Durasi: 6-8 Bulan)</option>
+								<option value="jeruk_keprok">Jeruk Keprok Siem (Durasi: Panen Tahunan)</option>
+								<option value="sawi_samhong">Sawi Samhong (Durasi: 30 Hari)</option>
+								<option value="kacang_kapri">Kacang Kapri / Snow Peas (Durasi: 2 Bulan)</option>
+							</optgroup>
+
+							<!-- ============ DATARAN TINGGI (1001 - 1500 MDPL) ============ -->
+							<optgroup label="⛰️ Dataran Tinggi / Pegunungan (1001 - 1500 MDPL)">
+								<option value="kentang">Kentang Granola (Durasi: 3.5 Bulan)</option>
+								<option value="wortel">Wortel Pegunungan (Durasi: 3-4 Bulan)</option>
+								<option value="brokoli">Brokoli (Durasi: 2.5 Bulan)</option>
+								<option value="strawberry">Strawberry (Durasi: 2 Bulan)</option>
+								<option value="kopi_arabika_premium">Kopi Arabika Premium (Durasi: 12 Bulan)</option>
+								<option value="kembang_kol">Kembang Kol / Cauliflower (Durasi: 2.5 Bulan)</option>
+								<option value="kubis_merah">Kubis Merah / Red Cabbage (Durasi: 3 Bulan)</option>
+								<option value="zucchini">Zucchini (Durasi: 2 Bulan)</option>
+								<option value="bit_merah">Bit Merah / Beetroot (Durasi: 2.5 Bulan)</option>
+								<option value="bawang_putih">Bawang Putih Lokal / Lumbung (Durasi: 3.5-4 Bulan)</option>
+								<option value="kailan">Kailan / Chinese Broccoli (Durasi: 45 Hari)</option>
+								<option value="selada_romaine">Selada Romaine (Durasi: 45 Hari)</option>
+								<option value="peterseli">Parsley / Peterseli (Durasi: 2.5 Bulan)</option>
+								<option value="krisan">Krisan Potong / Bunga (Durasi: 3 Bulan)</option>
+								<option value="lobak_putih">Lobak Putih (Durasi: 2 Bulan)</option>
+							</optgroup>
+
+							<!-- ============ DATARAN SANGAT TINGGI (> 1500 MDPL) ============ -->
+							<optgroup label="❄️ Dataran Sangat Tinggi / Sangat Dingin (> 1500 MDPL)">
+								<option value="kubis_bunga_spesial">Kubis Bunga Spesial (Durasi: 3 Bulan)</option>
+								<option value="selada_keriting">Selada Keriting & Red Rapid (Durasi: 40 Hari)</option>
+								<option value="bawang_prei">Bawang Prei / Leek (Durasi: 4 Bulan)</option>
+								<option value="apel">Apel Pegunungan (Durasi: 6 Bulan)</option>
+								<option value="teh">Teh Pegunungan Tinggi (Durasi: Panen Berkala)</option>
+								<option value="kale">Kale Curly & Lacinato (Durasi: 2 Bulan)</option>
+								<option value="blueberry">Blueberry Pegunungan (Durasi: Panen Tahunan)</option>
+								<option value="ketan_hitam">Ketan Hitam Pegunungan (Durasi: 5-6 Bulan)</option>
+								<option value="carica">Carica / Pepaya Dieng (Durasi: Panen Tahunan)</option>
+								<option value="ercis">Ercis / Kapri Polong Utuh (Durasi: 2.5 Bulan)</option>
+								<option value="asparagus">Asparagus (Durasi: Tanaman Perenial)</option>
+								<option value="thyme_rosemary">Thyme & Rosemary (Durasi: Panen Berkala)</option>
+								<option value="raspberry">Cranberry / Raspberry (Durasi: Panen Tahunan)</option>
+								<option value="plum">Plum Pegunungan (Durasi: Panen Tahunan)</option>
+								<option value="pir">Pyrus / Pir Lokal Tinggi (Durasi: Panen Tahunan)</option>
+							</optgroup>
+						</select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1.5">Tanggal Mulai Tanam (Semai/Tanam)</label>
+                        <input type="date" id="calendar-date" class="w-full bg-white border border-slate-300 rounded-xl px-4 py-2 text-xs font-semibold text-slate-800 focus:outline-none focus:border-emerald-600">
+                    </div>
+                </div>
+
+                <button onclick="generateCalendarTimeline()" class="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs transition-all shadow-md">
+                    <i class="fa-solid fa-wand-magic-sparkles mr-1"></i> Buat Jadwal Tanam Otomatis
+                </button>
+
+                <!-- Timeline Output Container -->
+                <div id="calendar-result" class="hidden mt-8 space-y-4 pt-6 border-t border-slate-200">
+                    <h3 class="font-bold text-slate-900 text-sm uppercase tracking-wider text-emerald-800 flex items-center gap-1.5">
+                        <i class="fa-solid fa-timeline"></i> Timeline Operasional Budidaya
+                    </h3>
+                    <div id="timeline-steps" class="space-y-3">
+                        <!-- Generated via JS -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTION 3: AI DOCTOR (DETEKSI PENYAKIT VIA FOTO) -->
+        <div id="section-doctor" class="hidden space-y-6">
+            <div class="glass-card rounded-3xl p-6 md:p-8 shadow-2xl text-slate-800">
+                <h2 class="text-xl font-bold text-slate-900 mb-1 flex items-space gap-2">
+                    <i class="fa-solid fa-stethoscope text-emerald-600"></i> AI Plant Doctor & Deteksi Penyakit
+                </h2>
+                <p class="text-slate-600 text-sm mb-6">Unggah foto daun atau bagian tanaman yang sakit untuk dianalisis oleh kecerdasan buatan agronomi.</p>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+                    <!-- Upload Box -->
+                    <div class="border-2 border-dashed border-emerald-300 bg-emerald-50/50 rounded-2xl p-6 text-center flex flex-col items-center justify-center cursor-pointer hover:bg-emerald-100/50 transition-all relative">                        
+						<input type="file" id="doctor-file" accept="image/*" capture="environment" class="absolute inset-0 opacity-0 cursor-pointer" onchange="previewImage(event)">
+                        <div id="upload-placeholder" class="space-y-2">
+                            <div class="w-12 h-12 rounded-full bg-emerald-200 text-emerald-800 flex items-center justify-center mx-auto text-xl">
+                                <i class="fa-solid fa-camera"></i>
+                            </div>
+                            <div class="text-xs font-bold text-slate-800">Klik atau seret foto daun ke sini</div>
+                            <div class="text-[10px] text-slate-500">Mendukung format JPG, PNG (Maks 5MB)</div>
+                        </div>
+                        <img id="image-preview" class="hidden max-h-48 rounded-xl object-contain mx-auto shadow-sm">
+                    </div>
+
+                    <!-- Diagnosis Action & Info -->
+                    <div class="space-y-4">
+                        <div class="bg-slate-50 border border-slate-200 p-4 rounded-2xl text-xs space-y-2">
+                            <h4 class="font-bold text-slate-800 uppercase tracking-wider"><i class="fa-solid fa-lightbulb text-amber-500 mr-1"></i> Tips Pengambilan Foto Akurat:</h4>
+                            <ul class="list-disc list-inside text-slate-600 space-y-1">
+                                <li>Pastikan pencahayaan cukup terang (outdoor alami).</li>
+                                <li>Fokuskan kamera pada bercak, lubang, atau perubahan warna daun.</li>
+                                <li>Sertakan bagian daun atas dan bawah jika diperlukan.</li>
+                            </ul>
+                        </div>
+                        <button onclick="analyzePlantDisease()" id="btn-analyze-disease" class="w-full py-3 bg-teal-700 hover:bg-teal-800 text-white font-bold rounded-xl text-xs transition-all shadow-md flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-microscope"></i> Analisis Penyakit Tanaman
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Loading AI Analysis -->
+                <div id="doctor-loading" class="hidden mt-6 text-center py-6">
+                    <div class="inline-block w-8 h-8 border-4 border-teal-600 border-t-transparent rounded-full animate-spin mb-2"></div>
+                    <p class="text-xs text-slate-600 font-medium">AI sedang memindai pola patogen & bercak daun...</p>
+                </div>
+
+                <!-- Result Diagnosis Box -->
+                <div id="doctor-result" class="hidden mt-6 bg-emerald-50 border border-emerald-200 p-5 rounded-2xl space-y-3">
+                    <div class="flex items-center justify-between border-b border-emerald-200 pb-3">
+                        <div>
+                            <span class="text-[10px] bg-emerald-200 text-emerald-900 font-bold px-2 py-0.5 rounded uppercase">Hasil Diagnosis AI</span>
+                            <h3 id="res-disease-name" class="font-bold text-emerald-950 text-base mt-1">-</h3>
+                        </div>
+                        <div id="res-confidence" class="text-xs font-bold text-emerald-700 bg-white px-3 py-1 rounded-xl shadow-xs">Akurasi: 94.8%</div>
+                    </div>
+                    <div class="space-y-2 text-xs text-emerald-950">
+                        <div><strong class="text-emerald-900 font-bold">Patogen / Penyebab:</strong> <span id="res-disease-cause">-</span></div>
+                        <div><strong class="text-emerald-900 font-bold">Rekomendasi Penanganan & Pengobatan:</strong> <p id="res-disease-treatment" class="mt-1 leading-relaxed bg-white p-3 rounded-xl border border-emerald-100 text-slate-700">-</p></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Modal Detail Tanaman & SOP Agronomi -->
+    <div id="crop-modal" class="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="glass-card bg-white w-full max-w-2xl rounded-3xl p-6 md:p-8 shadow-2xl relative text-slate-800 transform transition-all scale-95 opacity-0 duration-300" id="modal-content-box">
+            <!-- Close Button -->
+            <button onclick="closeModal()" class="absolute top-5 right-5 w-9 h-9 rounded-full bg-slate-100 hover:bg-red-100 text-slate-600 hover:text-red-600 flex items-center justify-center transition-all">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+
+            <!-- Modal Header -->
+            <div class="flex items-center gap-4 mb-4">
+                <div id="modal-icon" class="w-14 h-14 rounded-2xl bg-emerald-100 text-emerald-700 flex items-center justify-center text-2xl font-bold shadow-inner">
+                    <i class="fa-solid fa-seedling"></i>
+                </div>
+                <div>
+                    <h3 id="modal-title" class="text-xl md:text-2xl font-bold text-slate-900 leading-tight">Nama Tanaman</h3>
+                    <span id="modal-duration" class="inline-block px-3 py-1 bg-emerald-50 text-emerald-700 rounded-lg text-xs font-semibold mt-1">Estimasi Panen: -</span>
+                </div>
+            </div>
+
+            <!-- Modal Body Content -->
+            <div class="space-y-4 text-sm text-slate-600 max-h-[60vh] overflow-y-auto custom-scroll pr-1">
+                <div class="bg-slate-50 border border-slate-200 p-4 rounded-2xl space-y-2">
+                    <h4 class="font-bold text-slate-900 text-xs uppercase tracking-wider text-emerald-800 flex items-center gap-1.5">
+                        <i class="fa-solid fa-book-open"></i> Deskripsi & Syarat Tumbuh Agronomi
+                    </h4>
+                    <p id="modal-desc" class="leading-relaxed text-xs">-</p>
+					<h5 class="font-bold text-slate-900 text-xs uppercase tracking-wider text-emerald-800 flex items-center gap-1.5">
+                        Ketinggian ideal
+                    </h5>
+					<p id="modal-desctinggi" class="leading-relaxed text-xs">-</p>
+                    <div class="grid grid-cols-2 gap-2 pt-2 border-t border-slate-200 text-xs">
+                        <div><strong class="text-slate-700">pH Tanah Ideal:</strong> <span id="modal-ph" class="text-emerald-800 font-semibold">-</span></div>
+                        <div><strong class="text-slate-700">Suhu Mikro:</strong> <span id="modal-temp-req" class="text-emerald-800 font-semibold">-</span></div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="bg-slate-50 border border-slate-100 p-3 rounded-2xl">
+                        <div class="text-xs font-bold text-slate-500 uppercase mb-1"><i class="fa-solid fa-droplet text-blue-500 mr-1"></i> Kebutuhan Air</div>
+                        <div id="modal-water" class="text-slate-800 font-medium text-xs">-</div>
+                    </div>
+                    <div class="bg-slate-50 border border-slate-100 p-3 rounded-2xl">
+                        <div class="text-xs font-bold text-slate-500 uppercase mb-1"><i class="fa-solid fa-sun text-amber-500 mr-1"></i> Sinar Matahari</div>
+                        <div id="modal-sun" class="text-slate-800 font-medium text-xs">-</div>
+                    </div>
+                </div>
+
+                <!-- Kalkulator Dosis Pupuk N-P-K -->
+                <div class="bg-teal-900/5 border border-teal-200 p-4 rounded-2xl space-y-3">
+                    <div class="flex items-center justify-between">
+                        <h4 class="font-bold text-teal-900 text-xs uppercase tracking-wider flex items-center gap-1.5">
+                            <i class="fa-solid fa-calculator text-teal-600"></i> Kalkulator Dosis Pupuk Makro (N-P-K)
+                        </h4>
+                        <span class="text-[10px] bg-teal-100 text-teal-800 px-2 py-0.5 rounded font-bold">Standar Agronomi</span>
+                    </div>
+                    <p class="text-xs text-slate-600">Masukkan luas lahan budidaya untuk menghitung kebutuhan pupuk dasar:</p>
+                    
+                    <div class="flex items-center gap-2">
+                        <div class="relative flex-1">
+                            <input type="number" id="input-luas" value="100" min="10" class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 focus:outline-none focus:border-teal-600" oninput="hitungPupuk()">
+                            <span class="absolute right-3 top-2 text-xs text-slate-400 font-medium">m&sup2;</span>
+                        </div>
+                        <button onclick="hitungPupuk()" class="px-4 py-2 bg-teal-700 hover:bg-teal-800 text-white rounded-xl text-xs font-bold transition-all shadow-sm">
+                            Hitung
+                        </button>
+                    </div>
+
+                    <div id="hasil-kalkulator" class="grid grid-cols-3 gap-2 pt-1 text-center">
+                        <div class="bg-white border border-teal-100 p-2.5 rounded-xl shadow-xs">
+                            <div class="text-[10px] text-slate-500 font-bold uppercase">Urea (N)</div>
+                            <div id="val-urea" class="text-sm font-bold text-teal-900 mt-0.5">0 kg</div>
+                        </div>
+                        <div class="bg-white border border-teal-100 p-2.5 rounded-xl shadow-xs">
+                            <div class="text-[10px] text-slate-500 font-bold uppercase">SP-36 (P)</div>
+                            <div id="val-sp36" class="text-sm font-bold text-teal-900 mt-0.5">0 kg</div>
+                        </div>
+                        <div class="bg-white border border-teal-100 p-2.5 rounded-xl shadow-xs">
+                            <div class="text-[10px] text-slate-500 font-bold uppercase">KCl (K)</div>
+                            <div id="val-kcl" class="text-sm font-bold text-teal-900 mt-0.5">0 kg</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tips Perawatan & Pencegahan Hama -->
+                <div class="bg-emerald-50/70 border border-emerald-200 p-4 rounded-2xl space-y-2">
+                    <h4 class="font-bold text-emerald-900 text-xs uppercase tracking-wider flex items-center gap-1.5">
+                        <i class="fa-solid fa-shield-halved text-emerald-600"></i> SOP Perawatan & Pengendalian Hama / Penyakit
+                    </h4>
+                    <p id="modal-tips" class="text-emerald-950 text-xs leading-relaxed">-</p>
+                </div>
+            </div>
+
+            <div class="mt-6 pt-4 border-t border-slate-100 text-right">
+                <button onclick="closeModal()" class="px-5 py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-semibold rounded-xl text-xs transition-all">
+                    Tutup Detail
+                </button>
+            </div>
+        </div>
+    </div>
+
+<!-- Animasi custom -->
+<style>
+  @keyframes nav-slide-up {
+    from { transform: translateY(120%); opacity: 0; }
+    to   { transform: translateY(0);    opacity: 1; }
+  }
+  @keyframes nav-pop {
+    0%   { transform: scale(1); }
+    40%  { transform: scale(0.85) rotate(-8deg); }
+    70%  { transform: scale(1.15) rotate(6deg); }
+    100% { transform: scale(1) rotate(0); }
+  }
+  @keyframes nav-dot-pulse {
+    0%, 100% { transform: scale(1);   opacity: 1; }
+    50%      { transform: scale(1.6); opacity: 0.5; }
+  }
+  @keyframes nav-glow {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(16,185,129,0.0); }
+    50%      { box-shadow: 0 0 0 8px rgba(16,185,129,0.0); }
+  }
+
+  .nav-bar       { animation: nav-slide-up 0.6s cubic-bezier(.2,.9,.3,1.2) both; }
+  .nav-btn       { position: relative; transition: all .3s cubic-bezier(.2,.9,.3,1.2); }
+  .nav-btn i     { transition: transform .35s cubic-bezier(.2,.9,.3,1.4), color .3s; }
+  .nav-btn:hover i        { transform: translateY(-3px) scale(1.15); }
+  .nav-btn:hover          { background: rgba(16,185,129,0.12); }
+  .nav-btn:active i       { animation: nav-pop .4s ease; }
+  .nav-btn.active         { background: linear-gradient(180deg, rgba(16,185,129,0.20), rgba(16,185,129,0.05)); }
+  .nav-btn.active i       { color: #34d399; filter: drop-shadow(0 0 6px rgba(52,211,153,.8)); }
+  .nav-btn.active::after  {
+    content:''; position:absolute; bottom:-6px; left:50%;
+    width:6px; height:6px; border-radius:9999px;
+    background:#34d399; transform: translateX(-50%);
+    animation: nav-dot-pulse 1.6s ease-in-out infinite;
+  }
+
+  /* Tooltip */
+  .nav-btn .tooltip {
+    position: absolute; bottom: calc(100% + 10px); left: 50%;
+    transform: translateX(-50%) translateY(6px);
+    background: rgba(15,23,42,0.95); color:#a7f3d0;
+    font-size: 10px; font-weight: 600; white-space: nowrap;
+    padding: 4px 8px; border-radius: 8px;
+    border: 1px solid rgba(16,185,129,0.3);
+    opacity: 0; pointer-events: none;
+    transition: all .25s ease;
+    backdrop-filter: blur(8px);
+  }
+  .nav-btn .tooltip::after {
+    content:''; position:absolute; top:100%; left:50%;
+    transform: translateX(-50%);
+    border:4px solid transparent; border-top-color: rgba(15,23,42,0.95);
+  }
+  .nav-btn:hover .tooltip { opacity: 1; transform: translateX(-50%) translateY(0); }
+</style>
+
+<nav
+  x-data="{ active: 'home' }"
+  class="nav-bar fixed bottom-6 left-4 right-4 max-w-md mx-auto z-50
+         bg-zinc-900/75 backdrop-blur-xl
+         border border-emerald-800/50 rounded-3xl
+         px-3 py-3 flex justify-around items-center
+         shadow-2xl shadow-emerald-950/80
+         before:absolute before:inset-0 before:rounded-3xl
+         before:bg-gradient-to-r before:from-transparent before:via-emerald-500/5 before:to-transparent
+         before:pointer-events-none overflow-visible">
+  <!-- Beranda -->
+  <button @click="active='home'; switchPage('iklim.html', 'FazzQuranic Faroid Engine')"
+          :class="active==='home' && 'active'"
+          class="nav-btn flex items-center justify-center w-11 h-11 rounded-2xl text-slate-300 hover:text-emerald-300"
+          title="Beranda">
+    <i class="fa-solid fa-house text-base"></i>
+    <span class="tooltip">Beranda</span>
+  </button>
+  <!-- Sastratika -->
+  <button onclick="window.location.href='index.html'"
+          class="nav-btn flex items-center justify-center w-11 h-11 rounded-2xl text-slate-300 hover:text-emerald-300"
+          title="Fazz Smart Quranic">
+    <i class="fa-solid fa-hands-praying text-base"></i>
+    <span class="tooltip">Sastratika</span>
+  </button>
+  <!-- Faroid -->
+  <button onclick="window.location.href='kifayah.html'"
+          class="nav-btn flex items-center justify-center w-11 h-11 rounded-2xl text-slate-300 hover:text-emerald-300"
+          title="Fazz Faroid Engine">
+    <i class="fa-solid fa-calculator text-base"></i>
+    <span class="tooltip">Faroid</span>
+  </button>
+  <!-- AgroClimate -->
+  <button onclick="switchPage('altimeter.html', 'Fazz GeoAltimeter')"
+          class="nav-btn flex items-center justify-center w-11 h-11 rounded-2xl text-slate-300 hover:text-emerald-300"
+          title="Fazz GeoAltimeter">
+    <i class="fa-solid fa-cloud-sun text-base"></i>
+    <span class="tooltip">GeoAltimeter</span>
+  </button>
+  <!-- Hijaiyah -->
+  <button onclick="window.location.href='read.html'"
+          class="nav-btn flex items-center justify-center w-11 h-11 rounded-2xl text-slate-300 hover:text-emerald-300"
+          title="Fazz Hijaiyah Edu">
+    <i class="fa-solid fa-book-quran text-base"></i>
+    <span class="tooltip">Hijaiyah</span>
+  </button>
+  <!-- Sholat -->
+  <button onclick="window.location.href='sholat.html'"
+          class="nav-btn flex items-center justify-center w-11 h-11 rounded-2xl text-slate-300 hover:text-emerald-300"
+          title="Fazz Sholat Edu">
+    <i class="fa-solid fa-person-praying text-base"></i>
+    <span class="tooltip">Sholat</span>
+  </button>
+</nav>
+
+
+    <!-- Footer -->
+    <footer class="max-w-5xl mx-auto w-full text-center mt-12 text-slate-400 text-xs">
+        <p>AgroClimate Engine &copy; 2026 &bull; Sistem Pendukung Keputusan Pertanian Presisi</p>
+    </footer>
+
+
+<script>
+  // 1. Ambil config dari Firebase Console -> Project Settings -> General -> Your apps (Web)
+	const firebaseConfig = {
+	  apiKey: "AIzaSyCYlcSu9Nl1V_vWSkkh3qq8cYTouExdz08",
+	  authDomain: "fazz-smartquranic-4ff03.firebaseapp.com",
+	  projectId: "fazz-smartquranic-4ff03",
+	  storageBucket: "fazz-smartquranic-4ff03.firebasestorage.app",
+	  messagingSenderId: "227018342445",
+	  appId: "1:227018342445:web:f2f11c8623feabca4fb8a4",
+	  measurementId: "G-EV2MCX8DND"
+	};
+  // 2. Inisialisasi Firebase & Firestore
+  if (!firebase.apps.length) {
+	firebase.initializeApp(firebaseConfig);
+  }
+  const db = firebase.firestore();
+</script>
+    <!-- JavaScript Logic -->
+    <script>
+        let currentSelectedCrop = null;
+
+        // Tab Switcher
+        function switchTab(tabName) {
+            const secAnalisis = document.getElementById('section-analisis');
+            const secKalender = document.getElementById('section-kalender');
+            const secDoctor = document.getElementById('section-doctor');
+
+            const tabAnalisis = document.getElementById('tab-analisis');
+            const tabKalender = document.getElementById('tab-kalender');
+            const tabDoctor = document.getElementById('tab-doctor');
+
+            secAnalisis.classList.add('hidden');
+            secKalender.classList.add('hidden');
+            secDoctor.classList.add('hidden');
+
+            tabAnalisis.className = "flex-1 min-w-[140px] py-2.5 px-4 rounded-xl font-bold text-xs md:text-sm transition-all text-slate-700 hover:bg-slate-100";
+            tabKalender.className = "flex-1 min-w-[140px] py-2.5 px-4 rounded-xl font-bold text-xs md:text-sm transition-all text-slate-700 hover:bg-slate-100";
+            tabDoctor.className = "flex-1 min-w-[140px] py-2.5 px-4 rounded-xl font-bold text-xs md:text-sm transition-all text-slate-700 hover:bg-slate-100";
+
+            if (tabName === 'analisis') {
+                secAnalisis.classList.remove('hidden');
+                tabAnalisis.className = "flex-1 min-w-[140px] py-2.5 px-4 rounded-xl font-bold text-xs md:text-sm transition-all bg-emerald-600 text-white shadow-md";
+            } else if (tabName === 'kalender') {
+                secKalender.classList.remove('hidden');
+                tabKalender.className = "flex-1 min-w-[140px] py-2.5 px-4 rounded-xl font-bold text-xs md:text-sm transition-all bg-emerald-600 text-white shadow-md";
+                // Set default date to today
+                if(!document.getElementById('calendar-date').value) {
+                    document.getElementById('calendar-date').valueAsDate = new Date();
+                }
+            } else if (tabName === 'doctor') {
+                secDoctor.classList.remove('hidden');
+                tabDoctor.className = "flex-1 min-w-[140px] py-2.5 px-4 rounded-xl font-bold text-xs md:text-sm transition-all bg-emerald-600 text-white shadow-md";
+            }
+        }
+
+        // Crop Calendar Timeline Generator
+        function generateCalendarTimeline() {
+			const cropType = document.getElementById('calendar-crop').value;
+			const startDateVal = document.getElementById('calendar-date').value;
+
+			if (!startDateVal) {
+				alert('Silakan pilih tanggal mulai tanam terlebih dahulu.');
+				return;
+			}
+
+			let startDate = new Date(startDateVal);
+			let timelineStepsEl = document.getElementById('timeline-steps');
+			timelineStepsEl.innerHTML = "";
+
+			// Definisi timeline berdasarkan jenis tanaman
+			// Format: [hari ke- (dari tanam), judul fase, deskripsi detail]
+			let steps = [];
+
+			// ============ DATARAN RENDAH (< 300 MDPL) ============
+			if (cropType === 'padi') {
+				steps = [
+					{ day: 0, title: "Persiapan Lahan & Pengolahan Sawah", desc: "Bajak dan garu lahan hingga tanah menjadi bubur, genangi setinggi 2-3 cm. Tambahkan pupuk dasar berupa kompos atau pupuk kandang." },
+					{ day: 7, title: "Tanam Pindah Bibit (Tandur)", desc: "Tanam bibit padi usia 15-21 hari dengan sistem legowo (2:1 atau 4:1) untuk meningkatkan populasi tanaman per hektar." },
+					{ day: 21, title: "Pemupukan Susulan I", desc: "Berikan pupuk Urea (50% dosis) dan SP-36 secara merata. Lakukan penyiangan gulma pertama secara manual atau herbisida." },
+					{ day: 42, title: "Pemupukan Susulan II & Penyiangan II", desc: "Berikan sisa Urea (50%) dan KCl. Lakukan penyiangan kedua dan kendalikan hama wereng batang cokelat dengan insektisida jika diperlukan." },
+					{ day: 65, title: "Fase Pengisian Bulir (Primordia)", desc: "Jaga ketinggian air genangan 5-10 cm. Pantau serangan hama penggerek batang dan wereng. Aplikasikan fungisida untuk mencegah penyakit blas." },
+					{ day: 100, title: "Pengeringan Lahan & Panen", desc: "Keringkan sawah 10-15 hari sebelum panen. Panen saat gabah 80-90% menguning (kuning masak) untuk hasil optimal." }
+				];
+			} else if (cropType === 'kangkung') {
+				steps = [
+					{ day: 0, title: "Pengolahan Lahan & Penyemaian", desc: "Gemburkan tanah sedalam 15-20 cm, campur dengan kompos. Tabur benih kangkung secara langsung atau buat persemaian terlebih dahulu." },
+					{ day: 5, title: "Perkecambahan & Penjarangan", desc: "Setelah benih berkecambah, lakukan penjarangan agar jarak antar tanaman 5-10 cm. Siram pagi dan sore hari." },
+					{ day: 10, title: "Pemupukan Susulan I", desc: "Berikan pupuk Urea dengan dosis ringan (0,5 gram/tanaman) untuk merangsang pertumbuhan daun. Lakukan penyiangan gulma." },
+					{ day: 20, title: "Pemupukan Susulan II", desc: "Berikan pupuk NPK seimbang (1 gram/tanaman). Jaga kelembapan tanah dengan penyiraman rutin 2 kali sehari." },
+					{ day: 25, title: "Panen Perdana", desc: "Panen kangkung dengan cara mencabut seluruh tanaman atau memotong batang 5 cm dari tanah untuk panen berulang (regrowth)." }
+				];
+			} else if (cropType === 'timun') {
+				steps = [
+					{ day: 0, title: "Persiapan Lahan & Penanaman", desc: "Buat bedengan setinggi 30 cm, beri pupuk kandang. Tanam benih timun 2-3 biji per lubang dengan jarak 40x60 cm." },
+					{ day: 10, title: "Penjarangan & Pemasangan Ajir", desc: "Sisakan 1 tanaman terbaik per lubang. Pasang ajir dari bambu setinggi 2 meter untuk media rambat." },
+					{ day: 20, title: "Pemupukan Susulan & Penyiangan", desc: "Berikan NPK 16-16-16 (2 gram/tanaman). Lakukan penyiangan dan pemangkasan daun bawah untuk sirkulasi udara." },
+					{ day: 35, title: "Fase Pembungaan & Pembuahan", desc: "Lakukan penyerbukan manual jika perlu. Pasang perangkap lalat buah (metil eugenol). Berikan pupuk K tinggi." },
+					{ day: 60, title: "Panen Perdana", desc: "Panen buah timun saat masih muda (ukuran 15-20 cm) untuk tekstur renyah. Lakukan panen setiap 2-3 hari." }
+				];
+			} else if (cropType === 'jagung') {
+				steps = [
+					{ day: 0, title: "Pengolahan Lahan & Tanam", desc: "Buat lubang tanam sedalam 3-5 cm dengan jarak 20x40 cm. Tanam 2 biji per lubang, tutup dengan tanah tipis." },
+					{ day: 10, title: "Penjarangan & Pemupukan Dasar", desc: "Sisakan 1 tanaman per lubang. Berikan pupuk dasar Urea dan SP-36 dengan dosis 100 kg/ha." },
+					{ day: 21, title: "Pemupukan Susulan I", desc: "Berikan pupuk Urea (50% dari total dosis) dan KCl. Lakukan pembumbunan (penimbunan tanah di pangkal batang)." },
+					{ day: 42, title: "Pemupukan Susulan II & Penyiangan", desc: "Berikan sisa Urea (50%) dan KCl. Waspadai hama penggerek batang dengan agen hayati Trichoderma." },
+					{ day: 60, title: "Fase Pembentukan Tongkol", desc: "Jaga kelembapan tanah, lakukan pengairan jika perlu. Pantau serangan penyakit karat dan bulai." },
+					{ day: 75, title: "Panen", desc: "Panen jagung manis saat rambut jagung mengering dan biji masih berair (± 75 hari). Untuk jagung pipilan, panen saat biji keras." }
+				];
+			} else if (cropType === 'kacang_hijau') {
+				steps = [
+					{ day: 0, title: "Pengolahan Lahan & Tanam", desc: "Tanam benih kacang hijau sedalam 3-5 cm dengan jarak 20x40 cm. Tidak perlu banyak air, cukup tanah lembap." },
+					{ day: 14, title: "Penyiangan & Pemupukan", desc: "Lakukan penyiangan gulma. Berikan pupuk SP-36 dan KCl untuk merangsang pembentukan polong." },
+					{ day: 28, title: "Fase Pembungaan", desc: "Tanaman mulai berbunga. Pastikan tidak ada genangan air untuk mencegah penyakit layu fusarium." },
+					{ day: 42, title: "Fase Pengisian Polong", desc: "Pantau serangan ulat grayak. Semprot insektisida nabati jika populasi tinggi." },
+					{ day: 60, title: "Panen", desc: "Panen saat polong sudah berubah warna menjadi hitam/cokelat (kering). Jangan menunda panen untuk menghindari polong pecah." }
+				];
+			} else if (cropType === 'semangka') {
+				steps = [
+					{ day: 0, title: "Persiapan Lahan & Tanam", desc: "Buat bedengan dan lubang tanam jarak 100x200 cm. Tanam 2-3 biji per lubang, tutup dengan tanah tipis." },
+					{ day: 10, title: "Penjarangan & Pemasangan Mulsa", desc: "Sisakan 1 tanaman terbaik. Pasang mulsa plastik hitam-perak untuk mengendalikan gulma." },
+					{ day: 25, title: "Pemangkasan Cabang & Pemupukan", desc: "Pangkas cabang samping yang tidak produktif. Berikan NPK (2 gram/tanaman) dan K tinggi." },
+					{ day: 40, title: "Pembuahan & Penyerbukan", desc: "Lakukan penyerbukan manual pada bunga betina (pagi hari). Pilih 2-3 buah terbaik per tanaman." },
+					{ day: 60, title: "Panen", desc: "Kurangi penyiraman 1 minggu sebelum panen untuk meningkatkan kadar manis. Panen saat pola jala sempurna." }
+				];
+			} else if (cropType === 'singkong') {
+				steps = [
+					{ day: 0, title: "Persiapan Lahan & Stek", desc: "Buat guludan (bedengan) tinggi. Tanam stek batang singkong sepanjang 20-25 cm secara miring (45°)." },
+					{ day: 30, title: "Penyiangan I", desc: "Lakukan penyiangan manual atau herbisida. Berikan pupuk NPK (100 kg/ha) jika tanah kurang subur." },
+					{ day: 60, title: "Penyiangan II & Pemupukan", desc: "Lakukan penyiangan kedua. Berikan pupuk KCl (50 kg/ha) untuk meningkatkan kualitas umbi." },
+					{ day: 120, title: "Fase Pembesaran Umbi", desc: "Cek pertumbuhan umbi dengan menggali sedikit. Jaga kelembapan tanah cukup." },
+					{ day: 240, title: "Panen", desc: "Panen saat daun mulai menguning dan gugur (usia 8-10 bulan). Untuk hasil terbaik, panen di akhir musim kemarau." }
+				];
+			} else if (cropType === 'bayam') {
+				steps = [
+					{ day: 0, title: "Pengolahan Lahan & Penaburan", desc: "Gemburkan tanah, buat bedengan. Tabur benih bayam secara merata dengan jarak 10x10 cm." },
+					{ day: 7, title: "Perkecambahan & Penjarangan", desc: "Setelah kecambah muncul, lakukan penjarangan agar jarak antar tanaman 5-10 cm." },
+					{ day: 14, title: "Pemupukan Susulan", desc: "Berikan pupuk Urea (1 gram/tanaman) untuk merangsang pertumbuhan daun. Siram rutin." },
+					{ day: 25, title: "Panen", desc: "Panen dengan cara mencabut seluruh tanaman atau memotong 3 cm di atas tanah untuk panen ulang." }
+				];
+			} else if (cropType === 'kacang_panjang') {
+				steps = [
+					{ day: 0, title: "Persiapan Lahan & Tanam", desc: "Tanam benih sedalam 2-3 cm dengan jarak 20x50 cm. Siapkan ajir bambu sebagai tempat rambat." },
+					{ day: 14, title: "Pemasangan Ajir & Penjarangan", desc: "Pasang ajir setinggi 2 meter. Sisakan 1 tanaman per lubang." },
+					{ day: 28, title: "Pemupukan & Penyiangan", desc: "Berikan NPK (2 gram/tanaman). Lakukan penyiangan gulma secara teratur." },
+					{ day: 45, title: "Fase Pembungaan & Pembuahan", desc: "Pasang perangkap kuning untuk kutu kebul. Lakukan penyiraman pagi hari." },
+					{ day: 60, title: "Panen", desc: "Panen polong setiap 2-3 hari saat polong masih muda dan renyah. Panen rutin untuk merangsang pembungaan baru." }
+				];
+			} else if (cropType === 'kedelai') {
+				steps = [
+					{ day: 0, title: "Pengolahan Lahan & Tanam", desc: "Tanam benih kedelai sedalam 3-5 cm dengan jarak 20x40 cm. Inokulasi dengan Rhizobium sp." },
+					{ day: 21, title: "Pemupukan & Penyiangan", desc: "Berikan pupuk SP-36 dan KCl. Lakukan penyiangan gulma." },
+					{ day: 35, title: "Fase Pembungaan", desc: "Pantau serangan ulat grayak dan kutu daun. Semprot insektisida Bt jika diperlukan." },
+					{ day: 60, title: "Fase Pengisian Polong", desc: "Jaga kelembapan tanah. Hindari stres air pada fase pengisian biji." },
+					{ day: 90, title: "Panen", desc: "Panen saat polong sudah 90% berwarna cokelat. Jemur biji hingga kadar air 12%." }
+				];
+			} else if (cropType === 'melon') {
+				steps = [
+					{ day: 0, title: "Persiapan Lahan & Tanam", desc: "Buat bedengan dengan mulsa plastik perak. Tanam benih 2 biji per lubang jarak 60x150 cm." },
+					{ day: 10, title: "Penjarangan & Pemasangan Ajir", desc: "Sisakan 1 tanaman per lubang. Berikan ajir atau lanjaran bambu." },
+					{ day: 20, title: "Pemangkasan & Pemupukan", desc: "Pangkas cabang samping, sisakan 1-2 cabang utama. Berikan NPK dan pupuk K tinggi." },
+					{ day: 35, title: "Penyerbukan & Seleksi Buah", desc: "Lakukan penyerbukan manual. Pilih 2-3 buah per tanaman, sisanya dibuang." },
+					{ day: 55, title: "Pembesaran Buah & Pengurangan Air", desc: "Kurangi penyiraman secara bertahap. Berikan pupuk K untuk menambah manis." },
+					{ day: 75, title: "Panen", desc: "Panen saat aroma buah harum, tangkai buah retak (crack), dan warna kulit berubah." }
+				];
+			} else if (cropType === 'terong') {
+				steps = [
+					{ day: 0, title: "Penyemaian", desc: "Semai benih terong di tray atau bedengan selama 3-4 minggu hingga berdaun 4 helai." },
+					{ day: 28, title: "Pindah Tanam", desc: "Pindahkan bibit ke bedengan dengan jarak 60x80 cm. Siram pada sore hari." },
+					{ day: 45, title: "Pemupukan & Pemasangan Ajir", desc: "Berikan NPK (3 gram/tanaman). Pasang ajir bambu untuk penyangga." },
+					{ day: 70, title: "Fase Pembungaan & Pembuahan", desc: "Waspadai kumbang daun dan ulat pengerek batang. Semprot insektisida selektif." },
+					{ day: 90, title: "Panen", desc: "Panen buah saat sudah berwarna ungu mengkilap dan daging masih padat. Panen setiap 3-4 hari." }
+				];
+			} else if (cropType === 'kacang_tanah') {
+				steps = [
+					{ day: 0, title: "Pengolahan Lahan & Tanam", desc: "Tanam benih kacang tanah sedalam 3-5 cm dengan jarak 20x40 cm. Siram secukupnya." },
+					{ day: 21, title: "Pemupukan & Penyiangan", desc: "Berikan pupuk SP-36 dan KCl. Lakukan penyiangan pertama." },
+					{ day: 35, title: "Pembumbunan", desc: "Lakukan pembumbunan (menutup pangkal batang dengan tanah) saat ginofor mulai masuk tanah." },
+					{ day: 60, title: "Fase Pengisian Polong", desc: "Jaga kelembapan tanah cukup. Hindari genangan air." },
+					{ day: 90, title: "Panen", desc: "Panen saat daun menguning, polong sudah keras, dan biji berisi penuh." }
+				];
+			} else if (cropType === 'ubi_jalar') {
+				steps = [
+					{ day: 0, title: "Persiapan Lahan & Stek", desc: "Buat guludan (bedengan). Tanam stek ubi jalar sepanjang 20-30 cm dengan jarak 30x100 cm." },
+					{ day: 30, title: "Penyiangan & Pemupukan", desc: "Lakukan penyiangan. Berikan pupuk KCl (100 kg/ha) dan fosfat." },
+					{ day: 60, title: "Pembalikan Batang", desc: "Balikkan batang yang merambat agar tidak membentuk akar liar di ruas batang." },
+					{ day: 90, title: "Fase Pembesaran Umbi", desc: "Jaga kelembapan tanah. Jika umbi sudah mulai terbentuk, kurangi nitrogen." },
+					{ day: 120, title: "Panen", desc: "Panen saat daun mulai menguning dan ada retak-retak di tanah di atas umbi." }
+				];
+			} else if (cropType === 'tebu') {
+				steps = [
+					{ day: 0, title: "Persiapan Lahan & Bongkar Ratoon", desc: "Bajak lahan dan buat alur tanam. Siapkan bibit batang tebu (3-4 mata)." },
+					{ day: 30, title: "Pemupukan & Penyiangan", desc: "Berikan pupuk Urea (200 kg/ha) dan SP-36 (100 kg/ha). Lakukan penyiangan." },
+					{ day: 60, title: "Pemupukan Susulan", desc: "Berikan Urea (200 kg/ha) dan KCl (100 kg/ha). Lakukan pembumbunan." },
+					{ day: 120, title: "Fase Pematangan", desc: "Kurangi penyiraman. Lepaskan parasitoid Trichogramma untuk mengendalikan penggerek." },
+					{ day: 300, title: "Panen", desc: "Panen saat batang sudah mencapai kematangan fisiologis (usia 10-12 bulan)." }
+				];
+			}
+
+			// ============ DATARAN MENENGAH (300 - 700 MDPL) ============
+			else if (cropType === 'cabai_merah') {
+				steps = [
+					{ day: 0, title: "Penyemaian Bibit", desc: "Semai benih cabai merah di tray semai dengan media sekam bakar + kompos selama 25-30 hari." },
+					{ day: 25, title: "Pindah Tanam", desc: "Pindahkan bibit ke bedengan yang telah diberi mulsa plastik hitam-perak. Jarak tanam 50x70 cm." },
+					{ day: 45, title: "Pemupukan Susulan & Ajir", desc: "Berikan NPK (3 gram/tanaman). Pasang ajir bambu setinggi 1,5-2 meter." },
+					{ day: 70, title: "Fase Pembungaan & Pembuahan", desc: "Waspadai Antraknosa (patek) dan lalat buah. Aplikasikan fungisida tembaga dan perangkap feromon." },
+					{ day: 90, title: "Panen Perdana", desc: "Panen buah cabai yang sudah merah merata setiap 3-5 hari. Lakukan rotasi insektisida." }
+				];
+			} else if (cropType === 'tomat') {
+				steps = [
+					{ day: 0, title: "Penyemaian", desc: "Semai benih tomat di tray selama 3-4 minggu hingga berdaun 4-5 helai." },
+					{ day: 28, title: "Pindah Tanam", desc: "Pindahkan ke bedengan dengan jarak 40x70 cm. Siram sore hari dan beri naungan sementara." },
+					{ day: 45, title: "Pemupukan & Pangkas Tunas Air", desc: "Berikan NPK (3 gram/tanaman). Pangkas tunas air (axillary buds) setiap minggu." },
+					{ day: 70, title: "Fase Pembuahan & Proteksi", desc: "Waspadai busuk daun (Phytophthora). Semprot fungisida tembaga saat musim hujan." },
+					{ day: 90, title: "Panen", desc: "Panen saat buah sudah berwarna merah/hijau (sesuai kebutuhan). Panen setiap 3-4 hari." }
+				];
+			} else if (cropType === 'terong_ungu') {
+				steps = [
+					{ day: 0, title: "Penyemaian", desc: "Semai benih terong ungu selama 4 minggu hingga berdaun 4-5 helai." },
+					{ day: 28, title: "Pindah Tanam", desc: "Pindahkan bibit ke bedengan dengan jarak 60x80 cm. Siram pagi dan sore." },
+					{ day: 45, title: "Pemupukan & Ajir", desc: "Berikan NPK (3 gram/tanaman). Pasang ajir bambu." },
+					{ day: 70, title: "Fase Pembuahan", desc: "Kendalikan ulat pengerek buah dengan rotasi insektisida selektif." },
+					{ day: 90, title: "Panen", desc: "Panen buah terong saat masih muda dan berwarna ungu cerah. Panen setiap 3 hari." }
+				];
+			} else if (cropType === 'buncis') {
+				steps = [
+					{ day: 0, title: "Pengolahan Lahan & Tanam", desc: "Tanam benih buncis sedalam 3 cm dengan jarak 20x40 cm. Berikan ajir setinggi 2 meter." },
+					{ day: 14, title: "Pemasangan Ajir & Penyiangan", desc: "Pasang ajir bambu. Lakukan penyiangan pertama." },
+					{ day: 28, title: "Pemupukan", desc: "Berikan NPK (2 gram/tanaman). Lakukan pengairan rutin." },
+					{ day: 45, title: "Fase Pembungaan", desc: "Waspadai ulat daun. Semprot Bt jika diperlukan." },
+					{ day: 60, title: "Panen", desc: "Panen polong saat masih muda dan renyah. Panen setiap 2-3 hari." }
+				];
+			} else if (cropType === 'pepaya') {
+				steps = [
+					{ day: 0, title: "Persiapan Lahan & Tanam", desc: "Tanam bibit pepaya di lubang tanam 60x60x60 cm dengan jarak 250x300 cm." },
+					{ day: 30, title: "Pemupukan Dasar", desc: "Berikan pupuk kandang 10 kg/pohon dan NPK (100 gram/pohon)." },
+					{ day: 60, title: "Pemupukan Susulan", desc: "Berikan NPK (150 gram/pohon). Lakukan penyiraman rutin 2 hari sekali." },
+					{ day: 120, title: "Fase Pembungaan", desc: "Waspadai kutu daun. Semprot minyak neem preventif." },
+					{ day: 180, title: "Panen", desc: "Panen buah saat sudah mulai menguning (warna 50%)." }
+				];
+			} else if (cropType === 'sawi_pakcoy') {
+				steps = [
+					{ day: 0, title: "Pengolahan Lahan & Tanam", desc: "Gemburkan tanah, buat bedengan. Tabur benih langsung atau semai terlebih dahulu." },
+					{ day: 7, title: "Penjarangan", desc: "Lakukan penjarangan jarak 10x15 cm jika menabur langsung." },
+					{ day: 14, title: "Pemupukan Susulan I", desc: "Berikan Urea (1 gram/tanaman). Siram teratur pagi dan sore." },
+					{ day: 30, title: "Panen", desc: "Panen sawi pakcoy dengan cara mencabut seluruh tanaman. Panen saat daun masih muda dan segar." }
+				];
+			} else if (cropType === 'seledri') {
+				steps = [
+					{ day: 0, title: "Penyemaian", desc: "Semai benih seledri di tray selama 4 minggu hingga berdaun 3-4 helai." },
+					{ day: 28, title: "Pindah Tanam", desc: "Pindahkan bibit ke bedengan dengan jarak 20x20 cm. Siram pagi hari." },
+					{ day: 42, title: "Pemupukan", desc: "Berikan kompos (500 gram/m²) dan NPK (1 gram/tanaman)." },
+					{ day: 60, title: "Panen", desc: "Panen tangkai daun luar terlebih dahulu untuk merangsang pertumbuhan baru." }
+				];
+			} else if (cropType === 'cabai_rawit') {
+				steps = [
+					{ day: 0, title: "Penyemaian", desc: "Semai benih cabai rawit di tray selama 25-30 hari." },
+					{ day: 28, title: "Pindah Tanam", desc: "Pindahkan bibit ke bedengan dengan jarak 50x60 cm. Pasang mulsa." },
+					{ day: 45, title: "Pemangkasan Pucuk & Pemupukan", desc: "Lakukan pemangkasan pucuk untuk merangsang cabang produktif." },
+					{ day: 70, title: "Fase Pembuahan", desc: "Berikan pupuk P dan K tinggi. Waspadai thrips dan tungau." },
+					{ day: 90, title: "Panen", desc: "Panen cabai rawit saat buah sudah berwarna hijau/merah. Panen setiap 3-4 hari." }
+				];
+			} else if (cropType === 'kopi_robusta') {
+				steps = [
+					{ day: 0, title: "Persiapan Lahan & Tanam", desc: "Tanam bibit kopi robusta dengan jarak 250x250 cm. Berikan naungan sementara." },
+					{ day: 90, title: "Pemupukan Dasar", desc: "Berikan NPK (100 gram/pohon) dan pupuk organik." },
+					{ day: 180, title: "Pemangkasan & Pemupukan", desc: "Lakukan pemangkasan bentuk. Berikan NPK (150 gram/pohon)." },
+					{ day: 365, title: "Fase Berbuah Pertama", desc: "Pasang perangkap PBKo (penggerek buah kopi) dan lakukan sanitasi kebun." },
+					{ day: 730, title: "Panen", desc: "Panen buah kopi merah matang (cherry) secara selektif." }
+				];
+			} else if (cropType === 'pisang_kepok') {
+				steps = [
+					{ day: 0, title: "Persiapan Lahan & Tanam", desc: "Tanam anakan pisang sehat di lubang 50x50x50 cm, jarak 300x300 cm." },
+					{ day: 60, title: "Pemupukan", desc: "Berikan pupuk kandang 10-15 kg/rumpun dan NPK (200 gram/rumpun)." },
+					{ day: 180, title: "Pemupukan & Sanitasi", desc: "Berikan NPK (300 gram/rumpun). Bersihkan gulma dan anakan liar." },
+					{ day: 300, title: "Fase Pembuahan", desc: "Waspadai penyakit layu fusarium. Lakukan sanitasi kebun." },
+					{ day: 360, title: "Panen", desc: "Panen buah pisang saat sudut-sudut buah mulai membulat dan warna berubah." }
+				];
+			} else if (cropType === 'alpukat') {
+				steps = [
+					{ day: 0, title: "Persiapan Lahan & Tanam", desc: "Tanam bibit alpukat di lubang 60x60x60 cm, jarak 600x600 cm." },
+					{ day: 90, title: "Pemupukan", desc: "Berikan NPK (100 gram/pohon) dan pupuk organik." },
+					{ day: 180, title: "Pemangkasan Bentuk", desc: "Lakukan pemangkasan untuk membentuk tajuk." },
+					{ day: 365, title: "Pemupukan & Proteksi", desc: "Berikan NPK (200 gram/pohon). Cegah serangan Phytophthora." },
+					{ day: 1095, title: "Panen", desc: "Panen buah saat tangkai buah berubah warna (memasak)." }
+				];
+			} else if (cropType === 'bawang_merah') {
+				steps = [
+					{ day: 0, title: "Persiapan Lahan & Tanam", desc: "Tanam umbi bawang merah dengan jarak 15x20 cm. Jangan terlalu dalam." },
+					{ day: 14, title: "Pemupukan", desc: "Berikan NPK (2 gram/tanaman) dan KCl tinggi." },
+					{ day: 30, title: "Pemupukan & Penyiangan", desc: "Berikan Urea (1 gram/tanaman). Lakukan penyiangan." },
+					{ day: 45, title: "Penghentian Penyiraman", desc: "Hentikan penyiraman 2 minggu sebelum panen." },
+					{ day: 60, title: "Panen", desc: "Panen saat 70% tanaman rebah. Jemur umbi hingga kering." }
+				];
+			} else if (cropType === 'oyong') {
+				steps = [
+					{ day: 0, title: "Persiapan Lahan & Tanam", desc: "Tanam benih oyong dengan jarak 40x100 cm. Pasang para-para bambu." },
+					{ day: 14, title: "Pemasangan Para-para", desc: "Buat para-para dari bambu/kawat untuk tempat rambat." },
+					{ day: 30, title: "Pemupukan", desc: "Berikan NPK (2 gram/tanaman) dan pupuk organik." },
+					{ day: 60, title: "Panen", desc: "Panen buah saat masih muda (15-20 cm) untuk tekstur terbaik." }
+				];
+			} else if (cropType === 'merica') {
+				steps = [
+					{ day: 0, title: "Persiapan Lahan & Tanam", desc: "Tanam bibit lada di dekat tiang panjat hidup. Jarak tanam 200x300 cm." },
+					{ day: 90, title: "Pemupukan & Mulsa", desc: "Berikan NPK (50 gram/tanaman) dan mulsa organik." },
+					{ day: 180, title: "Pemangkasan", desc: "Pangkas tunas air dan cabang tidak produktif." },
+					{ day: 365, title: "Fase Berbuah", desc: "Berikan pupuk K tinggi. Waspadai hama kutu putih." },
+					{ day: 730, title: "Panen", desc: "Panen tandan buah lada yang sudah berwarna merah." }
+				];
+			}
+
+			// ============ DATARAN TINGGI TRANSISI (701 - 1000 MDPL) ============
+			else if (cropType === 'kopi_arabika') {
+				steps = [
+					{ day: 0, title: "Persiapan Lahan & Tanam", desc: "Tanam bibit kopi arabika di bawah naungan (50%). Jarak tanam 250x250 cm." },
+					{ day: 90, title: "Pemupukan & Naungan", desc: "Berikan NPK (100 gram/pohon). Jaga naungan tetap 50%." },
+					{ day: 180, title: "Pemangkasan & Pemupukan", desc: "Lakukan pemangkasan bentuk. Berikan NPK (150 gram/pohon)." },
+					{ day: 365, title: "Fase Berbuah", desc: "Kendalikan karat daun dengan fungisida tembaga." },
+					{ day: 730, title: "Panen", desc: "Panen buah merah matang secara selektif." }
+				];
+			} else if (cropType === 'buncis_tegak') {
+				steps = [
+					{ day: 0, title: "Pengolahan Lahan & Tanam", desc: "Tanam benih buncis tegak dengan jarak 20x30 cm." },
+					{ day: 14, title: "Penyiangan", desc: "Lakukan penyiangan pertama." },
+					{ day: 28, title: "Pemupukan", desc: "Berikan NPK (2 gram/tanaman)." },
+					{ day: 45, title: "Panen", desc: "Panen polong saat sudah mencapai ukuran optimal." }
+				];
+			} else if (cropType === 'daun_bawang') {
+				steps = [
+					{ day: 0, title: "Pengolahan Lahan & Tanam", desc: "Tanam umbi/biji daun bawang dengan jarak 15x15 cm." },
+					{ day: 14, title: "Pemupukan", desc: "Berikan Urea (1 gram/tanaman)." },
+					{ day: 30, title: "Pemupukan & Penyiangan", desc: "Berikan NPK (1 gram/tanaman). Lakukan penyiangan." },
+					{ day: 60, title: "Panen", desc: "Panen saat daun sudah cukup tinggi (25-30 cm)." }
+				];
+			} else if (cropType === 'kubis_putih') {
+				steps = [
+					{ day: 0, title: "Penyemaian", desc: "Semai benih kubis di tray selama 3-4 minggu." },
+					{ day: 28, title: "Pindah Tanam", desc: "Pindahkan bibit dengan jarak 40x50 cm." },
+					{ day: 45, title: "Pemupukan & Penyiangan", desc: "Berikan NPK (3 gram/tanaman). Waspadai ulat krop." },
+					{ day: 75, title: "Panen", desc: "Panen saat krop sudah padat dan berat." }
+				];
+			} else if (cropType === 'seledri_pegunungan') {
+				steps = [
+					{ day: 0, title: "Penyemaian", desc: "Semai benih seledri di tray selama 4 minggu." },
+					{ day: 28, title: "Pindah Tanam", desc: "Pindahkan bibit dengan jarak 20x20 cm." },
+					{ day: 50, title: "Pemupukan", desc: "Berikan kompos dan NPK ringan." },
+					{ day: 75, title: "Panen", desc: "Panen tangkai luar terlebih dahulu." }
+				];
+			} else if (cropType === 'labu_siam') {
+				steps = [
+					{ day: 0, title: "Persiapan Lahan & Tanam", desc: "Tanam buah labu siam di bedengan dengan para-para." },
+					{ day: 30, title: "Pemangkasan", desc: "Pangkas daun berlebih untuk sirkulasi udara." },
+					{ day: 60, title: "Pemupukan", desc: "Berikan NPK dan K tinggi." },
+					{ day: 90, title: "Panen", desc: "Panen buah saat berat 0,5-1 kg." }
+				];
+			} else if (cropType === 'sawi_putih') {
+				steps = [
+					{ day: 0, title: "Pengolahan Lahan & Tanam", desc: "Tanam benih sawi putih dengan jarak 30x40 cm." },
+					{ day: 14, title: "Pemupukan", desc: "Berikan Urea (1 gram/tanaman)." },
+					{ day: 30, title: "Pemupukan Susulan", desc: "Berikan NPK (2 gram/tanaman)." },
+					{ day: 60, title: "Panen", desc: "Panen saat krop sudah padat." }
+				];
+			} else if (cropType === 'paprika') {
+				steps = [
+					{ day: 0, title: "Penyemaian", desc: "Semai benih paprika di tray selama 4 minggu." },
+					{ day: 28, title: "Pindah Tanam", desc: "Pindahkan bibit ke greenhouse dengan jarak 40x60 cm." },
+					{ day: 50, title: "Pemangkasan & Pemupukan", desc: "Pangkas daun bawah. Berikan NPK dan K tinggi." },
+					{ day: 70, title: "Fase Pembuahan", desc: "Waspadai kutu kebul. Pasang perangkap kuning." },
+					{ day: 105, title: "Panen", desc: "Panen saat buah sudah berwarna merah/kuning." }
+				];
+			} else if (cropType === 'bawang_merah_seed') {
+				steps = [
+					{ day: 0, title: "Persiapan Lahan & Tanam", desc: "Tanam biji bawang merah dengan jarak 10x15 cm." },
+					{ day: 21, title: "Pemupukan", desc: "Berikan NPK (2 gram/tanaman) dan Trichoderma." },
+					{ day: 42, title: "Pemupukan & Penyiangan", desc: "Berikan K tinggi." },
+					{ day: 75, title: "Panen", desc: "Panen saat 70% tanaman rebah." }
+				];
+			} else if (cropType === 'markisa') {
+				steps = [
+					{ day: 0, title: "Persiapan Lahan & Tanam", desc: "Tanam bibit markisa dengan para-para kawat setinggi 2-3 meter." },
+					{ day: 60, title: "Pemangkasan", desc: "Pangkas cabang tidak produktif." },
+					{ day: 120, title: "Pemupukan", desc: "Berikan NPK dan organik cair." },
+					{ day: 240, title: "Panen", desc: "Panen buah saat kulit mulai keriput." }
+				];
+			} else if (cropType === 'ubi_ungu') {
+				steps = [
+					{ day: 0, title: "Persiapan Lahan & Tanam", desc: "Tanam stek ubi ungu dengan jarak 30x100 cm." },
+					{ day: 30, title: "Penyiangan", desc: "Lakukan penyiangan." },
+					{ day: 60, title: "Pemupukan", desc: "Berikan KCl (100 kg/ha)." },
+					{ day: 120, title: "Panen", desc: "Panen saat umbi sudah besar." }
+				];
+			} else if (cropType === 'talas') {
+				steps = [
+					{ day: 0, title: "Persiapan Lahan & Tanam", desc: "Tanam umbi talas dengan jarak 60x60 cm." },
+					{ day: 60, title: "Pemupukan", desc: "Berikan kompos dan NPK." },
+					{ day: 180, title: "Panen", desc: "Panen saat daun mulai menguning." }
+				];
+			} else if (cropType === 'jeruk_keprok') {
+				steps = [
+					{ day: 0, title: "Persiapan Lahan & Tanam", desc: "Tanam bibit jeruk bebas virus dengan jarak 400x400 cm." },
+					{ day: 90, title: "Pemupukan", desc: "Berikan NPK (100 gram/pohon)." },
+					{ day: 180, title: "Pemangkasan", desc: "Pangkas cabang mati dan ke dalam." },
+					{ day: 365, title: "Fase Berbuah", desc: "Waspadai CVPD. Gunakan bibit bebas virus." },
+					{ day: 730, title: "Panen", desc: "Panen buah setelah berwarna kuning." }
+				];
+			} else if (cropType === 'sawi_samhong') {
+				steps = [
+					{ day: 0, title: "Pengolahan Lahan & Tanam", desc: "Tanam benih sawi samhong langsung dengan jarak 20x20 cm." },
+					{ day: 14, title: "Pemupukan", desc: "Berikan Urea (1 gram/tanaman)." },
+					{ day: 30, title: "Panen", desc: "Panen saat daun sudah lebar dan segar." }
+				];
+			} else if (cropType === 'kacang_kapri') {
+				steps = [
+					{ day: 0, title: "Persiapan Lahan & Tanam", desc: "Tanam benih kacang kapri dengan jarak 10x20 cm. Berikan ajir." },
+					{ day: 21, title: "Pemupukan", desc: "Berikan NPK (1,5 gram/tanaman)." },
+					{ day: 45, title: "Panen", desc: "Panen polong saat masih datar dan ulet." }
+				];
+			}
+
+			// ============ DATARAN TINGGI (1001 - 1500 MDPL) ============
+			else if (cropType === 'kentang') {
+				steps = [
+					{ day: 0, title: "Pengolahan Tanah & Penanaman Bibit", desc: "Selesaikan pembajakan, buat bedengan, dan tanam umbi benih (G0/G1) sedalam 5-10 cm dengan jarak 25x75 cm." },
+					{ day: 15, title: "Pemupukan Dasar & Penyiangan I", desc: "Aplikasikan pupuk dasar Urea (50 kg/ha), SP-36 (100 kg/ha), dan KCl (75 kg/ha) di sekitar perakaran." },
+					{ day: 35, title: "Pembumbunan Pertama & Pemupukan Susulan", desc: "Timbun pangkal batang dengan tanah bedengan setinggi 15-20 cm untuk merangsang pembentukan umbi dan cegah gulma. Berikan Urea (50 kg/ha)." },
+					{ day: 55, title: "Pembumbunan Kedua & Proteksi Puso", desc: "Waspadai serangan Phytophthora infestans. Lakukan penyemprotan fungisida mankozeb + metalaksil secara preventif setiap 5-7 hari saat kabut pagi tebal." },
+					{ day: 75, title: "Penghentian Penyiraman & Panen", desc: "Hentikan penyiraman 2 minggu sebelum panen agar kulit umbi mengeras. Panen saat 90% tanaman mati alami." }
+				];
+			} else if (cropType === 'wortel') {
+				steps = [
+					{ day: 0, title: "Pengolahan Tanah & Tanam", desc: "Olah tanah minimal 30 cm, singkirkan batu. Tanam benih wortel dengan jarak 5x10 cm." },
+					{ day: 21, title: "Penjarangan", desc: "Lakukan penjarangan saat bibit berumur 3-4 daun." },
+					{ day: 45, title: "Pemupukan", desc: "Berikan KCl dan SP-36. Jaga kelembapan tanah." },
+					{ day: 90, title: "Panen", desc: "Panen saat umbi sudah mencapai ukuran optimal." }
+				];
+			} else if (cropType === 'brokoli') {
+				steps = [
+					{ day: 0, title: "Penyemaian", desc: "Semai benih brokoli di tray selama 3-4 minggu." },
+					{ day: 28, title: "Pindah Tanam", desc: "Pindahkan bibit dengan jarak 50x60 cm." },
+					{ day: 45, title: "Pemupukan & Boron", desc: "Berikan NPK dan boron (0,5 gram/liter) secara foliar." },
+					{ day: 75, title: "Panen", desc: "Panen saat krop (floret) sudah padat dan kompak." }
+				];
+			} else if (cropType === 'strawberry') {
+				steps = [
+					{ day: 0, title: "Persiapan Lahan & Tanam", desc: "Tanam bibit strawberry dengan jarak 30x40 cm. Gunakan mulsa jerami." },
+					{ day: 30, title: "Pemangkasan Stolon", desc: "Pangkas stolon (cabang merambat) untuk fokus pada buah." },
+					{ day: 60, title: "Panen", desc: "Panen buah saat sudah merah merata." }
+				];
+			} else if (cropType === 'kopi_arabika_premium') {
+				steps = [
+					{ day: 0, title: "Persiapan Lahan & Tanam", desc: "Tanam bibit kopi arabika di bawah naungan 50% dengan jarak 250x250 cm." },
+					{ day: 90, title: "Pemupukan & Naungan", desc: "Berikan NPK (100 gram/pohon)." },
+					{ day: 180, title: "Pemangkasan", desc: "Lakukan pemangkasan produksi." },
+					{ day: 365, title: "Fase Berbuah", desc: "Kendalikan karat daun dengan fungisida tembaga." },
+					{ day: 730, title: "Panen", desc: "Panen buah merah secara selektif." }
+				];
+			} else if (cropType === 'kembang_kol') {
+				steps = [
+					{ day: 0, title: "Penyemaian", desc: "Semai benih kembang kol di tray selama 3-4 minggu." },
+					{ day: 28, title: "Pindah Tanam", desc: "Pindahkan bibit dengan jarak 50x60 cm." },
+					{ day: 50, title: "Penutupan Curd", desc: "Tutupi curd yang muncul dengan daun." },
+					{ day: 75, title: "Panen", desc: "Panen saat curd putih dan padat." }
+				];
+			} else if (cropType === 'kubis_merah') {
+				steps = [
+					{ day: 0, title: "Penyemaian", desc: "Semai benih kubis merah di tray selama 3-4 minggu." },
+					{ day: 28, title: "Pindah Tanam", desc: "Pindahkan bibit dengan jarak 40x50 cm." },
+					{ day: 60, title: "Pengapuran", desc: "Cegah akar gada dengan pengapuran." },
+					{ day: 90, title: "Panen", desc: "Panen saat krop padat." }
+				];
+			} else if (cropType === 'zucchini') {
+				steps = [
+					{ day: 0, title: "Persiapan Lahan & Tanam", desc: "Tanam benih zucchini dengan jarak 40x80 cm." },
+					{ day: 21, title: "Penyerbukan", desc: "Lakukan penyerbukan manual jika perlu." },
+					{ day: 45, title: "Panen", desc: "Panen saat buah masih muda (15-20 cm)." }
+				];
+			} else if (cropType === 'bit_merah') {
+				steps = [
+					{ day: 0, title: "Pengolahan Tanah & Tanam", desc: "Tanam benih bit dengan jarak 10x15 cm." },
+					{ day: 21, title: "Penjarangan", desc: "Lakukan penjarangan." },
+					{ day: 75, title: "Panen", desc: "Panen saat umbi sudah bulat." }
+				];
+			} else if (cropType === 'bawang_putih') {
+				steps = [
+					{ day: 0, title: "Persiapan Lahan & Tanam", desc: "Tanam siung bawang putih dengan jarak 10x15 cm." },
+					{ day: 30, title: "Pemupukan", desc: "Berikan NPK dan K tinggi." },
+					{ day: 60, title: "Penghentian Penyiraman", desc: "Hentikan penyiraman 2 minggu sebelum panen." },
+					{ day: 105, title: "Panen", desc: "Panen saat 70% tanaman rebah." }
+				];
+			} else if (cropType === 'kailan') {
+				steps = [
+					{ day: 0, title: "Pengolahan Lahan & Tanam", desc: "Tanam benih kailan dengan jarak 20x30 cm." },
+					{ day: 21, title: "Pemupukan", desc: "Berikan Urea dan NPK." },
+					{ day: 45, title: "Panen", desc: "Panen sebelum bunga mekar." }
+				];
+			} else if (cropType === 'selada_romaine') {
+				steps = [
+					{ day: 0, title: "Pengolahan Lahan & Tanam", desc: "Tanam benih selada romaine dengan jarak 20x30 cm." },
+					{ day: 21, title: "Pemupukan", desc: "Berikan NPK (1 gram/tanaman)." },
+					{ day: 45, title: "Panen", desc: "Panen saat daun sudah tegak tinggi." }
+				];
+			} else if (cropType === 'peterseli') {
+				steps = [
+					{ day: 0, title: "Pengolahan Lahan & Tanam", desc: "Tanam benih peterseli dengan jarak 20x20 cm." },
+					{ day: 30, title: "Pemupukan", desc: "Berikan kompos dan NPK." },
+					{ day: 75, title: "Panen", desc: "Petik daun luar secara berkala." }
+				];
+			} else if (cropType === 'krisan') {
+				steps = [
+					{ day: 0, title: "Persiapan Lahan & Tanam", desc: "Tanam bibit krisan dengan jarak 30x40 cm." },
+					{ day: 30, title: "Pemangkasan Pucuk", desc: "Pangkas pucuk untuk cabang lebih banyak." },
+					{ day: 90, title: "Panen", desc: "Panen saat bunga mekar sempurna." }
+				];
+			} else if (cropType === 'lobak_putih') {
+				steps = [
+					{ day: 0, title: "Pengolahan Lahan & Tanam", desc: "Olah tanah gembur. Tanam benih lobak dengan jarak 15x20 cm." },
+					{ day: 21, title: "Penjarangan", desc: "Lakukan penjarangan." },
+					{ day: 60, title: "Panen", desc: "Panen saat umbi sudah panjang dan lurus." }
+				];
+			}
+
+			// ============ DATARAN SANGAT TINGGI (> 1500 MDPL) ============
+			else if (cropType === 'kubis_bunga_spesial') {
+				steps = [
+					{ day: 0, title: "Penyemaian", desc: "Semai benih kubis bunga spesial di tray selama 4 minggu." },
+					{ day: 28, title: "Pindah Tanam", desc: "Pindahkan bibit dengan jarak 50x60 cm." },
+					{ day: 60, title: "Penutupan Curd & Proteksi", desc: "Tutupi curd dengan daun. Waspadai busuk curd." },
+					{ day: 90, title: "Panen", desc: "Panen saat curd padat dan kompak." }
+				];
+			} else if (cropType === 'selada_keriting') {
+				steps = [
+					{ day: 0, title: "Pengolahan Lahan & Tanam", desc: "Tanam benih selada keriting dengan jarak 20x25 cm." },
+					{ day: 21, title: "Pemupukan", desc: "Berikan NPK ringan." },
+					{ day: 40, title: "Panen", desc: "Panen pagi hari untuk kerenyahan maksimal." }
+				];
+			} else if (cropType === 'bawang_prei') {
+				steps = [
+					{ day: 0, title: "Penyemaian", desc: "Semai benih bawang prei di tray selama 6-8 minggu." },
+					{ day: 42, title: "Pindah Tanam", desc: "Pindahkan bibit dengan jarak 15x25 cm." },
+					{ day: 90, title: "Pembumbunan", desc: "Lakukan pembumbunan untuk batang putih." },
+					{ day: 120, title: "Panen", desc: "Panen saat batang tebal (3-5 cm)." }
+				];
+			} else if (cropType === 'apel') {
+				steps = [
+					{ day: 0, title: "Persiapan Lahan & Tanam", desc: "Tanam bibit apel dengan jarak 500x500 cm." },
+					{ day: 365, title: "Pemangkasan & Defoliasi", desc: "Lakukan perontokan daun (rompes) untuk dormansi." },
+					{ day: 730, title: "Panen", desc: "Panen saat buah sudah matang dan manis." }
+				];
+			} else if (cropType === 'teh') {
+				steps = [
+					{ day: 0, title: "Persiapan Lahan & Tanam", desc: "Tanam bibit teh dengan jarak 100x200 cm." },
+					{ day: 90, title: "Pemangkasan", desc: "Lakukan pemangkasan tingkat pelepah." },
+					{ day: 365, title: "Panen", desc: "Panen pucuk daun muda (peko) setiap 7-10 hari." }
+				];
+			} else if (cropType === 'kale') {
+				steps = [
+					{ day: 0, title: "Pengolahan Lahan & Tanam", desc: "Tanam benih kale dengan jarak 30x40 cm." },
+					{ day: 30, title: "Pemupukan", desc: "Berikan NPK tinggi N." },
+					{ day: 60, title: "Panen", desc: "Petik daun bawah secara rutin." }
+				];
+			} else if (cropType === 'blueberry') {
+				steps = [
+					{ day: 0, title: "Persiapan Lahan & Tanam", desc: "Tanam bibit blueberry di lahan pH 4,5-5,5 dengan jarak 150x150 cm." },
+					{ day: 365, title: "Pemupukan", desc: "Berikan pupuk khusus tanaman asam." },
+					{ day: 730, title: "Panen", desc: "Panen buah beri saat sudah biru." }
+				];
+			} else if (cropType === 'ketan_hitam') {
+				steps = [
+					{ day: 0, title: "Pengolahan Lahan & Tanam", desc: "Bajak sawah dan tanam bibit padi ketan hitam." },
+					{ day: 30, title: "Pemupukan", desc: "Berikan pupuk organik dan jerami." },
+					{ day: 60, title: "Fase Primordia", desc: "Jaga ketinggian air." },
+					{ day: 150, title: "Panen", desc: "Panen saat gabah sudah kering." }
+				];
+			} else if (cropType === 'carica') {
+				steps = [
+					{ day: 0, title: "Persiapan Lahan & Tanam", desc: "Tanam bibit carica dengan jarak 300x300 cm." },
+					{ day: 365, title: "Pemupukan", desc: "Berikan kompos dan NPK." },
+					{ day: 730, title: "Panen", desc: "Panen buah saat mulai menguning." }
+				];
+			} else if (cropType === 'ercis') {
+				steps = [
+					{ day: 0, title: "Pengolahan Lahan & Tanam", desc: "Tanam benih ercis dengan jarak 15x30 cm. Berikan ajir." },
+					{ day: 30, title: "Pemupukan", desc: "Berikan NPK (1,5 gram/tanaman)." },
+					{ day: 75, title: "Panen", desc: "Panen polong saat masih datar." }
+				];
+			} else if (cropType === 'asparagus') {
+				steps = [
+					{ day: 0, title: "Persiapan Lahan & Tanam", desc: "Tanam bibit asparagus di bedengan tinggi." },
+					{ day: 365, title: "Dormansi Dingin", desc: "Biarkan tanaman mengalami dormansi alami di musim dingin." },
+					{ day: 730, title: "Panen", desc: "Panen rebung saat tinggi 15-20 cm." }
+				];
+			} else if (cropType === 'thyme_rosemary') {
+				steps = [
+					{ day: 0, title: "Persiapan Lahan & Tanam", desc: "Tanam bibit thyme/rosemary di media poros (pasir + kompos)." },
+					{ day: 90, title: "Pemangkasan", desc: "Pangkas pucuk untuk merangsang pertumbuhan." },
+					{ day: 180, title: "Panen", desc: "Panen daun segar saat tanaman sudah rimbun." }
+				];
+			} else if (cropType === 'raspberry') {
+				steps = [
+					{ day: 0, title: "Persiapan Lahan & Tanam", desc: "Tanam bibit raspberry di tanah pH 4,5-5,5 dengan jarak 120x150 cm." },
+					{ day: 365, title: "Pemangkasan", desc: "Pangkas ranting tua yang sudah berbuah." },
+					{ day: 730, title: "Panen", desc: "Panen buah beri saat sudah merah." }
+				];
+			} else if (cropType === 'plum') {
+				steps = [
+					{ day: 0, title: "Persiapan Lahan & Tanam", desc: "Tanam bibit plum dengan jarak 500x500 cm." },
+					{ day: 365, title: "Pemangkasan", desc: "Pangkas tajuk untuk cahaya merata." },
+					{ day: 730, title: "Panen", desc: "Panen buah saat sudah manis." }
+				];
+			} else if (cropType === 'pir') {
+				steps = [
+					{ day: 0, title: "Persiapan Lahan & Tanam", desc: "Tanam bibit pir dengan jarak 500x500 cm." },
+					{ day: 365, title: "Pemangkasan Bentuk", desc: "Lakukan pemangkasan bentuk tajuk." },
+					{ day: 730, title: "Panen", desc: "Panen buah saat sudah matang." }
+				];
+			}
+
+			// ============ DEFAULT (jika tidak ada yang cocok) ============
+			else {
+				steps = [
+					{ day: 0, title: "Persiapan Lahan & Penanaman", desc: "Siapkan lahan dan lakukan penanaman bibit/benih sesuai dengan jenis tanaman yang dipilih." },
+					{ day: 30, title: "Perawatan Rutin", desc: "Lakukan penyiraman, pemupukan, dan pengendalian gulma secara teratur." },
+					{ day: 60, title: "Pengendalian Hama & Penyakit", desc: "Monitor dan kendalikan hama serta penyakit sesuai dengan jenis tanaman." },
+					{ day: 90, title: "Panen", desc: "Lakukan pemanenan saat tanaman sudah mencapai umur panen yang optimal." }
+				];
+			}
+
+			// Generate timeline
+			steps.forEach((item, index) => {
+				let targetDate = new Date(startDate);
+				targetDate.setDate(startDate.getDate() + item.day);
+				let dateStr = targetDate.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+
+				timelineStepsEl.innerHTML += `
+					<div class="flex items-start gap-3 bg-white border border-emerald-100 p-3.5 rounded-2xl shadow-xs">
+						<div class="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-800 font-bold flex items-center justify-center text-xs flex-shrink-0">
+							${index + 1}
+						</div>
+						<div class="flex-1">
+							<div class="flex items-center justify-between">
+								<h4 class="font-bold text-slate-900 text-xs">${item.title}</h4>
+								<span class="text-[10px] font-bold bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded">${dateStr}</span>
+							</div>
+							<p class="text-slate-600 text-xs mt-1 leading-relaxed">${item.desc}</p>
+						</div>
+					</div>
+				`;
+			});
+
+			document.getElementById('calendar-result').classList.remove('hidden');
+		}
+
+		// AI Doctor Image Preview & Simulation
+		function previewImage(event) {
+			const file = event.target.files[0];
+			if (file) {
+				const reader = new FileReader();
+				reader.onload = function(e) {
+					const preview = document.getElementById('image-preview');
+					const placeholder = document.getElementById('upload-placeholder');
+					preview.src = e.target.result;
+					preview.classList.remove('hidden');
+					placeholder.classList.add('hidden');
+				}
+				reader.readAsDataURL(file);
+			}
+		}
+
+		// Fungsi Kompresi Gambar menggunakan Canvas
+		function compressAndConvertToBase64(file, maxWidth = 1024, maxHeight = 1024, quality = 0.7) {
+			return new Promise((resolve, reject) => {
+				const reader = new FileReader();
+				reader.readAsDataURL(file);
+				reader.onload = (event) => {
+					const img = new Image();
+					img.src = event.target.result;
+					img.onload = () => {
+						let width = img.width;
+						let height = img.height;
+
+						// Hitung rasio aspek untuk resize otomatis
+						if (width > height) {
+							if (width > maxWidth) {
+								height = Math.round((height * maxWidth) / width);
+								width = maxWidth;
+							}
+						} else {
+							if (height > maxHeight) {
+								width = Math.round((width * maxHeight) / height);
+								height = maxHeight;
+							}
+						}
+
+						// Gambar ulang di Canvas
+						const canvas = document.createElement('canvas');
+						canvas.width = width;
+						canvas.height = height;
+
+						const ctx = canvas.getContext('2d');
+						ctx.drawImage(img, 0, 0, width, height);
+
+						// Kompres ke JPEG dengan kualitas tertentu
+						const dataUrl = canvas.toDataURL('image/jpeg', quality);
+						const base64String = dataUrl.split(',')[1];
+						
+						resolve({
+							base64Image: base64String,
+							mimeType: 'image/jpeg'
+						});
+					};
+					img.onerror = (error) => reject(error);
+				};
+				reader.onerror = (error) => reject(error);
+			});
+		}
+
+		async function analyzePlantDisease() {
+			const fileInput = document.getElementById('doctor-file');
+			
+			if (fileInput.files.length === 0) {
+				Swal.fire({
+					icon: 'warning',
+					title: 'Foto Belum Diunggah',
+					text: 'Silakan unggah foto daun terlebih dahulu untuk dianalisis.',
+					confirmButtonColor: '#10B981',
+					confirmButtonText: 'Mengerti'
+				});
+				return;
+			}
+
+			const loading = document.getElementById('doctor-loading');
+			const resultBox = document.getElementById('doctor-result');
+			const btn = document.getElementById('btn-analyze-disease');
+
+			loading.classList.remove('hidden');
+			resultBox.classList.add('hidden');
+			btn.disabled = true;
+			btn.classList.add('opacity-50');
+
+			try {
+				const file = fileInput.files[0];
+				
+				// Kompresi gambar sebelum dikirim (Maks 1024px, Kualitas 70%)
+				const compressed = await compressAndConvertToBase64(file, 1024, 1024, 0.7);
+
+				// Panggil endpoint Vercel Serverless Function
+				const response = await fetch('https://pmd-sirampog.vercel.app/api/analyze', {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({
+						base64Image: compressed.base64Image,
+						mimeType: compressed.mimeType
+					})
+				});
+
+				if (!response.ok) {
+					throw new Error('Gagal terhubung ke server AI');
+				}
+
+				// Vercel backend langsung mengembalikan objek JSON diagnosis
+				const diagnosis = await response.json();
+
+				// Update teks ke elemen UI
+				document.getElementById('res-disease-name').innerText = diagnosis.name;
+				document.getElementById('res-disease-cause').innerText = diagnosis.cause;
+				
+				// Gabungkan treatment dan medication jika keduanya ada
+				const treatmentText = diagnosis.medication 
+					? `${diagnosis.treatment}; Obat/Pengobatan: ${diagnosis.medication}` 
+					: diagnosis.treatment;
+					
+				document.getElementById('res-disease-treatment').innerText = treatmentText;
+
+				// Update elemen Akurasi secara dinamis
+				const confidenceElem = document.getElementById('res-confidence');
+				if (confidenceElem) {
+					const confidenceVal = parseFloat(diagnosis.confidence || 0).toFixed(1);
+					confidenceElem.innerText = `Akurasi: ${confidenceVal}%`;
+				}
+
+				resultBox.classList.remove('hidden');
+
+				Swal.fire({
+					icon: 'success',
+					title: 'Analisis Selesai!',
+					text: 'Diagnosis penyakit berhasil terdeteksi.',
+					timer: 2000,
+					showConfirmButton: false
+				});
+
+			} catch (error) {
+				console.error('Error saat menganalisis:', error);
+				
+				Swal.fire({
+					icon: 'error',
+					title: 'Gagal Menganalisis',
+					text: 'Terjadi kesalahan saat memproses gambar. Silakan coba beberapa saat lagi.',
+					confirmButtonColor: '#EF4444',
+					confirmButtonText: 'Coba Lagi'
+				});
+			} finally {
+				loading.classList.add('hidden');
+				btn.disabled = false;
+				btn.classList.remove('opacity-50');
+			}
+		}
+
+        // GPS Detection & Climate Analysis Logic (Previous Engine Maintained)
+        function detectLocationAndAnalyze() {
+			const btn = document.getElementById('btn-detect');
+			const loading = document.getElementById('loading-state');
+			const resultSection = document.getElementById('result-section');
+			const loadingText = document.getElementById('loading-text');
+
+			btn.disabled = true;
+			btn.classList.add('opacity-50', 'cursor-not-allowed');
+			loading.classList.remove('hidden');
+			resultSection.classList.add('hidden');
+
+			if (!navigator.geolocation) {
+				alert('Geolocation tidak didukung oleh browser Anda.');
+				resetUI();
+				return;
+			}
+
+			loadingText.innerText = "Mengambil data cuaca real-time & analisis proyeksi 3 bulan...";
+
+			navigator.geolocation.getCurrentPosition(
+				(position) => {
+					let lat = position.coords.latitude;
+					let lon = position.coords.longitude;
+					let altitude = position.coords.altitude; 
+
+					// 1. Fetch Cuaca Real-Time & Proyeksi Harian/Bulanan (16 Hari hingga Proyeksi Musim)
+					const weatherApiUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,wind_speed_10m,weather_code&daily=precipitation_sum,temperature_2m_max&timezone=auto`;
+
+					fetch(weatherApiUrl)
+						.then(res => res.json())
+						.then(weatherData => {
+							let curr = weatherData.current || {};
+							updateWeatherUI(curr);
+
+							// Process & tampilkan proyeksi 3 bulan ke depan
+							let monthlyForecasts = calculate3MonthForecast(weatherData.daily);
+							display3MonthForecastUI(monthlyForecasts);
+
+							// Memeta skenario dominan 3 bulan untuk filtering agronomi
+							let primaryScenario = determinePrimaryScenario(monthlyForecasts);
+							return primaryScenario;
+						})
+						.then((polaSkenario) => {
+							loadingText.innerText = "Memetakan wilayah spesifik & menyaring komoditas berdasarkan proyeksi cuaca...";
+
+							// 2. Fetch Reverse Geocoding
+							fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=14&addressdetails=1`)
+								.then(response => response.json())
+								.then(data => {
+									let addr = data.address || {};
+									let village = addr.village || addr.suburb || addr.hamlet || addr.neighbourhood || '';
+									let district = addr.town || addr.city_district || addr.county || addr.municipality || addr.suburb || '';
+									let regency = addr.city || addr.county || addr.state_district || 'Pekalongan';
+
+									let specificLocation = "";
+									if (village && district && regency) {
+										specificLocation = `${village}, Kec. ${district}, ${regency.includes('Kab') ? regency : 'Kab. ' + regency}`;
+									} else {
+										specificLocation = `Pekalongan, Jawa Tengah`;
+									}
+
+									if (altitude === null || altitude === undefined || altitude < 100) {
+										altitude = 850; 
+									}
+
+									setTimeout(() => {
+										// Kirim polaSkenario ke fungsi pemroses database agronomi
+										processClimateAndAltitude(altitude, specificLocation, polaSkenario);
+										loading.classList.add('hidden');
+										resultSection.classList.remove('hidden');
+										resetUI();
+									}, 800);
+								})
+								.catch(() => {
+									let fallbackLocation = "Pekalongan, Jawa Tengah";
+									let fallbackAlt = 850;
+									setTimeout(() => {
+										processClimateAndAltitude(fallbackAlt, fallbackLocation, polaSkenario);
+										loading.classList.add('hidden');
+										resultSection.classList.remove('hidden');
+										resetUI();
+									}, 800);
+								});
+						})
+						.catch(() => {
+							// Fallback UI jika fetch cuaca gagal
+							document.getElementById('res-weather').innerText = "Cerah Berawan";
+							document.getElementById('res-temp').innerText = "26°C (75%)";
+							document.getElementById('res-wind').innerText = "8.2 km/j";
+							
+							let fallbackForecasts = ["Basah (Curah Hujan Tinggi)", "Sedang (Lembap)", "Kering (Kemarau)"];
+							display3MonthForecastUI(fallbackForecasts);
+							
+							processClimateAndAltitude(850, "Pekalongan, Jawa Tengah", "Basah");
+							loading.classList.add('hidden');
+							resultSection.classList.remove('hidden');
+							resetUI();
+						});
+				},
+				(error) => {
+					let demoLocation = "Brebes, Jawa Tengah (Demo GPS)";
+					let demoAlt = 850;
+					document.getElementById('res-weather').innerText = "Cerah Sejuk (Pegunungan)";
+					document.getElementById('res-temp').innerText = "21°C (82%)";
+					document.getElementById('res-wind').innerText = "11.5 km/j";
+					
+					let demoForecasts = ["Basah (Curah Hujan Tinggi)", "Basah (Curah Hujan Tinggi)", "Sedang (Lembap)"];
+					display3MonthForecastUI(demoForecasts);
+
+					setTimeout(() => {
+						processClimateAndAltitude(demoAlt, demoLocation, "Basah");
+						loading.classList.add('hidden');
+						resultSection.classList.remove('hidden');
+						resetUI();
+					}, 800);
+				},
+				{ timeout: 10000, enableHighAccuracy: true }
+			);
+		}
+
+		// Helper: Menghitung Estimasi Skenario Cuaca 3 Bulan Berdasarkan Data Daily Precip/Suhu
+		function calculate3MonthForecast(dailyData) {
+			if (!dailyData || !dailyData.precipitation_sum) {
+				return ["Basah (Hujan Tinggi)", "Sedang (Normal)", "Kering (Kemarau)"];
+			}
+
+			// Estimasi sederhana klasifikasi bulan berdasarkan rerata akumulasi presipitasi harian
+			let precipList = dailyData.precipitation_sum;
+			let avgPrecip = precipList.reduce((a, b) => a + b, 0) / (precipList.length || 1);
+
+			let months = [];
+			
+			// Bulan 1 (Berdasarkan tren minggu awal)
+			if (avgPrecip > 10) months.push("Basah (Curah Hujan Tinggi)");
+			else if (avgPrecip >= 3) months.push("Sedang (Lembap/Normal)");
+			else months.push("Kering (Kemarau)");
+
+			// Bulan 2 & Bulan 3 (Proyeksi estimasi/pola tren)
+			months.push(avgPrecip > 7 ? "Basah (Curah Hujan Tinggi)" : "Sedang (Lembap/Normal)");
+			months.push(avgPrecip < 5 ? "Kering (Kemarau)" : "Sedang (Lembap/Normal)");
+
+			return months;
+		}
+
+		// Helper: Memperbarui Elemen UI Cuaca 3 Bulan
+		function display3MonthForecastUI(forecasts) {
+			document.getElementById('first-weather').innerText = forecasts[0] || "Basah";
+			document.getElementById('second-weather').innerText = forecasts[1] || "Sedang";
+			document.getElementById('third-weather').innerText = forecasts[2] || "Kering";
+		}
+
+		// Helper: Menentukan Skenario Dominan untuk Memfilter Database Tanaman
+		function determinePrimaryScenario(forecasts) {
+			let firstMonth = forecasts[0] || "";
+			if (firstMonth.includes("Basah")) return "Basah";
+			if (firstMonth.includes("Kering")) return "Kering";
+			return "Sedang";
+		}
+
+		// Contoh penyesuaian fungsi processClimateAndAltitude untuk memfilter database
+		function processClimateAndAltitude(altitude, locationName, polaSkenario) {
+			// Tampilkan lokasi
+			const locElem = document.getElementById('res-location-subtitle');
+			if (locElem) locElem.innerText = locationName;
+
+			const altElem = document.getElementById('res-altitude');
+			if (altElem) altElem.innerText = `${altitude} mdpl (Zona Pegunungan)`;
+
+			// Saring database tanaman berdasarkan polaSkenario (Contoh: 'Basah', 'Sedang', 'Kering')
+			// let filteredCrops = databaseTanaman.filter(item => item.polaSkenario === polaSkenario);
+			// renderCropCards(filteredCrops);
+		}
+
+        function updateWeatherUI(curr) {
+            let temp = curr.temperature_2m || 25;
+            let hum = curr.relative_humidity_2m || 80;
+            let wind = curr.wind_speed_10m || 5;
+            let wcode = curr.weather_code || 0;
+
+            let weatherDesc = "Cerah";
+            if (wcode >= 1 && wcode <= 3) weatherDesc = "Berawan Sebagian";
+            else if (wcode >= 51 && wcode <= 67) weatherDesc = "Hujan Ringan / Rintik";
+            else if (wcode >= 95) weatherDesc = "Badai Petir";
+
+            document.getElementById('res-weather').innerText = weatherDesc;
+            document.getElementById('res-temp').innerText = `${temp}°C (${hum}%)`;
+            document.getElementById('res-wind').innerText = `${wind} km/j`;
+        }
+
+        function resetUI() {
+            const btn = document.getElementById('btn-detect');
+            const loading = document.getElementById('loading-state');
+            btn.disabled = false;
+            btn.classList.remove('opacity-50', 'cursor-not-allowed');
+            loading.classList.add('hidden');
+        }
+
+		async function processClimateAndAltitude(altitude, locationName) {
+			document.getElementById('res-location-subtitle').innerHTML = `<i class="fa-solid fa-location-dot text-emerald-600"></i> Wilayah Spesifik: <span class="text-slate-900 font-bold ml-1">${locationName}</span>`;
+
+			let zoneText = "";
+			let crops = [];
+
+			// 1. Tentukan zona berdasarkan altitude
+			if (altitude < 300) {
+				zoneText = "Dataran Rendah (< 300 MDPL)";
+			} else if (altitude >= 300 && altitude <= 700) {
+				zoneText = "Dataran Menengah (300 - 700 MDPL)";
+			} else if (altitude >= 701 && altitude <= 1000) {
+				zoneText = "Dataran Tinggi Transisi (701 - 1000 MDPL)";
+			} else if (altitude >= 1001 && altitude <= 1500) {
+				zoneText = "Dataran Tinggi / Pegunungan (1001 - 1500 MDPL)";
+			} else {
+				zoneText = "Dataran Sangat Tinggi / SANGAT DINGIN (> 1500 MDPL)";
+			}
+
+			try {
+				// 2. Mengambil data dari Firestore menggunakan compat API
+				const querySnapshot = await db.collection("aknend_crops").get();
+				
+				querySnapshot.forEach((doc) => {
+					const data = doc.data();
+					
+					const minAlt = data.minAltitude ?? 0;
+					const maxAlt = data.maxAltitude ?? 9999;
+
+					if (altitude >= minAlt && altitude <= maxAlt) {
+						crops.push({
+							id: doc.id,
+							name: data.name || "",
+							icon: data.icon || "fa-seedling",
+							desc: data.desc || "",
+							desctinggi: data.desctinggi || "",
+							ph: data.ph || "-",
+							tempReq: data.tempReq || "-",
+							duration: data.duration || "-",
+							water: data.water || "-",
+							sun: data.sun || "-",
+							tips: data.tips || "",
+							fRate: data.fRate || [0, 0, 0],
+							risiko: data.risiko || "Sedang",
+							minAltitude: minAlt,
+							maxAltitude: maxAlt
+						});
+					}
+				});
+
+				// 3. Render UI
+				document.getElementById('res-altitude').innerText = `${Math.round(altitude)} MDPL (${zoneText})`;
+				document.getElementById('crop-count-badge').innerText = `${crops.length} Pilihan Tanaman`;
+
+				const cropListEl = document.getElementById('crop-list');
+				cropListEl.innerHTML = "";
+
+				if (crops.length === 0) {
+					cropListEl.innerHTML = `
+						<div class="col-span-full text-center py-12">
+							<i class="fa-solid fa-leaf text-4xl text-slate-300 mb-3"></i>
+							<p class="text-slate-500">Tidak ada tanaman yang cocok di ketinggian ${Math.round(altitude)} MDPL</p>
+							<p class="text-slate-400 text-sm">Coba cari di zona ketinggian lainnya</p>
+						</div>
+					`;
+					return;
+				}
+
+				crops.forEach((crop) => {
+					const cropDataStr = JSON.stringify(crop).replace(/"/g, '&quot;');
+					
+					let riskBadge = "";
+					if (crop.risiko === "Rendah") {
+						riskBadge = `<span class="px-2 py-0.5 bg-green-100 text-green-700 rounded text-[10px] font-medium">Risiko Rendah</span>`;
+					} else if (crop.risiko === "Tinggi") {
+						riskBadge = `<span class="px-2 py-0.5 bg-red-100 text-red-700 rounded text-[10px] font-medium">Risiko Tinggi</span>`;
+					} else {
+						riskBadge = `<span class="px-2 py-0.5 bg-yellow-100 text-yellow-700 rounded text-[10px] font-medium">Risiko Sedang</span>`;
+					}
+					
+					cropListEl.innerHTML += `
+						<div onclick='openModal(${cropDataStr})' class="bg-white/95 border border-emerald-100 rounded-2xl p-4 shadow-sm hover:shadow-lg hover:border-emerald-400 transition-all flex flex-col justify-between cursor-pointer group">
+							<div>
+								<div class="flex items-center gap-3 mb-2">
+									<div class="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-700 group-hover:bg-emerald-600 group-hover:text-white flex items-center justify-center font-bold text-base flex-shrink-0 transition-colors">
+										<i class="fa-solid ${crop.icon}"></i>
+									</div>
+									<div class="flex-1 min-w-0">
+										<h4 class="font-bold text-slate-900 group-hover:text-emerald-700 text-base leading-tight transition-colors">${crop.name}</h4>
+										<div class="flex items-center gap-2 mt-0.5 flex-wrap">
+											${riskBadge}
+											<span class="px-2 py-0.5 bg-blue-50 text-blue-600 rounded text-[10px] font-medium">
+												${crop.minAltitude} - ${crop.maxAltitude} MDPL
+											</span>
+										</div>
+									</div>
+								</div>
+								<p class="text-slate-600 text-xs mb-3 leading-relaxed line-clamp-2">${crop.desc}</p>
+							</div>
+							<div class="flex items-center justify-between pt-2 border-t border-slate-100">
+								<span class="px-2.5 py-1 bg-emerald-50 text-emerald-700 rounded-lg text-xs font-semibold">
+									<i class="fa-regular fa-clock mr-1"></i> ${crop.duration}
+								</span>
+								<span class="text-xs text-emerald-600 font-bold flex items-center gap-1 group-hover:translate-x-1 transition-transform">
+									SOP Agronomi <i class="fa-solid fa-arrow-right text-[10px]"></i>
+								</span>
+							</div>
+						</div>
+					`;
+				});
+
+			} catch (error) {
+				console.error("Gagal mengambil data tanaman dari Firestore:", error);
+				document.getElementById('crop-list').innerHTML = `
+					<div class="col-span-full text-center py-12">
+						<i class="fa-solid fa-triangle-exclamation text-4xl text-red-400 mb-3"></i>
+						<p class="text-red-500 font-medium">Gagal memuat data tanaman</p>
+						<p class="text-slate-400 text-sm mt-1">${error.message}</p>
+						<button onclick="location.reload()" class="mt-4 px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm hover:bg-emerald-700 transition">
+							<i class="fa-solid fa-rotate mr-2"></i>Coba Ulang
+						</button>
+					</div>
+				`;
+			}
+		}
+
+        function hitungPupuk_Ori() {
+            const luas = parseFloat(document.getElementById('input-luas').value) || 0;
+            if (!currentSelectedCrop || !currentSelectedCrop.fRate) return;
+
+            let rateUrea = currentSelectedCrop.fRate[0];
+            let rateSP36 = currentSelectedCrop.fRate[1];
+            let rateKCl = currentSelectedCrop.fRate[2];
+
+            let totalUrea = ((luas * rateUrea) / 1000).toFixed(1);
+            let totalSP36 = ((luas * rateSP36) / 1000).toFixed(1);
+            let totalKCl = ((luas * rateKCl) / 1000).toFixed(1);
+
+            document.getElementById('val-urea').innerText = `${totalUrea} kg`;
+            document.getElementById('val-sp36').innerText = `${totalSP36} kg`;
+            document.getElementById('val-kcl').innerText = `${totalKCl} kg`;
+        }
+		
+		function hitungPupuk() {
+			// 1. Ambil input luas lahan pengguna dalam Meter Persegi (m2)
+			const luasM2 = parseFloat(document.getElementById('input-luas').value) || 0;
+
+			// Element penampung hasil
+			const elUrea = document.getElementById('val-urea');
+			const elSP36 = document.getElementById('val-sp36');
+			const elKCl  = document.getElementById('val-kcl');
+
+			// Validasi: Jika tanaman belum dipilih atau input luas 0/kosong
+			if (!currentSelectedCrop || !currentSelectedCrop.fRate || luasM2 <= 0) {
+				if (elUrea) elUrea.innerText = "0 kg";
+				if (elSP36) elSP36.innerText = "0 kg";
+				if (elKCl)  elKCl.innerText = "0 kg";
+				return;
+			}
+
+			// 2. Konversi Luas M2 ke Hektar (1 Hektar = 10.000 m2)
+			const luasHektar = luasM2 / 10000;
+
+			// 3. Ambil Dosis Rekomendasi Standar Tanaman (dalam Kg / Hektar)
+			// fRate[0] = Kg Urea/Ha, fRate[1] = Kg SP-36/Ha, fRate[2] = Kg KCl/Ha
+			const dosisUreaPerHa = currentSelectedCrop.fRate[0] || 0;
+			const dosisSP36PerHa = currentSelectedCrop.fRate[1] || 0;
+			const dosisKClPerHa  = currentSelectedCrop.fRate[2] || 0;
+
+			// 4. Hitung total kebutuhan riil (Kg) = Dosis Per Ha * Luas Lahan Hektar
+			const totalUreaKg = dosisUreaPerHa * luasHektar * 100;
+			const totalSP36Kg = dosisSP36PerHa * luasHektar * 100 ;
+			const totalKClKg  = dosisKClPerHa  * luasHektar * 100;
+
+			// 5. Helper Function untuk mempercantik Tampilan Satuan (Gram vs Kg)
+			function formatDosis(kg) {
+				if (kg <= 0) return "0 kg";
+				
+				// Jika kebutuhan kurang dari 1 kg, tampilkan dalam Gram
+				if (kg < 1) {
+					const gram = Math.round(kg * 1000);
+					return `${gram} gram`;
+				} 
+				// Jika 1 kg atau lebih, tampilkan dalam Kg (maksimal 2 desimal)
+				else {
+					return `${Number(kg.toFixed(2))} kg`;
+				}
+			}
+
+			// 6. Cetak hasil ke layar
+			if (elUrea) elUrea.innerText = formatDosis(totalUreaKg);
+			if (elSP36) elSP36.innerText = formatDosis(totalSP36Kg);
+			if (elKCl)  elKCl.innerText  = formatDosis(totalKClKg);
+		}
+
+        function openModal(crop) {
+            currentSelectedCrop = crop;
+            document.getElementById('modal-title').innerText = crop.name;
+            document.getElementById('modal-duration').innerText = `Estimasi Panen: ${crop.duration}`;
+            document.getElementById('modal-desc').innerText = crop.desc;
+			document.getElementById('modal-desctinggi').innerText = crop.desctinggi;
+            document.getElementById('modal-ph').innerText = crop.ph;
+            document.getElementById('modal-temp-req').innerText = crop.tempReq;
+            document.getElementById('modal-water').innerText = crop.water;
+            document.getElementById('modal-sun').innerText = crop.sun;
+            document.getElementById('modal-tips').innerText = crop.tips;
+            document.getElementById('modal-icon').innerHTML = `<i class="fa-solid ${crop.icon}"></i>`;
+
+            document.getElementById('input-luas').value = 100;
+            hitungPupuk();
+
+            const modal = document.getElementById('crop-modal');
+            const box = document.getElementById('modal-content-box');
+            
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                box.classList.remove('scale-95', 'opacity-0');
+                box.classList.add('scale-100', 'opacity-100');
+            }, 10);
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('crop-modal');
+            const box = document.getElementById('modal-content-box');
+            
+            box.classList.remove('scale-100', 'opacity-100');
+            box.classList.add('scale-95', 'opacity-0');
+            
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 200);
+        }
+
+        window.onclick = function(event) {
+            const modal = document.getElementById('crop-modal');
+            if (event.target === modal) {
+                closeModal();
+            }
+        }
+		
+		function fazzPage() {
+		  Swal.fire({
+		  title: 'Memuat Halaman',
+		  html: `Kembali ke halaman <b>FazzQuranic</b>...`,
+			  timer: 1200,
+			  timerProgressBar: true,
+			  showConfirmButton: false,
+			  background: '#0f172a',  
+			  color: '#fff',
+			  showClass: {
+				popup: 'animate__animated animate__fadeInDown animate__faster'
+			  },
+			  hideClass: {
+				popup: 'animate__animated animate__fadeOutUp animate__faster'
+			  },
+			  didOpen: () => {
+				Swal.showLoading();
+			  }
+			}).then(() => {
+				window.location.href = `index.html`;
+			});
+		}
+		
+		function switchPage(pageKey,halaman) {
+		  Swal.fire({
+		  title: 'Memuat Halaman',
+		  html: `Menuju halaman <b>` + halaman +`</b>...`,
+			  timer: 1200,
+			  timerProgressBar: true,
+			  showConfirmButton: false,
+			  background: '#0f172a',  
+			  color: '#fff',
+			  showClass: {
+				popup: 'animate__animated animate__fadeInDown animate__faster'
+			  },
+			  hideClass: {
+				popup: 'animate__animated animate__fadeOutUp animate__faster'
+			  },
+			  didOpen: () => {
+				Swal.showLoading();
+			  }
+			}).then(() => {
+				window.location.href = pageKey;
+			});
+		}
+		
+    </script>
+</body>
+</html>
+

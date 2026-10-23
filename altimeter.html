@@ -1,0 +1,1382 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GeoAltimeter - FazzQuranic</title>
+  <link rel="shortcut icon" type="image/png" href="img/iconfazz.png">
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Leaflet CSS & JS -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css"/>
+  <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
+  <!-- SweetAlert2 -->
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <!-- Chart.js & SunCalc -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/suncalc/1.9.0/suncalc.min.js"></script>
+  <style>
+	html, body {
+	  overflow-x: clip;   /* lebih modern dari hidden, tidak ganggu fixed */
+	}
+	html {
+	  height: 100%;
+	  overscroll-behavior: none;   /* cegah pull-to-refresh ganggu fixed */
+	}
+	body {
+	  min-height: 100%;
+	  overscroll-behavior-y: contain;
+	}
+	
+    main { padding-bottom: 6rem !important; }
+    @media (min-width: 640px) {
+      main { padding-bottom: 5rem !important; }
+    }
+    @keyframes pulse-slow { 0%, 100% { transform: scale(1); opacity: 0.8; } 50% { transform: scale(1.05); opacity: 0.3; } }
+    @keyframes bounce-step { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
+    @keyframes moon-glow { 0%, 100% { box-shadow: 0 0 12px rgba(224, 231, 255, 0.2); } 50% { box-shadow: 0 0 24px rgba(224, 231, 255, 0.4); } }
+
+    .animate-glow { animation: pulse-slow 4s infinite ease-in-out; }
+    .animate-step { animation: bounce-step 0.3s ease-out; }
+    .glass {
+      background: rgba(15, 23, 42, 0.8);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .leaflet-layer, .leaflet-control-zoom-in, .leaflet-control-zoom-out, .leaflet-control-attribution {
+      filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%);
+    }
+	
+	#altitudeValue {
+	  font-variant-numeric: tabular-nums;
+	  min-width: 4ch;
+	  display: inline-block;
+	  text-align: center;
+	}
+	
+	#compassHeading {
+	  font-variant-numeric: tabular-nums;
+	  min-width: 3.5ch;
+	  display: inline-block;
+	  text-align: right;
+	}
+
+    #map { z-index: 1; }
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 4px; }
+
+    /* CSS Visual Fase Bulan Dinamis Natural & Keemasan */
+    /* === MOON WIDGET (Diperbaiki) === */
+.moon-sphere {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(251, 191, 36, 0.25);
+  box-shadow: 0 0 15px rgba(245, 158, 11, 0.2), inset 0 0 8px rgba(0,0,0,0.6);
+  background: #0f172a;
+  animation: moon-glow 4s infinite ease-in-out;
+  flex-shrink: 0;
+}
+
+/* Bulan penuh dengan gradasi keemasan */
+.moon-full {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: radial-gradient(circle at 32% 32%,
+    #fffbeb 0%,
+    #fef3c7 15%,
+    #fde047 40%,
+    #f59e0b 75%,
+    #b45309 100%);
+  box-shadow:
+    inset -6px -6px 12px rgba(120, 53, 15, 0.4),
+    inset 4px 4px 8px rgba(255, 255, 255, 0.3);
+}
+
+/* Shadow overlay — bagian gelap bulan (menggunakan clip-path ellipse) */
+.moon-shadow {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: #0f172a; /* warna gelap sama dengan background sphere */
+  transition: clip-path 0.5s cubic-bezier(.4,0,.2,1);
+  pointer-events: none;
+}
+
+/* Kawah halus untuk tekstur realistis */
+.moon-craters {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 60% 35%, rgba(120, 53, 15, 0.15) 0%, transparent 8%),
+    radial-gradient(circle at 45% 60%, rgba(120, 53, 15, 0.12) 0%, transparent 6%),
+    radial-gradient(circle at 70% 65%, rgba(120, 53, 15, 0.1) 0%, transparent 5%),
+    radial-gradient(circle at 35% 45%, rgba(120, 53, 15, 0.08) 0%, transparent 4%);
+  pointer-events: none;
+  mix-blend-mode: multiply;
+  opacity: 0.7;
+}
+
+    /* =========================================================
+       BOTTOM NAVBAR (Optimasi Mobile & Responsive)
+       ========================================================= */
+    @keyframes nav-slide-up {
+      from { transform: translateY(120%); opacity: 0; }
+      to   { transform: translateY(0);    opacity: 1; }
+    }
+    @keyframes nav-pop {
+      0%   { transform: scale(1); }
+      40%  { transform: scale(0.85) rotate(-8deg); }
+      70%  { transform: scale(1.15) rotate(6deg); }
+      100% { transform: scale(1) rotate(0); }
+    }
+    @keyframes nav-dot-pulse {
+      0%, 100% { transform: translateX(-50%) scale(1);   opacity: 1; }
+      50%      { transform: translateX(-50%) scale(1.6); opacity: 0.5; }
+    }
+
+    .bottom-nav-safe {
+      bottom: calc(0.75rem + env(safe-area-inset-bottom, 0px));
+    }
+
+    .nav-bar {
+	  position: fixed !important;
+	  /* Gunakan left+right+margin-auto → lebih stabil dari left/right */
+	  left: 0;
+	  right: 0;
+	  margin-left: auto;
+	  margin-right: auto;
+	  width: calc(100% - 1.5rem);
+	  max-width: 32rem;
+	  /* Bottom aman dari gesture bar iOS */
+	  bottom: calc(0.75rem + env(safe-area-inset-bottom, 0px));
+	  /* Force GPU layer → smooth tanpa flicker */
+	  transform: translateZ(0);
+	  -webkit-transform: translateZ(0);
+	  will-change: transform;
+	  animation: nav-slide-up 0.6s cubic-bezier(.2,.9,.3,1.2) both;
+	  z-index: 9999;
+	}
+
+/* Hapus class .bottom-nav-safe karena sudah digabung */
+
+    .nav-btn {
+      position: relative;
+      transition: all .3s cubic-bezier(.2,.9,.3,1.2);
+      flex: 1 1 0%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+      background: transparent;
+      border: none;
+      color: #94a3b8;
+      padding: 6px 0;
+      border-radius: 12px;
+    }
+
+    .nav-btn i {
+      transition: transform .35s cubic-bezier(.2,.9,.3,1.4), color .3s;
+      pointer-events: none;
+    }
+
+    .nav-btn .nav-label {
+      font-size: 9px;
+      font-weight: 500;
+      margin-top: 2px;
+      line-height: 1;
+      pointer-events: none;
+      transition: color .3s;
+    }
+
+    .nav-btn:active i { animation: nav-pop .4s ease; }
+
+    .nav-btn.active {
+      color: #34d399;
+      background: linear-gradient(180deg, rgba(16,185,129,0.15), rgba(16,185,129,0.02));
+    }
+
+    .nav-btn.active i {
+      color: #34d399;
+      filter: drop-shadow(0 0 6px rgba(52,211,153,.8));
+    }
+
+    .nav-btn.active .nav-label {
+      color: #34d399;
+      font-weight: 700;
+    }
+
+    .nav-btn.active::after {
+      content: '';
+      position: absolute;
+      bottom: 2px;
+      left: 50%;
+      width: 4px;
+      height: 4px;
+      border-radius: 9999px;
+      background: #34d399;
+      transform: translateX(-50%);
+      animation: nav-dot-pulse 1.6s ease-in-out infinite;
+    }
+
+    .nav-btn .tooltip {
+      position: absolute;
+      bottom: calc(100% + 10px);
+      left: 50%;
+      transform: translateX(-50%) translateY(6px);
+      background: rgba(15,23,42,0.95);
+      color: #a7f3d0;
+      font-size: 10px;
+      font-weight: 600;
+      white-space: nowrap;
+      padding: 4px 8px;
+      border-radius: 8px;
+      border: 1px solid rgba(16,185,129,0.3);
+      opacity: 0;
+      pointer-events: none;
+      transition: all .25s ease;
+      backdrop-filter: blur(8px);
+    }
+
+    @media (hover: hover) and (pointer: fine) {
+      .nav-btn:hover i { transform: translateY(-2px) scale(1.1); }
+      .nav-btn:hover .tooltip {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+      }
+    }
+    @media (hover: none) {
+      .nav-btn .tooltip { display: none; }
+    }
+	
+#darkCountdown {
+  font-variant-numeric: tabular-nums;   /* digit monospace sejajar */
+  font-feature-settings: "tnum" 1;
+  display: inline-block;
+  min-width: 8.5ch;                      /* reservasi lebar tetap */
+  text-align: right;
+  letter-spacing: 0.5px;
+}
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex items-center justify-center p-3 md:p-6 relative font-sans">
+
+  <!-- Background Decorative Glows — dibungkus wrapper terpisah -->
+	<div id="bgGlow" class="fixed inset-0 pointer-events-none overflow-hidden" style="z-index: 0;">
+	  <div class="absolute -top-32 -left-32 w-96 h-96 bg-cyan-600/20 rounded-full filter blur-3xl animate-glow"></div>
+	  <div class="absolute -bottom-32 -right-32 w-96 h-96 bg-indigo-600/20 rounded-full filter blur-3xl animate-glow" style="animation-delay: 2s;"></div>
+	</div>
+
+  <!-- Main Grid Container -->
+  <div class="w-full max-w-6xl grid grid-cols-1 lg:grid-cols-12 gap-5 relative z-10">
+
+    <!-- KOLOM KIRI: Panel Kontrol & Sensor -->
+    <div class="lg:col-span-7 flex flex-col gap-4">
+
+      <!-- 1. Card Altimeter Utama -->
+      <div class="glass rounded-3xl p-5 shadow-2xl">
+        <div class="flex justify-between items-center mb-4">
+          <div class="flex items-center gap-2.5">
+            <div class="p-2 bg-cyan-500/10 rounded-xl text-cyan-400 border border-cyan-500/20">
+              <i class="fa-solid fa-mountain-sun text-base"></i>
+            </div>
+            <div>
+              <h1 class="text-sm font-bold bg-gradient-to-r from-cyan-400 to-indigo-300 bg-clip-text text-transparent">GeoAltimeter</h1>
+              <p class="text-[10px] text-slate-400">Sensor & Ketinggian</p>
+            </div>
+            <button onclick="window.location.href='index.html'" class="px-3 py-1.5 rounded-xl bg-lime-800/80 border border-slate-700 text-xs font-semibold hover:bg-rose-700 transition ml-2">Back to FazzQuranic</button>
+          </div>
+          <button id="unitBtn" onclick="toggleUnit()" class="px-3 py-1.5 rounded-xl bg-slate-800/80 border border-slate-700 text-xs font-semibold hover:bg-slate-700 transition">Meter (m)</button>
+        </div>
+
+        <!-- Gauge Ketinggian Minimalis & Rapi -->
+        <div class="flex items-center justify-center my-3">
+          <div class="relative w-36 h-36 rounded-full glass flex flex-col items-center justify-center shadow-inner border border-cyan-500/20">
+            <span class="text-[9px] uppercase tracking-wider text-slate-400 font-medium mb-0.5">Ketinggian</span>
+            <div class="flex items-baseline gap-1">
+              <span id="altitudeValue" class="text-3xl font-black text-white tracking-tight">--</span>
+              <span id="unitLabel" class="text-xs font-bold text-cyan-400">m</span>
+            </div>
+            <span id="categoryBadge" class="mt-1 text-[9px] px-2 py-0.5 rounded-full bg-slate-800/80 text-slate-300 border border-slate-700/80">Menunggu GPS...</span>
+          </div>
+        </div>
+
+        <!-- Grid Info Koordinat & Tekanan -->
+        <div class="grid grid-cols-2 gap-2.5 my-3">
+          <div class="p-2.5 rounded-xl bg-slate-900/60 border border-slate-800/80 flex items-center gap-2.5">
+            <i class="fa-solid fa-location-dot text-cyan-400 text-sm"></i>
+            <div class="overflow-hidden">
+              <p class="text-[9px] text-slate-400">Koordinat</p>
+              <p id="coordsText" class="text-[11px] font-mono font-medium text-slate-200 truncate">-- , --</p>
+            </div>
+          </div>
+          <div class="p-2.5 rounded-xl bg-slate-900/60 border border-slate-800/80 flex items-center gap-2.5">
+            <i class="fa-solid fa-gauge-high text-indigo-400 text-sm"></i>
+            <div class="overflow-hidden">
+              <p class="text-[9px] text-slate-400">Tekanan Udara</p>
+              <p id="pressureText" class="text-[11px] font-mono font-medium text-slate-200 truncate">-- hPa</p>
+            </div>
+          </div>
+        </div>
+
+        <button id="getLocBtn" onclick="getLocation()" class="w-full py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:opacity-90 font-bold text-xs text-white transition flex items-center justify-center gap-2 shadow-lg shadow-cyan-500/20">
+          <i class="fa-solid fa-crosshairs"></i> Perbarui Posisi & GPS
+        </button>
+        <p id="statusMsg" class="text-center text-[10px] text-slate-500 mt-2">Sistem siap mendeteksi lokasi</p>
+      </div>
+
+      <!-- Grid 2 Kolom untuk Pedometer & Kompas -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+        <!-- 2. Card Pedometer -->
+        <div class="glass rounded-3xl p-4 shadow-2xl flex flex-col justify-between border border-emerald-900/40 relative overflow-hidden">
+          <div class="absolute -top-10 -right-10 w-24 h-24 bg-emerald-500/10 rounded-full filter blur-xl"></div>
+          <div>
+            <div class="flex justify-between items-center mb-3">
+              <div class="flex items-center gap-2">
+                <div id="stepIconBox" class="p-2 bg-emerald-500/10 rounded-xl text-emerald-400 border border-emerald-500/20">
+                  <i class="fa-solid fa-shoe-prints text-sm"></i>
+                </div>
+                <div>
+                  <h2 class="text-xs font-bold text-emerald-100">Pedometer</h2>
+                  <p class="text-[9px] text-slate-400">Sensor Langkah</p>
+                </div>
+              </div>
+              <button id="startPedometerBtn" onclick="requestMotionPermission()" class="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-[10px] font-bold text-white transition">
+                Aktifkan
+              </button>
+            </div>
+
+            <div class="my-2">
+              <span class="text-[9px] uppercase text-emerald-400/80 font-semibold">Total Langkah</span>
+              <div class="flex items-baseline gap-1.5">
+                <span id="stepCount" class="text-3xl font-black text-white">0</span>
+                <span class="text-xs text-slate-400">langkah</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex justify-between items-center pt-2 border-t border-slate-800/80 text-[11px] text-slate-300">
+            <span>Jarak: <strong id="distanceEst" class="text-white font-mono">0.0</strong> m</span>
+            <span>Kalori: <strong id="calorieEst" class="text-white font-mono">0.0</strong> kcal</span>
+          </div>
+        </div>
+
+        <!-- 3. Card Kompas Digital -->
+        <div class="glass rounded-3xl p-4 shadow-2xl flex flex-col justify-between border border-amber-900/40 relative overflow-hidden">
+          <div class="absolute -top-10 -right-10 w-24 h-24 bg-amber-500/10 rounded-full filter blur-xl"></div>
+          <div>
+            <div class="flex justify-between items-center mb-3">
+              <div class="flex items-center gap-2">
+                <div class="p-2 bg-amber-500/10 rounded-xl text-amber-400 border border-amber-500/20">
+                  <i class="fa-solid fa-compass text-sm"></i>
+                </div>
+                <div>
+                  <h2 class="text-xs font-bold text-amber-100">Kompas</h2>
+                  <p class="text-[9px] text-slate-400">Orientasi</p>
+                </div>
+              </div>
+              <button id="startCompassBtn" onclick="requestCompassPermission()" class="px-2.5 py-1 rounded-lg bg-amber-600 hover:bg-amber-500 text-[10px] font-bold text-white transition">
+                Aktifkan
+              </button>
+            </div>
+
+            <!-- Kompas Mini Visual -->
+            <div class="flex items-center justify-center my-1">
+              <div class="w-20 h-20 rounded-full border border-amber-500/30 flex items-center justify-center relative bg-slate-900/50">
+                <!-- Penanda arah mata angin -->
+                <span class="absolute top-0.5 text-[8px] font-bold text-rose-400">U</span>
+                <span class="absolute bottom-0.5 text-[8px] font-bold text-slate-400">S</span>
+                <span class="absolute right-1 text-[8px] font-bold text-slate-400">T</span>
+                <span class="absolute left-1 text-[8px] font-bold text-slate-400">B</span>
+
+                <!-- Jarum kompas -->
+                <div id="compassDial" class="absolute inset-0 flex items-center justify-center transition-transform duration-100 ease-out" style="transform: rotate(0deg);">
+                  <div class="absolute w-0.5 h-8 bg-gradient-to-t from-slate-600 via-amber-400 to-rose-500 rounded-full" style="transform: translateY(-25%);"></div>
+                  <div class="absolute w-0.5 h-8 bg-slate-700 rounded-full" style="transform: translateY(25%);"></div>
+                </div>
+                <div class="w-2 h-2 bg-amber-400 rounded-full z-10 shadow-[0_0_8px_rgba(251,191,36,0.8)]"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="text-center pt-1 border-t border-slate-800/80">
+            <span id="compassHeading" class="text-sm font-black font-mono text-white">0°</span>
+            <span id="compassDirection" class="text-[10px] font-bold text-amber-400 ml-1">U</span>
+            <p id="compassStatus" class="text-[9px] text-slate-500 mt-0.5">Belum aktif</p>
+          </div>
+        </div>
+
+        <!-- 5. Card Suhu, Cuaca & Indeks UV -->
+        <div class="glass rounded-3xl p-4 shadow-2xl border border-sky-900/40 relative overflow-hidden sm:col-span-2">
+          <div class="absolute -top-10 -right-10 w-24 h-24 bg-sky-500/10 rounded-full filter blur-xl"></div>
+          <div class="flex justify-between items-center mb-3">
+            <div class="flex items-center gap-2">
+              <div class="p-2 bg-sky-500/10 rounded-xl text-sky-400 border border-sky-500/20">
+                <i id="weatherIcon" class="fa-solid fa-cloud-sun text-sm"></i>
+              </div>
+              <div>
+                <h2 class="text-xs font-bold text-sky-100">Suhu & Cuaca</h2>
+                <p id="weatherDesc" class="text-[9px] text-slate-400">Menunggu data GPS...</p>
+              </div>
+            </div>
+            <span id="tempValue" class="text-lg font-black font-mono text-white">--°C</span>
+          </div>
+
+          <div class="grid grid-cols-4 gap-2 pt-2 border-t border-slate-800/80 text-center text-[11px]">
+            <div class="bg-slate-900/50 p-2 rounded-xl border border-slate-800/50">
+              <span class="text-[9px] text-slate-400 block">Kelembapan</span>
+              <strong id="humidityValue" class="text-sky-300 font-mono">--%</strong>
+            </div>
+            <div class="bg-slate-900/50 p-2 rounded-xl border border-slate-800/50">
+              <span class="text-[9px] text-slate-400 block">Angin</span>
+              <strong id="windValue" class="text-sky-300 font-mono">-- km/h</strong>
+            </div>
+            <div class="bg-slate-900/50 p-2 rounded-xl border border-slate-800/50">
+              <span class="text-[9px] text-slate-400 block">Indeks UV</span>
+              <strong id="uvValue" class="text-amber-400 font-mono">--</strong>
+            </div>
+            <div class="bg-slate-900/50 p-2 rounded-xl border border-slate-800/50">
+              <span class="text-[9px] text-slate-400 block">Kondisi</span>
+              <strong id="conditionText" class="text-sky-300 truncate block">--</strong>
+            </div>
+          </div>
+        </div>
+
+        <!-- 6. Card Linimasa Surya & Countdown Gelap -->
+        <div class="glass rounded-3xl p-4 shadow-2xl border border-amber-900/40 relative overflow-hidden sm:col-span-2">
+          <div class="flex justify-between items-center mb-3">
+            <div class="flex items-center gap-2">
+              <div class="p-2 bg-amber-500/10 rounded-xl text-amber-400 border border-amber-500/20">
+                <i class="fa-solid fa-sun text-sm"></i>
+              </div>
+              <div>
+                <h2 class="text-xs font-bold text-amber-100">Linimasa Surya & Hitung Mundur Malam</h2>
+                <p class="text-[9px] text-slate-400">Estimasi waktu terang untuk pendaki</p>
+              </div>
+            </div>
+            <div class="text-right">
+              <span class="text-[9px] text-slate-400 block">Sisa Terang</span>
+              <span id="darkCountdown" class="text-sm font-black font-mono text-amber-400">00h 00m 00s</span>
+            </div>
+          </div>
+          <div class="grid grid-cols-3 sm:grid-cols-6 gap-2 text-center text-[10px] pt-2 border-t border-slate-800/80">
+            <div class="bg-slate-900/50 p-1.5 rounded-xl"><span class="text-slate-400 block text-[8px]">Fajar (Subuh)</span><strong id="timeDawn" class="text-slate-200">--:--</strong></div>
+            <div class="bg-slate-900/50 p-1.5 rounded-xl"><span class="text-slate-400 block text-[8px]">Terbit</span><strong id="timeSunrise" class="text-amber-300">--:--</strong></div>
+            <div class="bg-slate-900/50 p-1.5 rounded-xl"><span class="text-slate-400 block text-[8px]">Golden Hr</span><strong id="timeGolden" class="text-amber-400">--:--</strong></div>
+            <div class="bg-slate-900/50 p-1.5 rounded-xl"><span class="text-slate-400 block text-[8px]">Tengah Hari</span><strong id="timeNoon" class="text-yellow-300">--:--</strong></div>
+            <div class="bg-slate-900/50 p-1.5 rounded-xl"><span class="text-slate-400 block text-[8px]">Terbenam</span><strong id="timeSunset" class="text-orange-400">--:--</strong></div>
+            <div class="bg-slate-900/50 p-1.5 rounded-xl"><span class="text-slate-400 block text-[8px]">Senja (Isya)</span><strong id="timeDusk" class="text-rose-400">--:--</strong></div>
+          </div>
+        </div>
+
+        <!-- 7. Card Fase & Posisi Bulan dengan Widget Animasi Visual -->
+        <div class="glass rounded-3xl p-4 shadow-2xl border border-indigo-900/40 relative overflow-hidden sm:col-span-2">
+          <div class="flex justify-between items-center mb-3">
+            <div class="flex items-center gap-3">
+              <!-- Animated Visual Moon Widget -->
+				<div class="moon-sphere flex-shrink-0">
+				  <!-- Base: bulan penuh (terang) -->
+				  <div class="moon-full"></div>
+				  <!-- Shadow overlay: menutupi bagian gelap -->
+				  <div id="moonShadow" class="moon-shadow"></div>
+				  <!-- Highlight kawah halus -->
+				  <div class="moon-craters"></div>
+				</div>
+              <div>
+                <h2 class="text-xs font-bold text-indigo-100">Fase & Posisi Bulan</h2>
+                <p id="moonPhaseName" class="text-xs font-semibold text-indigo-300 mt-0.5">Menghitung...</p>
+                <p id="moonPhaseSub" class="text-[9px] text-slate-400">Visualisasi realtime berdasarkan posisi GPS</p>
+              </div>
+            </div>
+          </div>
+          <div class="grid grid-cols-3 gap-2 text-center text-[11px] pt-2 border-t border-slate-800/80">
+            <div class="bg-slate-900/50 p-2 rounded-xl border border-slate-800/50">
+              <span class="text-[9px] text-slate-400 block">Moonrise</span>
+              <strong id="moonriseTime" class="text-indigo-300 font-mono">--:--</strong>
+            </div>
+            <div class="bg-slate-900/50 p-2 rounded-xl border border-slate-800/50">
+              <span class="text-[9px] text-slate-400 block">Illuminasi</span>
+              <strong id="moonIllum" class="text-indigo-300 font-mono">--%</strong>
+            </div>
+            <div class="bg-slate-900/50 p-2 rounded-xl border border-slate-800/50">
+              <span class="text-[9px] text-slate-400 block">Moonset</span>
+              <strong id="moonsetTime" class="text-indigo-300 font-mono">--:--</strong>
+            </div>
+          </div>
+        </div>
+
+        <!-- 4. Card Riwayat Perjalanan -->
+        <div class="glass rounded-3xl p-4 shadow-2xl border border-indigo-900/40 relative overflow-hidden sm:col-span-2">
+          <div class="flex justify-between items-center mb-3">
+            <div class="flex items-center gap-2">
+              <div class="p-2 bg-indigo-500/10 rounded-xl text-indigo-400 border border-indigo-500/20">
+                <i class="fa-solid fa-clock-rotate-left text-sm"></i>
+              </div>
+              <div>
+                <h2 class="text-xs font-bold text-indigo-100">Riwayat Perjalanan</h2>
+                <p class="text-[9px] text-slate-400">Tersimpan otomatis saat GPS diperbarui</p>
+              </div>
+            </div>
+            <button onclick="clearHistory()" class="px-2 py-1 rounded-lg bg-rose-500/20 hover:bg-rose-500/30 text-[10px] font-semibold text-rose-300 transition">
+              Hapus Riwayat
+            </button>
+          </div>
+
+          <div id="historyList" class="space-y-2 max-h-36 overflow-y-auto pr-1">
+            <p class="text-[11px] text-slate-500 text-center py-3">Belum ada riwayat tersimpan.</p>
+          </div>
+        </div>
+
+        <!-- Card Barometer Sensor & Grafis 3 Jam -->
+        <div class="glass rounded-3xl p-4 shadow-2xl border border-indigo-900/40 relative overflow-hidden sm:col-span-2">
+          <div class="flex justify-between items-center mb-2">
+            <div class="flex items-center gap-2">
+              <div class="p-2 bg-indigo-500/10 rounded-xl text-indigo-400 border border-indigo-500/20">
+                <i class="fa-solid fa-chart-line text-sm"></i>
+              </div>
+              <div>
+                <h2 class="text-xs font-bold text-indigo-100">Barometer Hardware & Riwayat 3 Jam</h2>
+                <p id="baroSensorStatus" class="text-[9px] text-slate-400">Sensor hardware: Mencari...</p>
+              </div>
+            </div>
+          </div>
+          <div class="h-28 w-full mt-2">
+            <canvas id="baroChart"></canvas>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- KOLOM KANAN: Peta Interaktif -->
+    <div class="lg:col-span-5 glass rounded-3xl p-3 shadow-2xl flex flex-col h-[420px] lg:h-auto">
+      <div class="text-xs font-semibold text-slate-300 px-3 py-2 flex items-center gap-2">
+        <i class="fa-solid fa-map-location-dot text-cyan-400"></i> Peta Lokasi Pengguna
+      </div>
+      <div id="map" class="w-full flex-grow rounded-2xl bg-slate-900 overflow-hidden"></div>
+    </div>
+
+  </div>
+
+  <!-- =========================================================
+       BOTTOM NAVBAR
+       ========================================================= -->
+  <nav class="nav-bar fixed left-3 right-3 sm:left-auto sm:right-auto sm:w-full max-w-lg mx-auto z-50
+              bg-slate-900/90 backdrop-blur-xl border border-emerald-500/30 rounded-2xl
+              px-1.5 py-1.5 sm:px-3 sm:py-2
+              flex justify-between items-center gap-1
+              shadow-2xl shadow-black/80">
+
+    <button type="button" data-page="index.html" data-title="FazzQuranic Sastratika"
+            class="nav-btn" aria-label="Beranda">
+      <i class="fa-solid fa-house text-base sm:text-lg"></i>
+      <span class="nav-label">Beranda</span>
+      <span class="tooltip">Beranda</span>
+    </button>
+
+    <button type="button" data-page="index.html" data-title="FazzQuranic Sastratika"
+            class="nav-btn" aria-label="Sastratika">
+      <i class="fa-solid fa-hands-praying text-base sm:text-lg"></i>
+      <span class="nav-label">Sastra</span>
+      <span class="tooltip">Sastratika</span>
+    </button>
+
+    <button type="button" data-page="kifayah.html" data-title="Fazz Faroid Engine"
+            class="nav-btn" aria-label="Faroid">
+      <i class="fa-solid fa-calculator text-base sm:text-lg"></i>
+      <span class="nav-label">Faroid</span>
+      <span class="tooltip">Faroid</span>
+    </button>
+
+    <button type="button" data-page="iklim.html" data-title="Fazz AgroClimate AI"
+            class="nav-btn" aria-label="AgroClimate">
+      <i class="fa-solid fa-cloud-sun text-base sm:text-lg"></i>
+      <span class="nav-label">Iklim</span>
+      <span class="tooltip">AgroClimate</span>
+    </button>
+
+    <button type="button" data-page="read.html" data-title="FazzQuranic Hijaiyah Edu"
+            class="nav-btn" aria-label="Hijaiyah">
+      <i class="fa-solid fa-book-quran text-base sm:text-lg"></i>
+      <span class="nav-label">Hijaiyah</span>
+      <span class="tooltip">Hijaiyah</span>
+    </button>
+
+    <button type="button" data-page="sholat.html" data-title="FazzQuranic Sholat Edu"
+            class="nav-btn" aria-label="Sholat">
+      <i class="fa-solid fa-person-praying text-base sm:text-lg"></i>
+      <span class="nav-label">Sholat</span>
+      <span class="tooltip">Sholat</span>
+    </button>
+
+  </nav>
+
+  <script>
+    /* ============================================================
+       GLOBAL STATE
+       ============================================================ */
+    let currentAltitudeMeters = null, isFeet = false, map, marker;
+    let baroChartInstance = null;
+    let sunsetTime = null;
+    let countdownInterval = null;
+
+    // Kompas state
+    let isCompassActive = false;
+    let compassHeadingSmooth = 0;
+    let lastCompassRaw = null;
+    let compassPermissionRequested = false;
+
+    // Pedometer state
+    let steps = 0, lastAccel = 0, isTracking = false;
+    const stepLength = 0.74, calPerStep = 0.04;
+
+    /* ============================================================
+       MAP INIT
+       ============================================================ */
+    function initMap(lat = -7.204022, lon = 109.062086) {
+      if (!map) {
+        map = L.map('map', { zoomControl: false }).setView([lat, lon], 14);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
+        L.control.zoom({ position: 'topright' }).addTo(map);
+      } else {
+        map.setView([lat, lon], 16);
+      }
+
+      if (marker) {
+        marker.setLatLng([lat, lon]);
+      } else {
+        marker = L.marker([lat, lon]).addTo(map);
+      }
+
+      setTimeout(() => { map.invalidateSize(); }, 300);
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      initMap();
+      loadHistory();
+      initBarometerSensor();
+      initBaroChart();
+      calculateSolarAndLunar(-6.2088, 106.8456);
+    });
+
+    /* ============================================================
+       UNIT TOGGLE
+       ============================================================ */
+    function toggleUnit() {
+      isFeet = !isFeet;
+      document.getElementById("unitBtn").innerText = isFeet ? "Feet (ft)" : "Meter (m)";
+      document.getElementById("unitLabel").innerText = isFeet ? "ft" : "m";
+      updateDisplay();
+    }
+
+    function updateDisplay() {
+      if (currentAltitudeMeters === null) return;
+      const displayVal = isFeet ? Math.round(currentAltitudeMeters * 3.28084) : Math.round(currentAltitudeMeters);
+      document.getElementById("altitudeValue").innerText = displayVal;
+      const calcPres = Math.round(1013.25 * Math.pow((1 - (2.25577e-5 * currentAltitudeMeters)), 5.25588));
+      document.getElementById("pressureText").innerText = calcPres + " hPa";
+      let cat = currentAltitudeMeters < 10 ? "Pesisir" : currentAltitudeMeters < 200 ? "Dataran Rendah" : currentAltitudeMeters < 700 ? "Perbukitan" : "Dataran Tinggi";
+      document.getElementById("categoryBadge").innerText = cat;
+
+      addBaroPressurePoint(calcPres);
+    }
+
+    /* ============================================================
+       GEOLOCATION
+       ============================================================ */
+    function getLocation() {
+      const btn = document.getElementById("getLocBtn");
+      const statusMsg = document.getElementById("statusMsg");
+      btn.innerHTML = '<i class="fa-solid fa-spinner animate-spin"></i> Melacak...';
+      btn.disabled = true;
+      statusMsg.innerText = "Mendeteksi satelit GPS...";
+
+      navigator.geolocation.getCurrentPosition(
+        async (pos) => {
+          const lat = pos.coords.latitude, lon = pos.coords.longitude;
+          let alt = pos.coords.altitude;
+          document.getElementById("coordsText").innerText = `${lat.toFixed(3)}, ${lon.toFixed(3)}`;
+
+          if (alt === null) {
+            try {
+              const res = await fetch(`https://api.open-elevation.com/api/v1/lookup?locations=${lat},${lon}`);
+              alt = (await res.json()).results[0].elevation;
+            } catch (e) { alt = 15; }
+          }
+          currentAltitudeMeters = alt;
+          updateDisplay();
+          initMap(lat, lon);
+          marker.bindPopup(`<b>Lokasi Anda</b><br>Ketinggian: ${Math.round(alt)}m`).openPopup();
+
+          saveToHistory(lat, lon, alt, steps);
+          fetchWeather(lat, lon);
+          calculateSolarAndLunar(lat, lon);
+
+          btn.innerHTML = `<i class="fa-solid fa-crosshairs"></i> Perbarui Posisi & GPS`;
+          btn.disabled = false;
+          statusMsg.innerText = `Lokasi terdeteksi pada ${new Date().toLocaleTimeString('id-ID')}`;
+
+          // Reset kompas lalu minta ulang izin
+          lastCompassRaw = null;
+          compassHeadingSmooth = 0;
+          requestCompassPermission();
+        },
+        (err) => {
+          Swal.fire({
+            icon: 'error',
+            title: 'GPS Gagal',
+            text: 'Tidak dapat mendeteksi lokasi: ' + err.message,
+            background: '#0f172a',
+            color: '#fff'
+          });
+          btn.innerHTML = `<i class="fa-solid fa-crosshairs"></i> Coba Lagi`;
+          btn.disabled = false;
+          statusMsg.innerText = "Gagal mendeteksi lokasi";
+        },
+        { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+      );
+    }
+
+    /* ============================================================
+       BAROMETER SENSOR HARDWARE & GRAFIK 3 JAM
+       ============================================================ */
+    function initBarometerSensor() {
+      if ('PressureSensor' in window) {
+        try {
+          const sensor = new PressureSensor();
+          sensor.addEventListener('reading', () => {
+            const pressureHpa = sensor.pressure;
+            document.getElementById("pressureText").innerText = Math.round(pressureHpa) + " hPa (Sensor)";
+            document.getElementById("baroSensorStatus").innerText = "Sensor hardware: Aktif";
+            addBaroPressurePoint(pressureHpa);
+          });
+          sensor.start();
+        } catch (e) {
+          document.getElementById("baroSensorStatus").innerText = "Sensor hardware tidak tersedia (Menggunakan GPS)";
+        }
+      } else {
+        document.getElementById("baroSensorStatus").innerText = "Sensor hardware tidak didukung browser (Menggunakan GPS)";
+      }
+    }
+
+    function initBaroChart() {
+      const ctx = document.getElementById('baroChart').getContext('2d');
+      baroChartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: [],
+          datasets: [{
+            label: 'Tekanan (hPa)',
+            data: [],
+            borderColor: '#818cf8',
+            backgroundColor: 'rgba(129, 140, 248, 0.1)',
+            fill: true,
+            tension: 0.3,
+            borderWidth: 2
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { ticks: { color: '#94a3b8', font: { size: 9 } }, grid: { display: false } },
+            y: { ticks: { color: '#94a3b8', font: { size: 9 } }, grid: { color: 'rgba(255,255,255,0.05)' } }
+          }
+        }
+      });
+      loadBaroHistory();
+    }
+
+    function addBaroPressurePoint(pressure) {
+      let baroData = JSON.parse(localStorage.getItem('baro_history')) || [];
+      const now = Date.now();
+      baroData.push({ time: now, val: Math.round(pressure) });
+
+      const threeHoursAgo = now - (3 * 60 * 60 * 1000);
+      baroData = baroData.filter(item => item.time >= threeHoursAgo);
+
+      localStorage.setItem('baro_history', JSON.stringify(baroData));
+      updateBaroChart(baroData);
+    }
+
+    function loadBaroHistory() {
+      let baroData = JSON.parse(localStorage.getItem('baro_history')) || [];
+      const threeHoursAgo = Date.now() - (3 * 60 * 60 * 1000);
+      baroData = baroData.filter(item => item.time >= threeHoursAgo);
+      updateBaroChart(baroData);
+    }
+
+    function updateBaroChart(data) {
+      if (!baroChartInstance) return;
+      baroChartInstance.data.labels = data.map(d => new Date(d.time).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }));
+      baroChartInstance.data.datasets[0].data = data.map(d => d.val);
+      baroChartInstance.update();
+    }
+
+    /* ============================================================
+       LINIMASA SURYA & ANIMASI VISUAL BULAN
+       ————————————————
+       FIX: Waktu Fajar (Subuh) pakai sudut -20° (standar Kemenag),
+            Senja (Isya) pakai sudut -18°.
+            SunCalc.getTimes() default memakai -6° (civil dawn) yg terlalu siang.
+       ============================================================ */
+
+    /**
+     * Cari waktu saat ketinggian matahari melewati sudut tertentu.
+     * @param {Date} date  - tanggal acuan
+     * @param {number} lat - lintang
+     * @param {number} lon - bujur
+     * @param {number} angleDeg - sudut elevasi matahari (negatif = di bawah horizon)
+     * @param {'dawn'|'dusk'} direction - 'dawn' cari di pagi, 'dusk' cari di sore
+     * @returns {Date|null}
+     */
+    function getTimeAtSolarAngle(date, lat, lon, angleDeg, direction = 'dawn') {
+      const startHour = direction === 'dawn' ? 0 : 12;
+      const endHour   = direction === 'dawn' ? 12 : 24;
+      let lo = new Date(date); lo.setHours(startHour, 0, 0, 0);
+      let hi = new Date(date); hi.setHours(endHour, 0, 0, 0);
+
+      // Cek apakah sudut target memang tercapai di rentang tsb
+      const altLo = SunCalc.getPosition(lo, lat, lon).altitude * 180 / Math.PI;
+      const altHi = SunCalc.getPosition(hi, lat, lon).altitude * 180 / Math.PI;
+
+      if (direction === 'dawn') {
+        // butuh alt naik dari bawah angleDeg ke atas angleDeg
+        if (!(altLo <= angleDeg && altHi >= angleDeg)) return null;
+      } else {
+        // butuh alt turun dari atas angleDeg ke bawah angleDeg
+        if (!(altLo >= angleDeg && altHi <= angleDeg)) return null;
+      }
+
+      for (let i = 0; i < 40; i++) {
+        const mid = new Date((lo.getTime() + hi.getTime()) / 2);
+        const altDeg = SunCalc.getPosition(mid, lat, lon).altitude * 180 / Math.PI;
+        if (direction === 'dawn') {
+          if (altDeg < angleDeg) lo = mid; else hi = mid;
+        } else {
+          if (altDeg > angleDeg) lo = mid; else hi = mid;
+        }
+      }
+      return new Date((lo.getTime() + hi.getTime()) / 2);
+    }
+
+    function calculateSolarAndLunar(lat, lon) {
+      const now = new Date();
+      const times = SunCalc.getTimes(now, lat, lon);
+
+      // 🔧 FIX: Fajar pakai -20°, Senja pakai -18° (standar Indonesia)
+      const dawnCustom = getTimeAtSolarAngle(now, lat, lon, -20, 'dawn');
+      const duskCustom = getTimeAtSolarAngle(now, lat, lon, -18, 'dusk');
+
+      const fmt = (d) => (d && !isNaN(d.getTime?.() ?? d)) ? new Date(d).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) : '--:--';
+
+      document.getElementById("timeDawn").innerText    = fmt(dawnCustom) || fmt(times.dawn);
+      document.getElementById("timeSunrise").innerText = fmt(times.sunrise);
+      document.getElementById("timeGolden").innerText  = fmt(times.goldenHour);
+      document.getElementById("timeNoon").innerText    = fmt(times.solarNoon);
+      document.getElementById("timeSunset").innerText  = fmt(times.sunset);
+      document.getElementById("timeDusk").innerText    = fmt(duskCustom) || fmt(times.dusk);
+
+      sunsetTime = times.sunset;
+      startDarkCountdown();
+
+      // ===== BULAN =====
+      const moonIllum = SunCalc.getMoonIllumination(now);
+      const moonTimes = SunCalc.getMoonTimes(now, lat, lon);
+
+      document.getElementById("moonIllum").innerText = Math.round(moonIllum.fraction * 100) + "%";
+      document.getElementById("moonriseTime").innerText = fmt(moonTimes.rise);
+      document.getElementById("moonsetTime").innerText  = fmt(moonTimes.set);
+
+      let phaseName = "Bulan Baru";
+      const phase = moonIllum.phase;
+      if (phase > 0.03 && phase < 0.22) phaseName = "Bulan Sabit Awal";
+      else if (phase >= 0.22 && phase <= 0.28) phaseName = "Kuartal Pertama";
+      else if (phase > 0.28 && phase < 0.47) phaseName = "Cembung Awal";
+      else if (phase >= 0.47 && phase <= 0.53) phaseName = "Bulan Purnama";
+      else if (phase > 0.53 && phase < 0.72) phaseName = "Cembung Akhir";
+      else if (phase >= 0.72 && phase <= 0.78) phaseName = "Kuartal Ketiga";
+      else if (phase > 0.78 && phase < 0.97) phaseName = "Bulan Sabit Akhir";
+
+      document.getElementById("moonPhaseName").innerText = phaseName;
+      renderMoonVisual(phase);
+    }
+
+	function renderMoonVisual(phase) {
+	  const shadow = document.getElementById("moonShadow");
+	  if (!shadow) return;
+
+	  // Konversi phase → illumination fraction (0 = gelap total, 1 = terang penuh)
+	  const illum = phase <= 0.5 ? (phase * 2) : ((1 - phase) * 2);
+	  const isWaxing = phase <= 0.5;
+
+	  // Lebar horizontal terminator (0..1 dari radius)
+	  const cosAngle = 1 - 2 * illum;
+	  const terminatorWidth = Math.abs(cosAngle);   // 0 = full, 1 = new
+
+	  let clipPath = "";
+
+	  if (illum < 0.01) {
+		// Bulan baru — shadow menutupi seluruh bola
+		clipPath = "circle(50% at 50% 50%)";
+	  } else if (illum > 0.99) {
+		// Purnama — tidak ada shadow
+		clipPath = "circle(0% at 50% 50%)";
+	  } else if (isWaxing) {
+		// ===== WAXING: terang di KIRI, shadow di KANAN =====
+		if (illum < 0.5) {
+		  // Sabit awal (illum 0→0.5): shadow ellipse lebar, geser ke kanan
+		  // rx = 50% (sphere penuh) → 100% (menutupi semua)
+		  const rx = 50 + (illum * 2 * 50);   // 50% → 100%
+		  clipPath = `ellipse(${rx}% 50% at 100% 50%)`;
+		} else {
+		  // Cembung awal (illum 0.5→1): shadow ellipse sempit di kanan
+		  // rx = 50% (setengah) → 0% (hilang)
+		  const rx = (1 - illum) * 2 * 50;    // 50% → 0%
+		  clipPath = `ellipse(${rx}% 50% at 100% 50%)`;
+		}
+	  } else {
+		// ===== WANING: terang di KANAN, shadow di KIRI =====
+		if (illum < 0.5) {
+		  // Sabit akhir (illum 0.5→0): shadow ellipse lebar, geser ke kiri
+		  const rx = 50 + (illum * 2 * 50);   // 50% → 100%
+		  clipPath = `ellipse(${rx}% 50% at 0% 50%)`;
+		} else {
+		  // Cembung akhir (illum 1→0.5): shadow ellipse sempit di kiri
+		  const rx = (1 - illum) * 2 * 50;    // 50% → 0%
+		  clipPath = `ellipse(${rx}% 50% at 0% 50%)`;
+		}
+	  }
+
+	  shadow.style.clipPath = clipPath;
+	  shadow.style.webkitClipPath = clipPath;
+	}
+
+    function startDarkCountdown() {
+	  if (countdownInterval) { clearInterval(countdownInterval); countdownInterval = null; }
+	  const el = document.getElementById("darkCountdown");
+
+	  const pad2 = (n) => String(n).padStart(2, '0');
+
+	  const tick = () => {
+		if (!sunsetTime) return;
+		const now = new Date();
+		const diff = sunsetTime - now;
+
+		if (diff <= 0) {
+		  el.innerText = "Malam Tiba";
+		  el.className = "text-sm font-black font-mono text-rose-500";
+		  clearInterval(countdownInterval);
+		  countdownInterval = null;
+		  return;
+		}
+		const hrs  = Math.floor(diff / 3600000);
+		const mins = Math.floor((diff % 3600000) / 60000);
+		const secs = Math.floor((diff % 60000) / 1000);
+
+		// ✅ Format selalu 2 digit → lebar stabil
+		el.innerText = `${pad2(hrs)}:${pad2(mins)}:${pad2(secs)}`;
+		el.className = "text-sm font-black font-mono text-amber-400";
+	  };
+
+	  tick();
+	  countdownInterval = setInterval(tick, 1000);
+	}
+
+    /* ============================================================
+       PEDOMETER
+       ============================================================ */
+    function requestMotionPermission() {
+      const btn = document.getElementById("startPedometerBtn");
+      if (typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function') {
+        DeviceMotionEvent.requestPermission().then(state => {
+          if (state === 'granted') startTracking(btn);
+          else Swal.fire({ icon: 'warning', title: 'Izin Ditolak', text: 'Izin sensor gerak ditolak.', background: '#0f172a', color: '#fff' });
+        }).catch(console.error);
+      } else {
+        startTracking(btn);
+      }
+    }
+
+    function startTracking(btn) {
+      if (isTracking) return;
+      window.addEventListener('devicemotion', handleMotion);
+      isTracking = true;
+      btn.innerText = "Aktif";
+      btn.classList.replace("bg-emerald-600", "bg-emerald-900");
+      btn.classList.add("text-emerald-300", "border", "border-emerald-500");
+    }
+
+    function handleMotion(event) {
+      let accY = event.acceleration?.y || 0;
+      let accZ = event.acceleration?.z || 0;
+      let magnitude = Math.sqrt(accY * accY + accZ * accZ);
+
+      if (magnitude > 2.5 && magnitude > lastAccel * 1.5) {
+        steps++;
+        updatePedometerUI();
+        lastAccel = magnitude;
+        setTimeout(() => { lastAccel = 0; }, 300);
+      } else {
+        lastAccel = magnitude * 0.9;
+      }
+    }
+
+    function updatePedometerUI() {
+      document.getElementById("stepCount").innerText = steps;
+      document.getElementById("distanceEst").innerText = (steps * stepLength).toFixed(1);
+      document.getElementById("calorieEst").innerText = (steps * calPerStep).toFixed(1);
+
+      const iconBox = document.getElementById("stepIconBox");
+      iconBox.classList.remove("animate-step");
+      void iconBox.offsetWidth;
+      iconBox.classList.add("animate-step");
+    }
+
+    /* ============================================================
+	   COMPASS — VERSI ROBUST
+	   ————————————————
+	   Perbaikan:
+	   1. Pasang KEDUA listener (absolute + relative) → siapa yang fire duluan dipakai
+	   2. Deteksi apakah event benar-benar membawa heading valid
+	   3. Re-attach listener saat permission granted dari GPS callback
+	   4. Debug info ditampilkan untuk troubleshooting
+	   5. Handle iOS gesture requirement (tombol harus diklik user)
+	   ============================================================ */
+	
+	let compassListenerAttached = false;
+	let compassLastUpdate = 0;
+	let compassDebugMode = false;
+
+	function requestCompassPermission() {
+	  const btn = document.getElementById("startCompassBtn");
+	  const statusEl = document.getElementById("compassStatus");
+
+	  // Cek apakah browser support
+	  if (typeof DeviceOrientationEvent === 'undefined') {
+		statusEl.innerText = "❌ Browser tidak mendukung sensor orientasi";
+		statusEl.className = "text-[9px] text-rose-400 mt-0.5";
+		return;
+	  }
+
+	  // iOS 13+ butuh requestPermission via user gesture
+	  if (typeof DeviceOrientationEvent.requestPermission === 'function') {
+		DeviceOrientationEvent.requestPermission()
+		  .then(response => {
+			if (response === 'granted') {
+			  attachCompassListeners(btn, statusEl);
+			} else {
+			  statusEl.innerText = "❌ Izin kompas ditolak";
+			  statusEl.className = "text-[9px] text-rose-400 mt-0.5";
+			}
+		  })
+		  .catch(err => {
+			console.error("Compass permission error:", err);
+			statusEl.innerText = "❌ Error: " + err.message;
+			statusEl.className = "text-[9px] text-rose-400 mt-0.5";
+		  });
+	  } else {
+		// Android / desktop
+		attachCompassListeners(btn, statusEl);
+	  }
+	}
+
+	function attachCompassListeners(btn, statusEl) {
+	  // Jangan pasang ganda
+	  if (compassListenerAttached) {
+		// Tapi tetap update UI
+		btn.innerText = "Aktif";
+		btn.classList.remove("bg-amber-600");
+		btn.classList.add("bg-amber-950", "text-amber-300", "border", "border-amber-500");
+		return;
+	  }
+
+	  // ✅ PASANG KEDUA LISTENER — supaya apapun device-nya, ada yang fire
+	  window.addEventListener('deviceorientationabsolute', handleOrientation, true);
+	  window.addEventListener('deviceorientation', handleOrientation, true);
+
+	  compassListenerAttached = true;
+	  isCompassActive = true;
+
+	  btn.innerText = "Aktif";
+	  btn.classList.remove("bg-amber-600", "hover:bg-amber-500");
+	  btn.classList.add("bg-amber-950", "text-amber-300", "border", "border-amber-500");
+
+	  statusEl.innerText = "🔄 Menunggu sensor... (gerakkan HP angka 8)";
+	  statusEl.className = "text-[9px] text-amber-300 mt-0.5 animate-pulse";
+
+	  // Timeout: kalau 3 detik tidak ada update, kasih hint
+	  setTimeout(() => {
+		if (Date.now() - compassLastUpdate > 3000) {
+		  statusEl.innerText = "⚠️ Sensor tidak merespon — coba kalibrasi angka 8";
+		  statusEl.className = "text-[9px] text-rose-300 mt-0.5";
+		}
+	  }, 3500);
+	}
+
+	function getScreenAngle() {
+	  if (screen.orientation && typeof screen.orientation.angle === 'number') {
+		return screen.orientation.angle;
+	  }
+	  return window.orientation || 0;
+	}
+
+	let compassRawCount = 0; // debug counter
+	let compassHasAbsolute = false;
+
+	function handleOrientation(event) {
+	  // Tandai apakah event ini dari absolute (lebih akurat)
+	  if (event.type === 'deviceorientationabsolute') compassHasAbsolute = true;
+
+	  let heading = null;
+
+	  // --- iOS Safari ---
+	  // webkitCompassHeading: 0=Utara, searah jarum jam, sudah benar
+	  if (typeof event.webkitCompassHeading === 'number' && event.webkitCompassHeading >= 0) {
+		heading = event.webkitCompassHeading;
+	  }
+	  // --- Android / Chrome ---
+	  // alpha: 0..360, berlawanan jarum jam dari Utara
+	  else if (event.alpha !== null && event.alpha !== undefined && !isNaN(event.alpha)) {
+		const screenAngle = getScreenAngle();
+		heading = (360 - event.alpha + screenAngle) % 360;
+	  }
+	  // --- Fallback: beberapa device kirim compassHeading ---
+	  else if (typeof event.compassHeading === 'number') {
+		heading = event.compassHeading;
+	  }
+
+	  // Tidak ada heading valid → abaikan
+	  if (heading === null || isNaN(heading)) {
+		// Kalau event.alpha = null total, berarti device tidak support
+		if (event.alpha === null && compassRawCount === 0) {
+		  compassRawCount++;
+		  // Cek: apakah event pernah diterima sama sekali?
+		  document.getElementById("compassStatus").innerText =
+			"⚠️ Sensor tidak mengirim data — coba browser lain";
+		  document.getElementById("compassStatus").className =
+			"text-[9px] text-rose-400 mt-0.5";
+		}
+		return;
+	  }
+
+	  compassLastUpdate = Date.now();
+	  compassRawCount++;
+
+	  // === SMOOTHING dengan wrap-around 359→0 ===
+	  if (lastCompassRaw === null) {
+		compassHeadingSmooth = heading;
+	  } else {
+		let delta = heading - lastCompassRaw;
+		if (delta > 180) delta -= 360;
+		if (delta < -180) delta += 360;
+		// Adaptive smoothing: lebih cepat saat gerakan besar
+		const alpha = Math.min(0.35, Math.max(0.08, Math.abs(delta) / 90));
+		compassHeadingSmooth = (compassHeadingSmooth + delta * alpha + 360) % 360;
+	  }
+	  lastCompassRaw = heading;
+
+	  const roundedHeading = Math.round(compassHeadingSmooth);
+	  const dial = document.getElementById("compassDial");
+	  if (dial) dial.style.transform = `rotate(${-roundedHeading}deg)`;
+
+	  document.getElementById("compassHeading").innerText = `${roundedHeading}°`;
+	  document.getElementById("compassDirection").innerText = getWindDirection(roundedHeading);
+
+	  // Update status — hilangkan pesan warning
+	  const statusEl = document.getElementById("compassStatus");
+	  statusEl.innerText = compassHasAbsolute
+		? "✅ Aktif (absolute)"
+		: "✅ Aktif (relative)";
+	  statusEl.className = "text-[9px] text-emerald-400 mt-0.5";
+	}
+
+	function getWindDirection(deg) {
+	  const dirs = ["U","UT","T","ST","S","SB","B","UB"];
+	  const idx = Math.round(((deg % 360) / 45)) % 8;
+	  return dirs[idx];
+	}  
+
+
+    /* ============================================================
+       LOCALSTORAGE HISTORY
+       ============================================================ */
+    function saveToHistory(lat, lon, alt, stepCount) {
+      let historyData = JSON.parse(localStorage.getItem('geo_history')) || [];
+
+      const newEntry = {
+        date: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+        lat: lat.toFixed(3),
+        lon: lon.toFixed(3),
+        altitude: Math.round(alt),
+        steps: stepCount
+      };
+
+      historyData.unshift(newEntry);
+      if (historyData.length > 10) historyData.pop();
+
+      localStorage.setItem('geo_history', JSON.stringify(historyData));
+      loadHistory();
+    }
+
+    function loadHistory() {
+      const historyList = document.getElementById('historyList');
+      let historyData = JSON.parse(localStorage.getItem('geo_history')) || [];
+
+      if (historyData.length === 0) {
+        historyList.innerHTML = `<p class="text-[11px] text-slate-500 text-center py-3">Belum ada riwayat tersimpan.</p>`;
+        return;
+      }
+
+      let html = '';
+      historyData.forEach(item => {
+        html += `
+          <div class="p-2.5 rounded-xl bg-slate-900/60 border border-slate-800/80 flex justify-between items-center text-[11px]">
+            <div>
+              <span class="text-cyan-400 font-mono font-bold">${item.altitude} m</span>
+              <span class="text-slate-400 ml-1.5">(${item.lat}, ${item.lon})</span>
+              <p class="text-[9px] text-slate-500 mt-0.5">Langkah: ${item.steps} langkah</p>
+            </div>
+            <span class="text-[10px] font-mono text-slate-400 bg-slate-800 px-2 py-0.5 rounded-md">${item.date}</span>
+          </div>
+        `;
+      });
+
+      historyList.innerHTML = html;
+    }
+
+    function clearHistory() {
+      Swal.fire({
+        title: 'Hapus Riwayat?',
+        text: 'Seluruh riwayat perjalanan akan dihapus.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Ya, Hapus',
+        cancelButtonText: 'Batal',
+        background: '#0f172a',
+        color: '#fff',
+        confirmButtonColor: '#e11d48'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          localStorage.removeItem('geo_history');
+          loadHistory();
+        }
+      });
+    }
+
+    /* ============================================================
+       CUACA — Open-Meteo
+       ============================================================ */
+    async function fetchWeather(lat, lon) {
+      try {
+        const response = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m,uv_index`);
+        const data = await response.json();
+
+        if (data && data.current) {
+          const temp = data.current.temperature_2m;
+          const humidity = data.current.relative_humidity_2m;
+          const windSpeed = data.current.wind_speed_10m;
+          const weatherCode = data.current.weather_code;
+          const uvIndex = data.current.uv_index;
+
+          document.getElementById("tempValue").innerText = `${temp}°C`;
+          document.getElementById("humidityValue").innerText = `${humidity}%`;
+          document.getElementById("windValue").innerText = `${windSpeed} km/h`;
+          document.getElementById("uvValue").innerText = uvIndex !== undefined ? uvIndex.toFixed(1) : "--";
+
+          let weatherInfo = getWeatherDescription(weatherCode);
+          document.getElementById("weatherDesc").innerText = weatherInfo.text;
+          document.getElementById("conditionText").innerText = weatherInfo.text;
+
+          const iconEl = document.getElementById("weatherIcon");
+          iconEl.className = `fa-solid ${weatherInfo.icon} text-sm`;
+        }
+      } catch (error) {
+        console.error("Gagal memuat data cuaca:", error);
+        document.getElementById("weatherDesc").innerText = "Gagal memuat cuaca";
+      }
+    }
+
+    function getWeatherDescription(code) {
+      switch (code) {
+        case 0: return { text: "Cerah", icon: "fa-sun text-amber-400" };
+        case 1: case 2: case 3: return { text: "Berawan", icon: "fa-cloud-sun text-slate-300" };
+        case 45: case 48: return { text: "Berkabut", icon: "fa-smog text-slate-400" };
+        case 51: case 53: case 55: case 56: case 57: return { text: "Gerimis", icon: "fa-cloud-rain text-cyan-400" };
+        case 61: case 63: case 65: case 66: case 67: return { text: "Hujan", icon: "fa-cloud-showers-heavy text-blue-400" };
+        case 71: case 73: case 75: case 77: return { text: "Salju", icon: "fa-snowflake text-indigo-200" };
+        case 95: case 96: case 99: return { text: "Badai Petir", icon: "fa-cloud-bolt text-amber-500" };
+        default: return { text: "Normal", icon: "fa-cloud text-sky-400" };
+      }
+    }
+
+    /* ============================================================
+       NAVIGASI HALAMAN
+       ============================================================ */
+    let isNavigating = false;
+    function switchPage(pageKey, halaman) {
+      if (isNavigating) return;
+      isNavigating = true;
+
+      Swal.fire({
+        title: 'Memuat Halaman',
+        html: `Menuju halaman <b>${halaman}</b>...`,
+        timer: 1200,
+        timerProgressBar: true,
+        showConfirmButton: false,
+        allowOutsideClick: false,
+        background: '#0f172a',
+        color: '#fff',
+        didOpen: () => { Swal.showLoading(); }
+      }).then(() => {
+        window.location.href = pageKey;
+      });
+    }
+
+    document.addEventListener('click', (e) => {
+      const btn = e.target.closest('.nav-btn');
+      if (!btn) return;
+      const page = btn.dataset.page;
+      const title = btn.dataset.title || page;
+      if (!page) return;
+
+      document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+
+      switchPage(page, title);
+    });
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const rawPath = window.location.pathname.split('/').pop() || '';
+      const current = rawPath.replace(/\.(html|txt)$/i, '').toLowerCase();
+
+      let activePage = 'altimeter.html';
+
+      if (current === 'index' || current === '') activePage = 'index.html';
+      else if (current === 'kifayah')            activePage = 'kifayah.html';
+      else if (current === 'iklim')              activePage = 'iklim.html';
+      else if (current === 'read')               activePage = 'read.html';
+      else if (current === 'sholat')             activePage = 'sholat.html';
+      else if (current === 'altimeter')          activePage = 'altimeter.html';
+
+      document.querySelectorAll('.nav-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.page === activePage);
+      });
+    });
+  </script>
+</body>
+</html>
