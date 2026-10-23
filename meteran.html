@@ -8,19 +8,15 @@
   * { margin: 0; padding: 0; box-sizing: border-box; }
   html, body { width: 100%; height: 100%; overflow: hidden; background: #000; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
 
-  #ui {
-    position: fixed; inset: 0; pointer-events: none; z-index: 10;
-  }
+  #ui { position: fixed; inset: 0; pointer-events: none; z-index: 10; }
 
   #overlay {
     position: fixed; inset: 0; display: flex; flex-direction: column;
     align-items: center; justify-content: center; z-index: 20;
     background: radial-gradient(circle at center, #1a1a2e 0%, #000 100%);
-    color: #fff; padding: 24px; text-align: center;
-    transition: opacity 0.4s;
+    color: #fff; padding: 24px; text-align: center; transition: opacity 0.4s;
   }
   #overlay.hidden { opacity: 0; pointer-events: none; }
-
   #overlay h1 {
     font-size: 28px; margin-bottom: 8px;
     background: linear-gradient(90deg, #00d4ff, #7b2ff7);
@@ -40,21 +36,21 @@
   #startBtn:active { transform: scale(0.95); }
   #startBtn:disabled { opacity: 0.5; cursor: not-allowed; }
 
-  /* Crosshair */
   #reticle {
     position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%);
     width: 20px; height: 20px; z-index: 11; display: none;
-    border: 2px solid rgba(255,255,255,0.8);
-    border-radius: 50%;
+    border: 2px solid rgba(255,255,255,0.8); border-radius: 50%;
     box-shadow: 0 0 8px rgba(0,212,255,0.8);
+    transition: border-color 0.3s, box-shadow 0.3s;
   }
   #reticle::after {
     content: ''; position: absolute; top: 50%; left: 50%;
     width: 4px; height: 4px; background: #00d4ff; border-radius: 50%;
-    transform: translate(-50%,-50%);
+    transform: translate(-50%,-50%); transition: background 0.3s;
   }
+  #reticle.active { border-color: #ffd400; box-shadow: 0 0 12px rgba(255,212,0,0.9); }
+  #reticle.active::after { background: #ffd400; }
 
-  /* Info panel */
   #info {
     position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
     background: rgba(0,0,0,0.65); backdrop-filter: blur(10px);
@@ -64,7 +60,15 @@
   }
   #info b { color: #00d4ff; font-size: 18px; }
 
-  /* Buttons bottom */
+  #liveInfo {
+    position: fixed; top: 70px; left: 50%; transform: translateX(-50%);
+    background: rgba(255,212,0,0.15); backdrop-filter: blur(10px);
+    color: #ffd400; padding: 8px 18px; border-radius: 30px;
+    font-size: 13px; z-index: 12; display: none; white-space: nowrap;
+    border: 1px solid rgba(255,212,0,0.5); font-weight: 600;
+  }
+  #liveInfo b { color: #fff; font-size: 16px; }
+
   #controls {
     position: fixed; bottom: 24px; left: 0; right: 0;
     display: none; justify-content: center; gap: 12px;
@@ -75,26 +79,21 @@
     padding: 14px 22px; font-size: 14px; font-weight: 600;
     border: none; border-radius: 50px; color: #fff;
     background: rgba(255,255,255,0.15); backdrop-filter: blur(10px);
-    border: 1px solid rgba(255,255,255,0.25);
-    transition: background 0.2s;
+    border: 1px solid rgba(255,255,255,0.25); transition: background 0.2s;
   }
   #controls button:active { background: rgba(255,255,255,0.3); }
-  #controls button.primary {
-    background: linear-gradient(135deg, #00d4ff, #7b2ff7);
-    border: none;
-  }
 
   #status {
     position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%);
-    color: rgba(255,255,255,0.7); font-size: 12px; z-index: 12; display: none;
+    color: rgba(255,255,255,0.7); font-size: 12px; z-index: 12;
+    display: none; text-align: center; padding: 0 20px;
   }
 
   #toast {
     position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%) scale(0.9);
     background: rgba(0,0,0,0.85); color: #fff; padding: 14px 24px;
     border-radius: 12px; font-size: 14px; z-index: 30; opacity: 0;
-    transition: all 0.3s; pointer-events: none; text-align: center;
-    max-width: 280px;
+    transition: all 0.3s; pointer-events: none; text-align: center; max-width: 280px;
   }
   #toast.show { opacity: 1; transform: translate(-50%,-50%) scale(1); }
 </style>
@@ -110,6 +109,7 @@
 
 <div id="reticle"></div>
 <div id="info"></div>
+<div id="liveInfo"></div>
 <div id="status"></div>
 
 <div id="controls">
@@ -131,13 +131,14 @@
 import * as THREE from 'three';
 
 // ============ DOM ============
-const overlay = document.getElementById('overlay');
-const startBtn = document.getElementById('startBtn');
-const reticleEl = document.getElementById('reticle');
-const infoEl = document.getElementById('info');
-const statusEl = document.getElementById('status');
+const overlay    = document.getElementById('overlay');
+const startBtn   = document.getElementById('startBtn');
+const reticleEl  = document.getElementById('reticle');
+const infoEl     = document.getElementById('info');
+const liveInfoEl = document.getElementById('liveInfo');
+const statusEl   = document.getElementById('status');
 const controlsEl = document.getElementById('controls');
-const toastEl = document.getElementById('toast');
+const toastEl    = document.getElementById('toast');
 
 function toast(msg, ms = 2200) {
   toastEl.textContent = msg;
@@ -148,15 +149,9 @@ function toast(msg, ms = 2200) {
 
 // ============ WebXR support check ============
 startBtn.addEventListener('click', async () => {
-  if (!navigator.xr) {
-    toast('WebXR tidak didukung di browser ini. Gunakan Chrome Android.');
-    return;
-  }
+  if (!navigator.xr) { toast('WebXR tidak didukung di browser ini. Gunakan Chrome Android.'); return; }
   const supported = await navigator.xr.isSessionSupported('immersive-ar');
-  if (!supported) {
-    toast('AR tidak didukung di perangkat ini.');
-    return;
-  }
+  if (!supported) { toast('AR tidak didukung di perangkat ini.'); return; }
   startBtn.disabled = true;
   startBtn.textContent = 'Memuat...';
   await initAR();
@@ -169,33 +164,34 @@ let hitTestSourceRequested = false;
 let referenceSpace = null;
 let viewerSpace = null;
 
-let reticle;            // 3D reticle marker
-let placedPoints = [];  // array of {position, mesh}
-let lineMeshes = [];    // line objects between points
-let labels = [];        // sprite labels
-let lastHitPose = null; // pose of current hit test
+let reticle;
+let placedPoints = [];
+let lineMeshes = [];
+let labels = [];
+let lastHitPose = null;
+let currentHitPos = new THREE.Vector3(); // posisi reticle saat ini (world)
+let hasCurrentHit = false;
 
-const tmpMatrix = new THREE.Matrix4();
-const tmpVec = new THREE.Vector3();
+// Garis preview (dashed) + label live
+let previewLine = null;   // Mesh dashed
+let previewLabel = null;  // Sprite
+let previewActive = false;
 
 // ============ Init ============
 async function initAR() {
-  // Renderer
   renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
   renderer.setPixelRatio(window.devicePixelRatio);
   renderer.setSize(window.innerWidth, window.innerHeight);
   renderer.xr.enabled = true;
   document.body.appendChild(renderer.domElement);
 
-  // Scene & Camera
   scene = new THREE.Scene();
   camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.01, 20);
 
-  // Light
   const light = new THREE.HemisphereLight(0xffffff, 0xbbbbff, 1.5);
   scene.add(light);
 
-  // Reticle - ring
+  // Reticle
   const ringGeo = new THREE.RingGeometry(0.06, 0.08, 32).rotateX(-Math.PI / 2);
   const ringMat = new THREE.MeshBasicMaterial({ color: 0x00d4ff });
   reticle = new THREE.Mesh(ringGeo, ringMat);
@@ -203,32 +199,27 @@ async function initAR() {
   reticle.visible = false;
   scene.add(reticle);
 
-  // Request AR session
   try {
     const session = await navigator.xr.requestSession('immersive-ar', {
       requiredFeatures: ['hit-test'],
-      optionalFeatures: ['dom-overlay', 'local-floor', 'anchors'],
+      optionalFeatures: ['dom-overlay', 'local-floor'],
       domOverlay: { root: document.getElementById('ui') || document.body }
     });
 
     await renderer.xr.setSession(session);
     session.addEventListener('end', onSessionEnd);
 
-    // Setup reference spaces
     referenceSpace = await session.requestReferenceSpace('local');
-    viewerSpace = await session.requestReferenceSpace('viewer');
+    viewerSpace    = await session.requestReferenceSpace('viewer');
 
-    // Start render loop
     renderer.setAnimationLoop(render);
 
-    // UI
     overlay.classList.add('hidden');
     reticleEl.style.display = 'block';
     controlsEl.style.display = 'flex';
     statusEl.style.display = 'block';
-    statusEl.textContent = 'Arahkan crosshair ke permukaan lalu ketuk untuk menandai titik';
+    statusEl.textContent = 'Arahkan crosshair ke permukaan, lalu ketuk untuk menandai titik.';
 
-    // Tap handler on canvas
     renderer.domElement.addEventListener('pointerdown', onTap);
 
   } catch (err) {
@@ -242,7 +233,6 @@ async function initAR() {
 // ============ Render loop ============
 function render(timestamp, frame) {
   if (frame) {
-    // Hit test
     if (!hitTestSourceRequested) {
       frame.session.requestHitTestSource({ space: viewerSpace }).then(source => {
         hitTestSource = source;
@@ -251,26 +241,131 @@ function render(timestamp, frame) {
     }
 
     if (hitTestSource) {
-      const hitTestResults = frame.getHitTestResults(hitTestSource);
-      if (hitTestResults.length > 0) {
-        const hit = hitTestResults[0];
-        const pose = hit.getPose(referenceSpace);
+      const results = frame.getHitTestResults(hitTestSource);
+      if (results.length > 0) {
+        const pose = results[0].getPose(referenceSpace);
         if (pose) {
           lastHitPose = pose;
           reticle.visible = true;
           reticle.matrix.fromArray(pose.transform.matrix);
+
+          // Simpan posisi hit dalam world-space (untuk preview line)
+          currentHitPos.setFromMatrixPosition(reticle.matrix);
+          hasCurrentHit = true;
+
+          // Update garis preview jika sudah ada minimal 1 titik
+          updatePreviewLine();
         }
       } else {
         reticle.visible = false;
         lastHitPose = null;
+        hasCurrentHit = false;
+        // Jangan hapus preview line, biarkan di posisi terakhir (biar user lihat)
+        // Tapi bisa juga hide. Kita biarkan visible supaya konsisten.
       }
     }
   }
 
-  // Update label sprites to face camera
+  // Label selalu menghadap kamera
   labels.forEach(lbl => lbl.quaternion.copy(camera.quaternion));
+  if (previewLabel) previewLabel.quaternion.copy(camera.quaternion);
 
   renderer.render(scene, camera);
+}
+
+// ============ Preview Line (dashed) dari titik terakhir ke reticle ============
+function updatePreviewLine() {
+  // Butuh minimal 1 titik terpasang + hit aktif
+  if (placedPoints.length === 0 || !hasCurrentHit) {
+    removePreview();
+    return;
+  }
+
+  const lastPoint = placedPoints[placedPoints.length - 1].position;
+  const dist = lastPoint.distanceTo(currentHitPos);
+
+  // Terlalu dekat, jangan tampilkan
+  if (dist < 0.005) {
+    removePreview();
+    return;
+  }
+
+  // ====== Garis dashed ======
+  if (!previewLine) {
+    // Buat cylinder dashed: pakai LineDashedMaterial dengan BufferGeometry
+    const geom = new THREE.BufferGeometry().setFromPoints([lastPoint.clone(), currentHitPos.clone()]);
+    const mat = new THREE.LineDashedMaterial({
+      color: 0xffd400,
+      dashSize: 0.015,
+      gapSize: 0.01,
+      linewidth: 2,
+      depthTest: false,
+      transparent: true,
+      opacity: 0.95
+    });
+    previewLine = new THREE.Line(geom, mat);
+    previewLine.computeLineDistances();
+    previewLine.renderOrder = 999;
+    scene.add(previewLine);
+  } else {
+    // Update posisi geometry
+    previewLine.geometry.setFromPoints([lastPoint.clone(), currentHitPos.clone()]);
+    previewLine.computeLineDistances();
+  }
+
+  // ====== Label jarak live ======
+  if (!previewLabel) {
+    previewLabel = makeLabelSprite('0 cm', 0.055, '#ffd400', '#ffd400');
+    previewLabel.renderOrder = 1000;
+    scene.add(previewLabel);
+  }
+  updateLabelSprite(previewLabel, formatDistance(dist));
+
+  // Posisi label di tengah garis, sedikit di atas
+  const mid = new THREE.Vector3().addVectors(lastPoint, currentHitPos).multiplyScalar(0.5);
+  mid.y += 0.025;
+  previewLabel.position.copy(mid);
+
+  previewActive = true;
+
+  // Update live info panel
+  const dx = Math.abs(currentHitPos.x - lastPoint.x);
+  const dy = Math.abs(currentHitPos.y - lastPoint.y);
+  const dz = Math.abs(currentHitPos.z - lastPoint.z);
+  const axisLabel = getDominantAxis(dx, dy, dz);
+  liveInfoEl.style.display = 'block';
+  liveInfoEl.innerHTML = `📐 Live: <b>${formatDistance(dist)}</b> &nbsp;(${axisLabel})`;
+
+  // Tandai reticle aktif (kuning)
+  reticleEl.classList.add('active');
+}
+
+function removePreview() {
+  if (previewLine) {
+    scene.remove(previewLine);
+    previewLine.geometry.dispose();
+    previewLine.material.dispose();
+    previewLine = null;
+  }
+  if (previewLabel) {
+    scene.remove(previewLabel);
+    if (previewLabel.material.map) previewLabel.material.map.dispose();
+    previewLabel.material.dispose();
+    previewLabel = null;
+  }
+  previewActive = false;
+  liveInfoEl.style.display = 'none';
+  reticleEl.classList.remove('active');
+}
+
+// Tentukan label axis dominan: "Horizontal", "Vertikal", "Diagonal"
+function getDominantAxis(dx, dy, dz) {
+  const total = dx + dy + dz;
+  if (total < 1e-6) return '—';
+  const max = Math.max(dx, dy, dz);
+  if (dy === max && dy > dx * 1.5) return '↕ Vertikal';
+  if ((dx === max || dz === max) && dy < max * 0.5) return '↔ Horizontal';
+  return '↗ Diagonal';
 }
 
 // ============ Tap = place point ============
@@ -282,13 +377,13 @@ function onTap(e) {
 
   const pos = new THREE.Vector3().setFromMatrixPosition(reticle.matrix);
   addMeasurePoint(pos);
-
-  // vibrate if available
   if (navigator.vibrate) navigator.vibrate(30);
 }
 
 function addMeasurePoint(pos) {
-  // Marker sphere
+  // Hapus preview line dulu — akan digantikan garis final
+  removePreview();
+
   const geo = new THREE.SphereGeometry(0.015, 16, 16);
   const mat = new THREE.MeshBasicMaterial({ color: 0xff3366 });
   const sphere = new THREE.Mesh(geo, mat);
@@ -298,76 +393,101 @@ function addMeasurePoint(pos) {
   const pointObj = { position: pos.clone(), mesh: sphere };
   placedPoints.push(pointObj);
 
-  // If we now have 2+ points, draw a line to the previous point
+  // Gambar garis final solid antara titik baru dan sebelumnya
   if (placedPoints.length >= 2) {
     const prev = placedPoints[placedPoints.length - 2];
     drawLine(prev.position, pointObj.position);
   }
 
   updateInfo();
+
+  // Setelah tap, preview line akan otomatis muncul lagi dari titik baru
+  // saat reticle bergerak (di frame berikutnya), asalkan ada hit.
 }
 
 function drawLine(p1, p2) {
-  // Cylinder between two points
   const distance = p1.distanceTo(p2);
 
+  // Garis solid biru
   const cylGeo = new THREE.CylinderGeometry(0.004, 0.004, distance, 8);
   const cylMat = new THREE.MeshBasicMaterial({ color: 0x00d4ff });
   const cyl = new THREE.Mesh(cylGeo, cylMat);
 
-  // Position at midpoint
   const mid = new THREE.Vector3().addVectors(p1, p2).multiplyScalar(0.5);
   cyl.position.copy(mid);
 
-  // Orient: cylinder default is +Y axis
   const dir = new THREE.Vector3().subVectors(p2, p1).normalize();
-  const up = new THREE.Vector3(0, 1, 0);
-  const quat = new THREE.Quaternion().setFromUnitVectors(up, dir);
-  cyl.quaternion.copy(quat);
+  const up  = new THREE.Vector3(0, 1, 0);
+  cyl.quaternion.setFromUnitVectors(up, dir);
 
   scene.add(cyl);
   lineMeshes.push(cyl);
 
-  // Label with distance
-  const label = makeLabelSprite(formatDistance(distance), 0.06);
+  // Label jarak final
+  const label = makeLabelSprite(formatDistance(distance), 0.06, '#00d4ff', '#00d4ff');
   label.position.copy(mid).add(new THREE.Vector3(0, 0.03, 0));
   scene.add(label);
   labels.push(label);
-
-  // Also add axis-aligned info if we can compute delta
-  // (for "lebar" / "tinggi" we'd need user to tap 2 points horizontally/vertically)
 }
 
-function makeLabelSprite(text, size = 0.05) {
+// ============ Sprite label helpers ============
+function makeLabelSprite(text, size = 0.05, textColor = '#00d4ff', bgBorder = '#00d4ff') {
+  const sprite = new THREE.Sprite(new THREE.SpriteMaterial({
+    depthTest: false, depthWrite: false
+  }));
+  sprite.scale.set(0.001, 0.001, 1); // di-set oleh updateLabelSprite
+  sprite.userData = { size, textColor, bgBorder, text: text };
+  updateLabelSprite(sprite, text);
+  return sprite;
+}
+
+function updateLabelSprite(sprite, text) {
+  const { size, textColor, bgBorder } = sprite.userData;
+  if (sprite.userData.text === text && sprite.userData._built) {
+    return; // sudah sama, skip rebuild
+  }
+  sprite.userData.text = text;
+  sprite.userData._built = true;
+
+  // Dispose texture lama
+  if (sprite.material.map) sprite.material.map.dispose();
+
   const canvas = document.createElement('canvas');
   const ctx = canvas.getContext('2d');
-  const padding = 20;
   const fontSize = 64;
   ctx.font = `bold ${fontSize}px sans-serif`;
   const textWidth = ctx.measureText(text).width;
+  const padding = 24;
 
-  canvas.width = textWidth + padding * 2;
+  canvas.width  = Math.ceil(textWidth + padding * 2);
   canvas.height = fontSize + padding * 2;
 
-  // redraw because canvas resized
   const ctx2 = canvas.getContext('2d');
+  // Background gelap rounded
   ctx2.fillStyle = 'rgba(0,0,0,0.8)';
-  roundRect(ctx2, 0, 0, canvas.width, canvas.height, 20);
+  roundRect(ctx2, 2, 2, canvas.width - 4, canvas.height - 4, 20);
   ctx2.fill();
+  // Border tipis
+  ctx2.strokeStyle = bgBorder;
+  ctx2.lineWidth = 3;
+  roundRect(ctx2, 2, 2, canvas.width - 4, canvas.height - 4, 20);
+  ctx2.stroke();
 
+  // Text
   ctx2.font = `bold ${fontSize}px sans-serif`;
-  ctx2.fillStyle = '#00d4ff';
+  ctx2.fillStyle = textColor;
   ctx2.textAlign = 'center';
   ctx2.textBaseline = 'middle';
   ctx2.fillText(text, canvas.width / 2, canvas.height / 2 + 4);
 
   const texture = new THREE.CanvasTexture(canvas);
   texture.minFilter = THREE.LinearFilter;
-  const material = new THREE.SpriteMaterial({ map: texture, depthTest: false, depthWrite: false });
-  const sprite = new THREE.Sprite(material);
+  texture.needsUpdate = true;
+  sprite.material.map = texture;
+  sprite.material.needsUpdate = true;
+
   const aspect = canvas.width / canvas.height;
   sprite.scale.set(size * aspect, size, 1);
-  return sprite;
 }
 
 function roundRect(ctx, x, y, w, h, r) {
@@ -390,16 +510,12 @@ function formatDistance(m) {
 }
 
 function updateInfo() {
-  if (placedPoints.length === 0) {
-    infoEl.style.display = 'none';
-    return;
-  }
+  if (placedPoints.length === 0) { infoEl.style.display = 'none'; return; }
   if (placedPoints.length === 1) {
     infoEl.style.display = 'block';
-    infoEl.innerHTML = 'Titik ke-1 tertandai. Ketuk lagi untuk mengukur.';
+    infoEl.innerHTML = 'Titik ke-1 tertandai. Gerakkan kamera & ketuk titik ke-2.';
     return;
   }
-  // Show all measurements
   const parts = [];
   for (let i = 1; i < placedPoints.length; i++) {
     const d = placedPoints[i - 1].position.distanceTo(placedPoints[i].position);
@@ -412,28 +528,27 @@ function updateInfo() {
 // ============ Undo & Reset ============
 document.getElementById('undoBtn').addEventListener('click', () => {
   if (placedPoints.length === 0) return;
-
-  const lastPoint = placedPoints.pop();
-  scene.remove(lastPoint.mesh);
-
-  // Remove last line + label if any (the line connecting to previous point)
+  removePreview();
+  const last = placedPoints.pop();
+  scene.remove(last.mesh);
   if (lineMeshes.length > 0 && placedPoints.length >= 1) {
-    const line = lineMeshes.pop();
-    scene.remove(line);
+    scene.remove(lineMeshes.pop());
     const lbl = labels.pop();
-    scene.remove(lbl);
+    if (lbl) { scene.remove(lbl); if (lbl.material.map) lbl.material.map.dispose(); lbl.material.dispose(); }
   }
-
   updateInfo();
 });
 
 document.getElementById('resetBtn').addEventListener('click', () => {
+  removePreview();
   placedPoints.forEach(p => scene.remove(p.mesh));
   lineMeshes.forEach(l => scene.remove(l));
-  labels.forEach(l => scene.remove(l));
-  placedPoints = [];
-  lineMeshes = [];
-  labels = [];
+  labels.forEach(l => {
+    scene.remove(l);
+    if (l.material.map) l.material.map.dispose();
+    l.material.dispose();
+  });
+  placedPoints = []; lineMeshes = []; labels = [];
   updateInfo();
 });
 
@@ -444,21 +559,25 @@ function onSessionEnd() {
   hitTestSource = null;
   hitTestSourceRequested = false;
 
-  // Clear scene
+  removePreview();
   placedPoints.forEach(p => scene.remove(p.mesh));
   lineMeshes.forEach(l => scene.remove(l));
-  labels.forEach(l => scene.remove(l));
-  placedPoints = [];
-  lineMeshes = [];
-  labels = [];
+  labels.forEach(l => {
+    scene.remove(l);
+    if (l.material.map) l.material.map.dispose();
+    l.material.dispose();
+  });
+  placedPoints = []; lineMeshes = []; labels = [];
 
   overlay.classList.remove('hidden');
   startBtn.disabled = false;
   startBtn.textContent = 'Mulai AR';
   reticleEl.style.display = 'none';
   infoEl.style.display = 'none';
+  liveInfoEl.style.display = 'none';
   controlsEl.style.display = 'none';
   statusEl.style.display = 'none';
+  reticleEl.classList.remove('active');
 }
 
 // ============ Resize ============
