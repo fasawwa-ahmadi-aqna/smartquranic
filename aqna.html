@@ -3,11 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fazz - Smart Quranic Digital</title>
-    <!-- PWA Manifest & Theme -->
+    <title>FazzQuranic — Al-Qur'an Digital, Jadwal Sholat, Kiblat & Kalender Hijriah</title>
+	<meta name="description" content="FazzQuranic — Companion digital Al-Qur'an, sastratika, chat interaktif masalah hukum dan spiritual islam, jadwal sholat GPS, arah kiblat, kalender Hijriah-Jawa, tafsir Sastratika, dan hadits qudsi. khatam bareng. Untuk Fasawwa Ahmadi Aqna. mahasiswa i'm uii">
+    <meta property="og:type" content="website">
+	<meta property="og:title" content="FazzQuranic — Al-Qur'an Digital & Companion Muslim">
+	<meta property="og:description" content="Baca Al-Qur'an, jadwal sholat GPS, arah kiblat, kalender Hijriah-Jawa, dan tafsir Sastratika.">
+	<meta property="og:image" content="https://fazz-smartquranic-4ff03.web.app/img/iconfazz.png">
+	<meta property="og:url" content="https://fazz-smartquranic-4ff03.web.app/">
+	<meta property="og:locale" content="id_ID">
+
+	<meta name="twitter:card" content="summary_large_image">
+	<meta name="twitter:title" content="FazzQuranic — Al-Qur'an Digital">
+	<meta name="twitter:description" content="Companion Muslim: Quran, sholat, kiblat, kalender.">
+	<meta name="twitter:image" content="https://fazz-smartquranic-4ff03.web.app/img/iconfazz.png">
+	<!-- PWA Manifest & Theme -->
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#030712">
     <link rel="apple-touch-icon" href="img/iconfazz.png">
+	<link rel="icon" type="image/png" href="img/iconfazz.png">
+	<link rel="icon" type="image/png" sizes="192x192" href="img/iconfazz.png">
 
     <!-- Daftarkan Service Worker -->
     <script>
@@ -568,21 +582,21 @@
             <div class="absolute inset-1 rounded-2xl bg-gradient-to-br from-emerald-400/10 to-indigo-500/10"></div>
             <!-- Logo -->
             <img src="img/fazz.png" 
-                 alt="Logo" 
+                 alt="fazz FazzQuranic — aplikasi Al-Qur'an digital " 
                  class="h-14 w-auto object-contain drop-shadow-2xl relative z-10"
                  style="border-radius:20%;width:60px;height:auto;">
         </div>
     </div>
 
     <!-- Title with Gradient Animation -->
-    <h1 class="text-4xl md:text-5xl font-extrabold tracking-tight mb-3 font-heading animate-[fade-up_1s_ease-out]">
+    <div class="text-4xl md:text-5xl font-extrabold tracking-tight mb-3 font-heading animate-[fade-up_1s_ease-out]">
         <span class="bg-gradient-to-r from-white via-emerald-200 to-white bg-clip-text text-transparent bg-[length:200%_auto] animate-[shimmer_3s_linear_infinite]">
             FAZZ
         </span>
         <span class="bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent">
             Quranic & Companion
         </span>
-    </h1>
+    </div>
 
     <!-- Subtitle dengan efek typing yang lebih lambat untuk durasi 11 detik -->
     <p class="text-slate-400 text-sm max-w-xs mb-4 font-light tracking-wide animate-[fade-up_1.2s_ease-out]">
@@ -688,7 +702,7 @@
                         
                         <!-- Tombol Logo -->
                         <button @click="openModal = true" class="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-emerald-900/50 focus:outline-none cursor-pointer overflow-hidden">
-                            <img src="img/IMG_20260828_203323.jpg" alt="Logo" class="h-12 w-auto object-contain drop-shadow" style="border-radius:30%;width:50px;height:auto;">
+                            <img src="img/fasawwa-ahmadi-aqna1.jpg" alt="Logo" class="h-12 w-auto object-contain drop-shadow" style="border-radius:30%;width:50px;height:auto;">
                         </button>
 
                         <!-- Teleport memindahkan modal ke <body> -->
@@ -737,7 +751,7 @@
 													<!-- Efek Glow dalam -->
 													<div class="absolute -inset-2 bg-indigo-400/20 rounded-full blur-xl animate-pulse" style="animation-delay: 1s;"></div>
 													<!-- Gambar -->
-													<img src="img/IMG_20260828_203323.jpg" alt="Fazz 1" 
+													<img src="img/fasawwa-ahmadi-aqna1.jpg" alt="Fazz 1" 
 														 class="object-contain drop-shadow-2xl rounded-full relative z-10"
 														 style="box-shadow: 0 0 30px rgba(99, 102, 241, 0.3), 0 0 60px rgba(99, 102, 241, 0.15);width:250px;">
 												</div>
@@ -750,7 +764,7 @@
 													<!-- Efek Glow dalam -->
 													<div class="absolute -inset-2 bg-indigo-400/20 rounded-2xl blur-xl animate-pulse" style="animation-delay: 1s;"></div>
 													<!-- Gambar -->
-													<img src="img/IMG_20260828_112810.jpg" alt="Fazz 2" 
+													<img src="img/fasawwa-ahmadi-aqna2.jpg" alt="Fazz 2" 
 														 class="w-72 h-72 object-contain drop-shadow-2xl rounded-full relative z-10"
 														 style="box-shadow: 0 0 30px rgba(99, 102, 241, 0.3), 0 0 60px rgba(99, 102, 241, 0.15);">
 												</div>
@@ -762,7 +776,7 @@
 													<!-- Efek Glow dalam -->
 													<div class="absolute -inset-2 bg-indigo-400/20 rounded-2xl blur-xl animate-pulse" style="animation-delay: 1s;"></div>
 													<!-- Gambar -->
-													<img src="img/IMG_20260828_132412.jpg" alt="Fazz 3" 
+													<img src="img/fasawwa-ahmadi-aqna3.jpg" alt="Fazz 3" 
 														 class="w-80 h-80 object-contain drop-shadow-2xl rounded-full relative z-10"
 														 style="box-shadow: 0 0 30px rgba(99, 102, 241, 0.3), 0 0 60px rgba(99, 102, 241, 0.15);">
 												</div>
@@ -867,7 +881,7 @@
                     
                     <div class="flex items-center space-x-2.5">
                         <div>
-                            <span class="text-xl font-bold tracking-tight font-heading text-white">Fazz<span class="text-emerald-400">Quran</span></span>
+                            <h1 class="text-xl font-bold tracking-tight font-heading text-white">Fazz<span class="text-emerald-400">Quran</span></h1>
                             <span class="block text-[10px] tracking-widest uppercase text-emerald-400/80 font-medium">Digital Companion</span>
                         </div>
                         <!-- Fase Bulan Hijriah Dinamis di Sebelah Judul -->
@@ -1244,16 +1258,16 @@
 							<span class="text-base font-extrabold text-yellow-300 font-heading" x-text="hijriDateString"></span>
 						</span>
 						&nbsp;
-						<button @click="window.location.href='aqna.html'" class="group relative focus:outline-none">
+						<a href="aqna.html" class="group relative focus:outline-none">
 						<span class="bg-green-800/30 text-emerald-300 text-xs font-semibold px-3 py-1 rounded-full uppercase tracking-wider mb-3 inline-block border border-emerald-500/30">Simak & Resapi</span>
-						</button>
+						</a>
 						&nbsp;&nbsp;
-						<button @click="window.location.href='khatam.html'" class="group relative focus:outline-none">
+						<a href='khatam.html'" class="group relative focus:outline-none">
 							<div class="absolute -inset-0.5 bg-yellow-500 rounded-full blur opacity-75 group-hover:opacity-100 transition duration-300"></div>
 							<span class="relative bg-rose-800/50 text-yellow-300 text-xs font-semibold px-4 py-1.5 rounded-full uppercase tracking-wider inline-block border border-yellow-400/50 shadow-[0_0_15px_rgba(234,179,8,0.5)] transition-all duration-300 group-hover:shadow-[0_0_25px_rgba(234,179,8,0.8)]">
 								Khatam Bareng
 							</span>
-						</button>
+						</a>
 						<style>.noto-sans-javanese-<uniquifier> {font-family: "Noto Sans Javanese", sans-serif;font-optical-sizing: auto;font-weight: <weight>;font-style: normal;}</style>
 						<link href="https://fonts.googleapis.com/css2?family=Caacupe+One&family=Noto+Sans+Javanese:wght@400..700&display=swap" rel="stylesheet">
 						<h2 class="text-3xl md:text-5xl font-extrabold tracking-tight mb-4" style="color: LawnGreen; font-family: 'Lobster', cursive; text-shadow: 0 0 10px cyan, 0 0 20px cyan, 0 0 30px cyan; animation: pendarCyan 2s infinite alternate;">
@@ -1985,7 +1999,7 @@
                     <div class="flex items-center space-x-3">
                         <div class="w-12 h-12 bg-gradient-to-tr from-indigo-600 to-blue-500 rounded-2xl flex items-center justify-center shadow-lg">
                             <img src="img/fazz.png" 
-                             alt="Logo" class="h-12 w-auto object-contain drop-shadow" 
+                             alt="Logo FazzQuranic — aplikasi Al-Qur'an digital" class="h-12 w-auto object-contain drop-shadow" 
                              style="border-radius:30%;width:51px;height:auto;">
                         </div>
                         <div>
@@ -3715,6 +3729,19 @@
 
     window.addEventListener('DOMContentLoaded', muatAyatHariIni);
 	
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "FazzQuranic",
+  "url": "https://fazz-smartquranic-4ff03.web.app/",
+  "applicationCategory": "LifestyleApplication",
+  "operatingSystem": "Any",
+  "inLanguage": "id",
+  "description": "Aplikasi Al-Qur'an digital dengan jadwal sholat GPS, arah kiblat, kalender Hijriah-Jawa, dan tafsir Sastratika.",
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "IDR" }
+}
 </script>
 
 </body>
