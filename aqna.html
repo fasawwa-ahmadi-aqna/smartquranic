@@ -276,6 +276,9 @@
 @media (prefers-reduced-motion:reduce){
     .fazz-moon-orb{animation:none}
 }
+@media (prefers-reduced-motion: reduce) {
+  #splash-screen { display: none !important; }
+}
 </style>
 
 <style id="fazz-im-uii-glow">
@@ -691,7 +694,7 @@
 
 
     <!-- MAIN APP WRAPPER -->
-    <div class="flex-1 flex flex-col relative z-10" x-cloak x-show="!showSplash" x-transition.opacity.duration.1500ms>
+    <div class="flex-1 flex flex-col relative z-10" x-show="!showSplash" x-transition.opacity.duration.1500ms>
 
         <!-- HEADER / NAVBAR -->
         <header class="sticky top-0 z-40 backdrop-blur-xl bg-slate-900/80 border-b border-slate-800/80 px-4 lg:px-8 py-4">
@@ -1232,6 +1235,10 @@
 
         <!-- KONTEN UTAMA -->
         <main class="flex-1 max-w-7xl w-full mx-auto p-4 lg:p-8 pb-28 md:pb-8 flex flex-col">
+			<section class="sr-only" aria-hidden="false">
+			  <h2>Tentang FazzQuranic</h2>
+			  <p>FazzQuranic adalah aplikasi pendamping Al-Qur'an digital yang menyediakan bacaan 114 surat, jadwal waktu sholat berdasarkan GPS, penentu arah kiblat real-time, kalender Hijriah dan Jawa (weton), tafsir Sastratika, serta kumpulan hadits qudsi.</p>
+			</section>
 
             <!-- TAB 1: BERANDA / DAFTAR SURAT -->
             <div x-show="activeTab === 'home'">
@@ -1258,9 +1265,9 @@
 							<span class="text-base font-extrabold text-yellow-300 font-heading" x-text="hijriDateString"></span>
 						</span>
 						&nbsp;
-						<a href="aqna.html" class="group relative focus:outline-none">
+						<button @click="activeTab = 'bookmark'" :class="activeTab === 'bookmark' ? 'bg-emerald-600 text-white shadow-md' : 'text-slate-400 hover:text-white'" class="group relative focus:outline-none">
 						<span class="bg-green-800/30 text-emerald-300 text-xs font-semibold px-3 py-1 rounded-full uppercase tracking-wider mb-3 inline-block border border-emerald-500/30">Simak & Resapi</span>
-						</a>
+						</button>
 						&nbsp;&nbsp;
 						<a href='khatam.html'" class="group relative focus:outline-none">
 							<div class="absolute -inset-0.5 bg-yellow-500 rounded-full blur opacity-75 group-hover:opacity-100 transition duration-300"></div>
@@ -1289,7 +1296,8 @@
 							}
 						</style>
 						
-						<p class="text-slate-300 text-sm md:text-base mb-6 leading-relaxed">Menjelajahi Keindahan dan Kedalaman Makna Ayat-Ayat Suci melalui Simponi Huruf dan Angka </p>
+						<p class="text-slate-300 text-sm md:text-base mb-6 leading-relaxed">Menjelajahi Keindahan dan Kedalaman Makna Ayat-Ayat Suci melalui Simponi Huruf dan Angka. 
+						<br>"Exploratory Sastratika" bukanlah sebuah tafsir yang mengurai aksara, melainkan denyut sujud kekaguman teramat dalam, lahir bagai mutiara yang terbentuk dari tetesan air mata kesedihan yang mengendap di dasar palung duka, menjelma menjadi sebuah kidung sunyi atas keindahan samudera makna dan keagungan ayat-ayat dalam kitab suci, dan lalu tumpah dalam bentuk kepak sayap karya sastra</p>
 						
 						<div class="relative">
 							<span class="absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400"><i class="fa-solid fa-search"></i></span>
@@ -2043,7 +2051,9 @@
             <div x-show="activeTab === 'bookmark'" x-cloak>
                 <div class="mb-6">
                     <h2 class="text-2xl font-bold font-heading text-white">Sastratika Surat Pilihan</h2>
-                    <p class="text-slate-400 text-sm">Jelajahi keindahan dan kedalaman makna surat-surat pilihan.</p>
+					<p class="text-slate-400 text-sm">
+					"Exploratory Sastratika" bukanlah sebuah tafsir akademis yang berupaya mengurai deretan aksara secara harfiah, melainkan manifestasi dari denyut sujud kekaguman teramat dalam yang menghidupkan relung-relung jiwa. Ia hadir bagai mutiara bercahaya yang lahir dari proses batin yang getir—terbentuk dari endapan tetesan air mata kesedihan yang membatu di dasar palung duka, ditempa oleh gelombang rindu. Dari kedalaman samudra kontemplasi tersebut, ia bertransformasi menjadi kidung sunyi yang merayakan keindahan mahakarya ilahi, melukiskan keagungan ayat-ayat dalam kitab suci, dan pada akhirnya melepaskan diri ke udara bebas dalam bentuk kepak sayap karya sastra yang siap menaungi setiap hati yang haus akan makna.
+					</p>
                 </div>
 				
 				<div class="space-y-4">                    
@@ -2084,6 +2094,14 @@
 							<button onclick="openPdfModal('https://drive.google.com/file/d/1bwwkZzvEn0kHpa0tn3RaSVC8fG3_Jwsy/view?usp=drive_link', 'Surah Luqman:12-19')" 
 									class="text-xs sm:text-sm font-semibold px-2 sm:px-3 py-1.5 sm:py-1 bg-emerald-950 text-emerald-400 rounded-full border border-emerald-800 hover:bg-emerald-900 transition-colors duration-200 whitespace-nowrap">
 								Hikmah di Telapak Waktu
+							</button>
+							<button onclick="openPdfModal('https://drive.google.com/file/d/1wyEVJ3kle-EczkdZVwXU2alFmzmdeq5-/view?usp=drive_link', 'Surah An-Naml:60-64')" 
+									class="text-xs sm:text-sm font-semibold px-2 sm:px-3 py-1.5 sm:py-1 bg-emerald-950 text-emerald-400 rounded-full border border-emerald-800 hover:bg-emerald-900 transition-colors duration-200 whitespace-nowrap">
+								Ziarah Ssastratika Ke Relung Nurani
+							</button>
+							<button onclick="openPdfModal('https://drive.google.com/file/d/12h9jVGuVkPXuHEMy3WPyar8tjRtNpBPA/view?usp=drive_link', 'Surah Ar-Rum:20-27')" 
+									class="text-xs sm:text-sm font-semibold px-2 sm:px-3 py-1.5 sm:py-1 bg-emerald-950 text-emerald-400 rounded-full border border-emerald-800 hover:bg-emerald-900 transition-colors duration-200 whitespace-nowrap">
+								Arsitektur Semesta Yang Bersujud
 							</button>
 						</div>
 					</div>
