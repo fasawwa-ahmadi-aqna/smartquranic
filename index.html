@@ -2200,42 +2200,77 @@
      BAGIAN 2: EVENT SPESIAL
      ============================================ */
   const SPECIAL_EVENTS = [
-    {
-      id: 'kelahiran',
-      variant: 'birth',
-      icon: '🌸',
-      eyebrow: 'SELAMAT ULANG TAHUN',
-      title: 'Selamat Milad, Sayang',
-      messageHTML: `
-        <p>Hari ini, langit pernah tersenyum karena kehadiranmu.<br>
-        <strong>8 Oktober</strong> — sebuah tanggal yang Allah pilih untuk meniupkan ruh ke dalam rahim, menghadirkan sosok yang kini begitu berarti.</p>
-        <p>Terima kasih telah lahir ke dunia ini.<br>
-        Terima kasih telah menjadi bagian dari perjalanan ini.</p>
-        <div class="doa-arab">اللَّهُمَّ بَارِكْ لَهُ فِي عُمْرِهِ وَصِحَّتِهِ وَأَهْلِهِ</div>
-        <div class="doa-latin">Allāhumma bārik lahu fī 'umrihi wa ṣiḥḥatihi wa ahlihi</div>
-        <div class="doa-arti">"Ya Allah, berkahilah umurnya, kesehatannya, dan keluarganya."</div>
-        <p>Semoga setiap tahun yang berlalu menjadi tahun yang lebih baik, lebih dekat pada-Nya, dan lebih bahagia. 🤍</p>
-      `,
-      check: (g, h) => g.getDate() === 8 && g.getMonth() === 9
-    },
-    {
-      id: 'kepergian',
-      variant: 'memorial',
-      icon: '🕊️',
-      eyebrow: 'IN MEMORIAM',
-      title: 'Doa untuk yang Tercinta',
-      messageHTML: `
-        <p>Hari ini, langit terasa lebih hening.<br>
-        <strong>23 November</strong> — hari ketika engkau berpulang menghadap Sang Pencipta, meninggalkan jejak yang takkan pernah pudar.</p>
-        <p>Meski raga telah tiada, namamu tetap hidup dalam doa, dalam kenangan, dalam setiap helaan napas kami.</p>
-        <div class="doa-arab">اللَّهُمَّ اغْفِرْ لَهُ وَارْحَمْهُ وَعَافِهِ وَاعْفُ عَنْهُ</div>
-        <div class="doa-latin">Allāhummaghfir lahu warḥamhu wa 'āfihi wa'fu 'anhu</div>
-        <div class="doa-arti">"Ya Allah, ampunilah dia, rahmatilah dia, selamatkanlah dia, dan maafkanlah segala kesalahannya."</div>
-        <p>Semoga Allah melapangkan kuburnya, menerangi alam barzakhnya, dan menempatkannya di surga tertinggi bersama para kekasih-Nya. Aamiin. 🤲</p>
-      `,
-      check: (g, h) => g.getDate() === 23 && g.getMonth() === 10
-    }
-  ];
+  {
+    id: 'kelahiran',
+    variant: 'birth',
+    icon: '🌸',
+    eyebrow: 'SELAMAT ULANG TAHUN',
+    title: 'Selamat Milad, Sayang',
+    messageHTML: `
+      <p>Hari ini, langit pernah tersenyum karena kehadiranmu.<br>
+      <strong>8 Oktober</strong> — sebuah tanggal yang Allah pilih untuk meniupkan ruh ke dalam rahim, menghadirkan sosok yang kini begitu berarti.</p>
+      <p>Terima kasih telah lahir ke dunia ini.<br>
+      Terima kasih telah menjadi bagian dari perjalanan ini.</p>
+      <div class="doa-arab">اللَّهُمَّ بَارِكْ لَهُ فِي عُمْرِهِ وَصِحَّتِهِ وَأَهْلِهِ</div>
+      <div class="doa-latin">Allāhumma bārik lahu fī 'umrihi wa ṣiḥḥatihi wa ahlihi</div>
+      <div class="doa-arti">"Ya Allah, berkahilah umurnya, kesehatannya, dan keluarganya."</div>
+      <p>Semoga setiap tahun yang berlalu menjadi tahun yang lebih baik, lebih dekat pada-Nya, dan lebih bahagia. 🤍</p>
+    `,
+    check: (g, h) => g.getDate() === 8 && g.getMonth() === 9
+  },
+  {
+    id: 'kepergian',
+    variant: 'memorial',
+    icon: '🕊️',
+    eyebrow: 'IN MEMORIAM',
+    title: 'Doa untuk yang Tercinta',
+    messageHTML: `
+      <p>Hari ini, langit terasa lebih hening.<br>
+      <strong>23 November</strong> — hari ketika engkau berpulang menghadap Sang Pencipta, meninggalkan jejak yang takkan pernah pudar.</p>
+      <p>Meski raga telah tiada, namamu tetap hidup dalam doa, dalam kenangan, dalam setiap helaan napas kami.</p>
+      <div class="doa-arab">اللَّهُمَّ اغْفِرْ لَهُ وَارْحَمْهُ وَعَافِهِ وَاعْفُ عَنْهُ</div>
+      <div class="doa-latin">Allāhummaghfir lahu warḥamhu wa 'āfihi wa'fu 'anhu</div>
+      <div class="doa-arti">"Ya Allah, ampunilah dia, rahmatilah dia, selamatkanlah dia, dan maafkanlah segala kesalahannya."</div>
+      <p>Semoga Allah melapangkan kuburnya, menerangi alam barzakhnya, dan menempatkannya di surga tertinggi bersama para kekasih-Nya. Aamiin. 🤲</p>
+    `,
+    check: (g, h) => g.getDate() === 23 && g.getMonth() === 10
+  },
+  {
+    id: 'kepergian',
+    variant: 'memorial',
+    icon: '🕊️',
+    eyebrow: 'IN MEMORIAM',
+    title: 'Doa untuk yang Tercinta',
+    messageHTML: `
+      <p>Hari ini, langit terasa lebih hening.<br>
+      <strong>2 Jumadil Akhir</strong> — hari ketika engkau berpulang menghadap Sang Pencipta, meninggalkan jejak yang takkan pernah pudar.</p>
+      <p>Meski raga telah tiada, namamu tetap hidup dalam doa, dalam kenangan, dalam setiap helaan napas kami.</p>
+      <div class="doa-arab">اللَّهُمَّ اغْفِرْ لَهُ وَارْحَمْهُ وَعَافِهِ وَاعْفُ عَنْهُ</div>
+      <div class="doa-latin">Allāhummaghfir lahu warḥamhu wa 'āfihi wa'fu 'anhu</div>
+      <div class="doa-arti">"Ya Allah, ampunilah dia, rahmatilah dia, selamatkanlah dia, dan maafkanlah segala kesalahannya."</div>
+      <p>Semoga Allah melapangkan kuburnya, menerangi alam barzakhnya, dan menempatkannya di surga tertinggi bersama para kekasih-Nya. Aamiin. 🤲</p>
+    `,
+    check: (g, h) => h.day === 2 && h.month === 6
+  },
+  {
+    id: 'kelahiran',
+    variant: 'birth',
+    icon: '🌸',
+    eyebrow: 'SELAMAT ULANG TAHUN',
+    title: 'Selamat Milad, Sayang',
+    messageHTML: `
+      <p>Hari ini, langit pernah tersenyum karena kehadiranmu.<br>
+      <strong>15 Ramadhan</strong> — sebuah tanggal yang Allah pilih untuk meniupkan ruh ke dalam rahim, menghadirkan sosok yang kini begitu berarti.</p>
+      <p>Terima kasih telah lahir ke dunia ini.<br>
+      Terima kasih telah menjadi bagian dari perjalanan ini.</p>
+      <div class="doa-arab">اللَّهُمَّ بَارِكْ لَهُ فِي عُمْرِهِ وَصِحَّتِهِ وَأَهْلِهِ</div>
+      <div class="doa-latin">Allāhumma bārik lahu fī 'umrihi wa ṣiḥḥatihi wa ahlihi</div>
+      <div class="doa-arti">"Ya Allah, berkahilah umurnya, kesehatannya, dan keluarganya."</div>
+      <p>Semoga setiap tahun yang berlalu menjadi tahun yang lebih baik, lebih dekat pada-Nya, dan lebih bahagia. 🤍</p>
+    `,
+    check: (g, h) => h.day === 15 && h.month === 9
+  }
+];
 
   function checkSpecialEvent(gregorian, hijri) {
     const todayKey = `${gregorian.getFullYear()}-${gregorian.getMonth()}-${gregorian.getDate()}`;
